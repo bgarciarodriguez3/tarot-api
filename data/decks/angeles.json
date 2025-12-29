@@ -1,92 +1,91 @@
 {
   "id": "angeles",
-  "name": "Ángeles",
+  "name": "Tarot de los Ángeles",
   "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_tarot_de_los_angeles.png",
   "cards": [
     {
-      "id": "arcangel_miguel",
+      "id": "Angel_Arcangel_Miguel",
       "name": "Arcángel Miguel",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png",
-      "upright": "Protección divina, valentía y fuerza espiritual. Miguel te acompaña para cortar miedos y defender tu camino con determinación.",
-      "reversed": "Miedo a actuar, inseguridad o sensación de desprotección. Es momento de recuperar tu poder personal y pedir ayuda espiritual."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png",
+      "upright": "Protección y valentía",
+      "reversed": "En invertida: bloqueo o exceso de «protección y valentía»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "arcangel_gabriel",
+      "id": "Angel_Arcangel_Gabriel",
       "name": "Arcángel Gabriel",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png",
-      "upright": "Mensajes claros, revelaciones y guía divina. Gabriel anuncia noticias importantes y claridad en la comunicación.",
-      "reversed": "Confusión, dificultad para escuchar la intuición o mensajes ignorados. Necesitas silencio interior para comprender la señal."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png",
+      "upright": "Mensajes claros",
+      "reversed": "En invertida: bloqueo o exceso de «mensajes claros»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "arcangel_rafael",
+      "id": "Angel_Arcangel_Rafael",
       "name": "Arcángel Rafael",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png",
-      "upright": "Sanación física, emocional y espiritual. Rafael trae alivio, equilibrio y procesos de curación profunda.",
-      "reversed": "Resistencia a sanar o heridas no atendidas. Es necesario cuidar cuerpo y alma con mayor conciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png",
+      "upright": "Sanación",
+      "reversed": "En invertida: bloqueo o exceso de «sanación»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "arcangel_uriel",
+      "id": "Angel_Arcangel_Uriel",
       "name": "Arcángel Uriel",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png",
-      "upright": "Claridad mental, ideas brillantes y soluciones prácticas. Uriel ilumina el camino con sabiduría.",
-      "reversed": "Bloqueo mental o exceso de preocupación. Es momento de confiar más en tu intuición que en el control."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png",
+      "upright": "Claridad mental",
+      "reversed": "En invertida: bloqueo o exceso de «claridad mental»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_tiempo_divino",
+      "id": "Angel_Angel_del_Tiempo_Divino",
       "name": "Ángel del Tiempo Divino",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png",
-      "upright": "Todo llega en el momento perfecto. Confía en los tiempos del universo y en el proceso.",
-      "reversed": "Impaciencia o frustración por retrasos. El aprendizaje está en soltar la prisa y confiar."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png",
+      "upright": "Confía en los tiempos",
+      "reversed": "En invertida: bloqueo o exceso de «confía en los tiempos»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_nuevo_comienzo",
+      "id": "Angel_Angel_del_Nuevo_Comienzo",
       "name": "Ángel del Nuevo Comienzo",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png",
-      "upright": "Renacimiento, oportunidades frescas y nuevos ciclos. Un inicio lleno de esperanza se abre ante ti.",
-      "reversed": "Miedo a empezar de nuevo o apego al pasado. Para avanzar, primero hay que soltar."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png",
+      "upright": "Renacimiento",
+      "reversed": "En invertida: bloqueo o exceso de «renacimiento»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_suenos",
+      "id": "Angel_Angel_de_los_Suenos",
       "name": "Ángel de los Sueños",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png",
-      "upright": "Mensajes a través de los sueños y la intuición. Escucha lo que tu alma te revela mientras descansas.",
-      "reversed": "Desconexión espiritual o sueños ignorados. Presta atención a las señales sutiles."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png",
+      "upright": "Escucha tu intuición",
+      "reversed": "En invertida: bloqueo o exceso de «escucha tu intuición»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_abundancia",
+      "id": "Angel_Angel_de_la_Abundancia",
       "name": "Ángel de la Abundancia",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png",
-      "upright": "Prosperidad, gratitud y apertura a recibir. La abundancia fluye cuando confías.",
-      "reversed": "Bloqueos económicos o miedo a la escasez. Cambia la mentalidad para permitir el flujo."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png",
+      "upright": "Prosperidad",
+      "reversed": "En invertida: bloqueo o exceso de «prosperidad»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "arcangel_chamuel",
+      "id": "Angel_Arcangel_Chamuel",
       "name": "Arcángel Chamuel",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png",
-      "upright": "Amor incondicional, armonía y relaciones sanas. Chamuel ayuda a sanar el corazón.",
-      "reversed": "Conflictos emocionales o amor propio debilitado. Es momento de reconciliarte contigo."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png",
+      "upright": "Amor",
+      "reversed": "En invertida: bloqueo o exceso de «amor»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "arcangel_zadkiel",
+      "id": "Angel_Arcangel_Zadkiel",
       "name": "Arcángel Zadkiel",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Zadkiel.png",
-      "upright": "Transmutación, perdón y liberación del pasado. Zadkiel transforma el dolor en sabiduría.",
-      "reversed": "Rencor o dificultad para perdonar. El perdón es la llave de tu libertad."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Zadkiel.png",
+      "upright": "Transmutación",
+      "reversed": "En invertida: bloqueo o exceso de «transmutación»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_guardian",
+      "id": "Angel_Angel_de_la_Guarda",
       "name": "Ángel Guardián",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda.png",
-      "upright": "Protección constante y guía silenciosa. Nunca estás sola, tu ángel camina contigo.",
-      "reversed": "Sensación de abandono o desconexión espiritual. Recuerda que la protección sigue ahí."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda.png",
+      "upright": "Protección constante",
+      "reversed": "En invertida: bloqueo o exceso de «protección constante»; revisa el miedo, la resistencia o la impaciencia."
     },
     {
-      "id": "angel_paz",
+      "id": "Angel_Angel_de_la_Paz",
       "name": "Ángel de la Paz",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Paz.png",
-      "upright": "Calma interior, serenidad y armonía emocional. La paz comienza dentro de ti.",
-      "reversed": "Ansiedad o conflicto interno. Respira, baja el ritmo y vuelve al centro."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Paz.png",
+      "upright": "Calma interior",
+      "reversed": "En invertida: bloqueo o exceso de «calma interior»; revisa el miedo, la resistencia o la impaciencia."
     }
   ]
 }
-
