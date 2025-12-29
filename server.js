@@ -9,10 +9,10 @@ app.use(cors());
 app.use(express.json());
 
 // =========================
-// CONFIG (ajusta si quieres)
+// CONFIG
 // =========================
 
-// Probabilidad de que una TIRADA tenga cartas invertidas
+// Probabilidad de que una tirada tenga cartas invertidas
 const REVERSED_READING_PROB = 0.3; // 30%
 
 // Máximo de cartas invertidas por tirada
@@ -21,17 +21,24 @@ const MAX_REVERSED_PER_READING = 3;
 // Carpeta donde están tus JSON de barajas
 const DECKS_DIR = path.join(__dirname, "data", "decks");
 
-// Si tienes productId en Shopify, puedes mapearlo aquí.
-// Si no lo rellenas, el server intentará inferir deckId a partir del productId.
+// Mapeo de productos Shopify -> deckId + cantidad esperada de cartas
+// (Usamos los IDs numéricos que aparecen en tus URLs de Shopify)
 const PRODUCTS = {
-  // EJEMPLOS (ajusta a tus IDs reales si quieres):
-  // "angeles_4": { deckId: "angeles" },
-  // "semilla_5": { deckId: "semilla_estelar" },
-  // "arcanos_3": { deckId: "arcanos_mayores" },
+  // Tres Puertas del Destino (3 Cartas)
+  "10493369745745": { deckId: "arcanos_mayores", cards: 3 },
+
+  // Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas
+  "10496012616017": { deckId: "angeles", cards: 4 },
+
+  // Camino de la Semilla Estelar (5 Cartas)
+  "10495993446737": { deckId: "semilla_estelar", cards: 5 },
+
+  // Lectura Profunda: Análisis Completo (12 Cartas)
+  "10493383082321": { deckId: "arcanos_mayores", cards: 12 },
 };
 
 // =========================
-// Helpers
+// HELPERS
 // =========================
 
 function safeReadJson(filePath) {
@@ -49,26 +56,37 @@ function loadDeck(deckId) {
   return safeReadJson(p);
 }
 
-function inferDeckIdFromProductId(productId = "") {
-  const p = (productId || "").toLowerCase();
-  if (p.includes("angel")) return "angeles";
+// Inferencia por texto (por si no mandas productId pero mandas un nombre)
+function inferDeckIdFromText(text = "") {
+  const p = (text || "").toLowerCase();
+
+  if (p.includes("ángel") || p.includes("angel")) return "angeles";
   if (p.includes("semilla")) return "semilla_estelar";
-  if (p.includes("arcano")) return "arcanos_mayores";
+  if (p.includes("arcano") || p.includes("destino") || p.includes("profunda"))
+    return "arcanos_mayores";
+
   return null;
 }
 
-function resolveDeckId({ productId, deckId }) {
+function resolveDeck({ productId, deckId, productTitle }) {
   // 1) Si viene deckId explícito, se usa
   if (deckId && typeof deckId === "string") return deckId;
 
-  // 2) Si productId está en PRODUCTS
-  if (productId && PRODUCTS[productId]?.deckId) return PRODUCTS[productId].deckId;
+  // 2) Si viene productId y está en PRODUCTS
+  if (productId && PRODUCTS[String(productId)]?.deckId) {
+    return PRODUCTS[String(productId)].deckId;
+  }
 
-  // 3) Inferencia por texto del productId
-  const inferred = inferDeckIdFromProductId(productId);
+  // 3) Si viene productTitle (o similar), intentamos inferir
+  const inferred = inferDeckIdFromText(productTitle || "");
   if (inferred) return inferred;
 
   return null;
+}
+
+function expectedCardsFromProduct(productId) {
+  if (!productId) return null;
+  return PRODUCTS[String(productId)]?.cards ?? null;
 }
 
 function pickReversedIndexes(total) {
@@ -87,7 +105,7 @@ function pickReversedIndexes(total) {
 }
 
 // =========================
-// Routes
+// ROUTES
 // =========================
 
 app.get("/", (req, res) => {
@@ -98,7 +116,7 @@ app.get("/health", (req, res) => {
   res.json({ ok: true });
 });
 
-// ✅ GET /decks/:deckId  -> devuelve el JSON de la baraja
+// ✅ GET /decks/:deckId -> devuelve el JSON de la baraja
 app.get("/decks/:deckId", (req, res) => {
   const { deckId } = req.params;
   const deck = loadDeck(deckId);
@@ -110,17 +128,19 @@ app.get("/decks/:deckId", (req, res) => {
   return res.json(deck);
 });
 
-// ✅ POST /tarot/reading
-// Body recomendado:
-// {
-//   "productId": "angeles_4",
-//   "selectedCards": ["Angel_Arcangel_Rafael", "..."]
-// }
-// Opcionalmente puedes mandar:
-// { "deckId": "angeles" }  // si no usas productId
+/**
+ * ✅ POST /tarot/reading
+ * Body recomendado:
+ * {
+ *   "productId": "10496012616017",   // opcional (Shopify)
+ *   "productTitle": "Mensaje de los Ángeles ...", // opcional
+ *   "deckId": "angeles",             // opcional (si no mandas productId)
+ *   "selectedCards": ["id1","id2",...]
+ * }
+ */
 app.post("/tarot/reading", (req, res) => {
   try {
-    const { productId, deckId, selectedCards } = req.body || {};
+    const { productId, productTitle, deckId, selectedCards } = req.body || {};
 
     if (!Array.isArray(selectedCards) || selectedCards.length === 0) {
       return res.status(400).json({
@@ -129,13 +149,25 @@ app.post("/tarot/reading", (req, res) => {
     }
 
     // Resolver deckId
-    const resolvedDeckId = resolveDeckId({ productId, deckId });
+    const resolvedDeckId = resolveDeck({ productId, deckId, productTitle });
     if (!resolvedDeckId) {
       return res.status(400).json({
         error:
-          "No pude determinar la baraja. Envía deckId o configura PRODUCTS para ese productId.",
-        productId,
-        deckId,
+          "No pude determinar la baraja. Envía deckId o productId (o productTitle).",
+        productId: productId || null,
+        deckId: deckId || null,
+        productTitle: productTitle || null,
+      });
+    }
+
+    // Validar cantidad esperada si viene productId
+    const expected = expectedCardsFromProduct(productId);
+    if (expected && selectedCards.length !== expected) {
+      return res.status(400).json({
+        error: `Para este producto se esperan ${expected} cartas`,
+        expectedCards: expected,
+        receivedCards: selectedCards.length,
+        productId: String(productId),
       });
     }
 
@@ -159,7 +191,7 @@ app.post("/tarot/reading", (req, res) => {
       });
     }
 
-    // Validar que las cartas existen en la baraja
+    // Validar que existen en la baraja
     const validIds = new Set((deck.cards || []).map((c) => c.id));
     const invalid = selectedCards.filter((id) => !validIds.has(id));
     if (invalid.length > 0) {
@@ -170,16 +202,19 @@ app.post("/tarot/reading", (req, res) => {
       });
     }
 
-    // Cartas invertidas: 30% por tirada, máx 3
+    // Cartas invertidas (30% de prob, máx 3)
     const reversedIndexes = pickReversedIndexes(selectedCards.length);
 
     // Construir respuesta
     const reading = selectedCards.map((cardId, index) => {
+      const card = (deck.cards || []).find((c) => c.id === cardId) || null;
       const isReversed = reversedIndexes.has(index);
+
       return {
         position: index + 1,
         cardId,
         reversed: isReversed,
+        card, // te devuelve también el objeto completo de la carta
         meaning: isReversed
           ? `Interpretación invertida de ${cardId}`
           : `Interpretación directa de ${cardId}`,
@@ -189,8 +224,9 @@ app.post("/tarot/reading", (req, res) => {
     return res.json({
       ok: true,
       deckId: resolvedDeckId,
-      productId: productId || null,
-      back: deck.back,
+      productId: productId ? String(productId) : null,
+      productTitle: productTitle || null,
+      back: deck.back || null,
       reading,
     });
   } catch (err) {
@@ -200,7 +236,7 @@ app.post("/tarot/reading", (req, res) => {
 });
 
 // =========================
-// Start
+// START
 // =========================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Tarot API running on port ${PORT}`));
