@@ -56,7 +56,7 @@ function loadDeck(deckId) {
   return safeReadJson(p);
 }
 
-// Inferencia por texto (por si no mandas productId pero mandas un nombre)
+// Inferencia por texto (por si no mandas productId pero mandas un nombre/título)
 function inferDeckIdFromText(text = "") {
   const p = (text || "").toLowerCase();
 
@@ -132,9 +132,9 @@ app.get("/decks/:deckId", (req, res) => {
  * ✅ POST /tarot/reading
  * Body recomendado:
  * {
- *   "productId": "10496012616017",   // opcional (Shopify)
- *   "productTitle": "Mensaje de los Ángeles ...", // opcional
- *   "deckId": "angeles",             // opcional (si no mandas productId)
+ *   "productId": "10496012616017",            // opcional (Shopify)
+ *   "productTitle": "Mensaje de los Ángeles", // opcional
+ *   "deckId": "angeles",                      // opcional (si no mandas productId)
  *   "selectedCards": ["id1","id2",...]
  * }
  */
@@ -205,7 +205,7 @@ app.post("/tarot/reading", (req, res) => {
     // Cartas invertidas (30% de prob, máx 3)
     const reversedIndexes = pickReversedIndexes(selectedCards.length);
 
-    // Construir respuesta
+    // ✅ Construir respuesta con upright/reversed reales del JSON
     const reading = selectedCards.map((cardId, index) => {
       const card = (deck.cards || []).find((c) => c.id === cardId) || null;
       const isReversed = reversedIndexes.has(index);
@@ -214,10 +214,12 @@ app.post("/tarot/reading", (req, res) => {
         position: index + 1,
         cardId,
         reversed: isReversed,
-        card, // te devuelve también el objeto completo de la carta
+        card,
         meaning: isReversed
-          ? `Interpretación invertida de ${cardId}`
-          : `Interpretación directa de ${cardId}`,
+          ? (card?.reversed || `Interpretación invertida de ${cardId}`)
+          : (card?.upright || `Interpretación directa de ${cardId}`),
+        upright: card?.upright || null,
+        reversedMeaning: card?.reversed || null,
       };
     });
 
