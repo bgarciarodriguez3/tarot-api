@@ -1,78 +1,138 @@
 {
   "id": "semilla_estelar",
   "name": "Camino de la Semilla Estelar",
-  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_semilla_estelar.png",
   "cards": [
     {
-      "id": "origen_estelar",
-      "name": "Origen Estelar",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/origen_estelar.png",
-      "upright": "Recuerdo del alma y conexión con tu origen cósmico. Esta carta habla de tu misión estelar y del despertar de memorias antiguas.",
-      "reversed": "Desconexión de tu propósito o dudas sobre tu camino espiritual. Es momento de reconectar con tu esencia."
+      "id": "tribu_del_alma",
+      "name": "Tribu del Alma",
+      "upright": "Conexión con personas afines al alma, sensación de pertenencia y apoyo mutuo. Encuentro con tu verdadera familia espiritual.",
+      "reversed": "Sensación de no pertenecer, aislamiento espiritual o dificultad para encontrar personas afines. Heridas de rechazo aún activas."
     },
     {
-      "id": "despertar",
-      "name": "Despertar",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/despertar.png",
-      "upright": "Expansión de conciencia y activación espiritual. Estás recordando quién eres realmente.",
-      "reversed": "Resistencia al cambio o miedo a ver la verdad. El despertar puede ser incómodo, pero es necesario."
+      "id": "sincronias_del_universo",
+      "name": "Sincronías del Universo",
+      "upright": "Señales claras del universo confirmando que vas por el camino correcto. Todo encaja de forma divina.",
+      "reversed": "Desconexión con las señales, exceso de mente racional o desconfianza en la guía del universo."
     },
     {
-      "id": "sanacion_karmica",
-      "name": "Sanación Kármica",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/sanacion_karmica.png",
-      "upright": "Liberación de cargas del pasado y cierre de ciclos kármicos. El alma se aligera.",
-      "reversed": "Patrones repetitivos no resueltos. Es necesario mirar de frente lo que aún duele."
+      "id": "semilla_del_coraje",
+      "name": "Semilla del Coraje",
+      "upright": "Valor interior para dar pasos importantes. Fuerza del alma activándose.",
+      "reversed": "Miedo a avanzar, inseguridad o duda sobre la propia fortaleza interna."
     },
     {
-      "id": "portal",
-      "name": "Portal",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/portal.png",
-      "upright": "Puerta energética abierta. Nuevas líneas temporales y oportunidades se activan.",
-      "reversed": "Miedo a cruzar el umbral o a tomar una decisión importante. El portal sigue ahí, esperando."
+      "id": "santuario_interior",
+      "name": "Santuario Interior",
+      "upright": "Espacio sagrado interno de calma, silencio y protección espiritual.",
+      "reversed": "Dificultad para encontrar paz interna, ruido mental o desconexión del espacio sagrado personal."
     },
     {
-      "id": "guia_estelar",
-      "name": "Guía Estelar",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/guia_estelar.png",
-      "upright": "Acompañamiento espiritual y protección desde planos superiores. No estás sola en tu camino.",
-      "reversed": "Desconfianza en la guía interior o sensación de soledad espiritual. Vuelve a escuchar tu intuición."
+      "id": "renacimiento_estelar",
+      "name": "Renacimiento Estelar",
+      "upright": "Transformación profunda del alma y nacimiento de una nueva versión de ti.",
+      "reversed": "Resistencia al cambio profundo o apego a una identidad que ya no vibra contigo."
     },
     {
-      "id": "mision_alma",
-      "name": "Misión del Alma",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/mision_alma.png",
-      "upright": "Recuerdo claro del propósito encarnado. Tu alma sabe exactamente por qué está aquí.",
-      "reversed": "Confusión vocacional o desconexión del propósito. La misión sigue viva, aunque ahora no la veas."
+      "id": "reconexion_con_el_corazon",
+      "name": "Reconexión con el Corazón",
+      "upright": "Apertura emocional, sanación afectiva y retorno a la verdad del corazón.",
+      "reversed": "Bloqueo emocional, heridas no sanadas o dificultad para sentir y expresar emociones auténticas."
     },
     {
-      "id": "integracion",
-      "name": "Integración",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/integracion.png",
-      "upright": "Unión entre lo humano y lo divino. Aterrizar la espiritualidad en la vida cotidiana.",
-      "reversed": "Desequilibrio entre lo espiritual y lo material. Es momento de armonizar ambos planos."
+      "id": "rayo_dorado",
+      "name": "Rayo Dorado",
+      "upright": "Activación del poder personal, autoestima elevada y luz interior reconocida.",
+      "reversed": "Desvalorización personal o rechazo del propio brillo espiritual."
     },
     {
-      "id": "frecuencia",
-      "name": "Frecuencia",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/frecuencia.png",
-      "upright": "Elevación vibracional y alineación energética. Tu energía atrae lo que vibra contigo.",
-      "reversed": "Baja vibración por emociones densas o agotamiento. Cuida tu energía."
+      "id": "puente_entre_mundos",
+      "name": "Puente entre Mundos",
+      "upright": "Capacidad de integrar lo espiritual en la vida cotidiana.",
+      "reversed": "Dificultad para integrar lo espiritual con lo humano o tendencia al escapismo."
     },
     {
-      "id": "linaje_estelar",
-      "name": "Linaje Estelar",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/linaje_estelar.png",
-      "upright": "Conexión con familias estelares y memorias ancestrales del alma.",
-      "reversed": "Sensación de no pertenecer o de estar perdida. El linaje no se rompe, se recuerda."
+      "id": "portal_de_encarnacion",
+      "name": "Portal de Encarnación",
+      "upright": "Aceptación plena de la experiencia humana y anclaje en esta vida.",
+      "reversed": "Resistencia a estar plenamente presente en la realidad material."
     },
     {
-      "id": "retorno",
-      "name": "Retorno",
-      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/retorno.png",
-      "upright": "Regreso al centro, al hogar interior. Todo vuelve a alinearse.",
-      "reversed": "Resistencia a cerrar un ciclo o miedo al cambio final. El retorno es inevitable y sanador."
+      "id": "origen_galactico",
+      "name": "Origen Galáctico",
+      "upright": "Recuerdo del origen estelar del alma y aceptación de la propia sensibilidad.",
+      "reversed": "Negación de la propia esencia espiritual o miedo a sentirse diferente."
+    },
+    {
+      "id": "mision_de_alma",
+      "name": "Misión de Alma",
+      "upright": "Claridad sobre el propósito vital y sentido profundo de la encarnación.",
+      "reversed": "Confusión vocacional o desconexión del propósito del alma."
+    },
+    {
+      "id": "memorias_de_otras_vidas",
+      "name": "Memorias de Otras Vidas",
+      "upright": "Recuerdos kármicos activándose para sanar y comprender.",
+      "reversed": "Patrones repetitivos no comprendidos o cargas del pasado aún activas."
+    },
+    {
+      "id": "luz_en_la_sombra",
+      "name": "Luz en la Sombra",
+      "upright": "Integración consciente de la sombra y sanación profunda.",
+      "reversed": "Negación de aspectos internos o miedo a mirar la propia sombra."
+    },
+    {
+      "id": "llamado_estelar",
+      "name": "Llamado Estelar",
+      "upright": "El alma llama a despertar y recordar quién eres realmente.",
+      "reversed": "Evasión del llamado interior o distracción constante."
+    },
+    {
+      "id": "hogar_en_la_estrella",
+      "name": "Hogar en la Estrella",
+      "upright": "Sensación de hogar interior y conexión con el origen del alma.",
+      "reversed": "Nostalgia paralizante o sensación de no pertenecer."
+    },
+    {
+      "id": "guardianes_del_umbral",
+      "name": "Guardianes del Umbral",
+      "upright": "Protección en procesos de cambio e iniciación espiritual.",
+      "reversed": "Miedo a atravesar transformaciones necesarias."
+    },
+    {
+      "id": "el_llamado_de_la_noche",
+      "name": "El Llamado de la Noche",
+      "upright": "Mensaje del inconsciente y sabiduría que emerge en el silencio.",
+      "reversed": "Negación del mundo interior o miedo a la introspección."
+    },
+    {
+      "id": "destino_cuantico",
+      "name": "Destino Cuántico",
+      "upright": "Apertura a nuevas líneas temporales y posibilidades infinitas.",
+      "reversed": "Sensación de estancamiento o miedo a decidir."
+    },
+    {
+      "id": "contrato_almico",
+      "name": "Contrato Álmico",
+      "upright": "Vínculos del alma activándose para aprendizaje y evolución.",
+      "reversed": "Relaciones kármicas no comprendidas o pactos pendientes de sanar."
+    },
+    {
+      "id": "consejo_de_guias",
+      "name": "Consejo de Guías",
+      "upright": "Guía espiritual constante y acompañamiento invisible.",
+      "reversed": "Desconfianza en la guía espiritual o bloqueo intuitivo."
+    },
+    {
+      "id": "codigos_de_luz",
+      "name": "Códigos de Luz",
+      "upright": "Activaciones energéticas elevando la conciencia.",
+      "reversed": "Bloqueos energéticos o saturación espiritual."
+    },
+    {
+      "id": "alianza_con_la_tierra",
+      "name": "Alianza con la Tierra",
+      "upright": "Integración del propósito espiritual en la vida material.",
+      "reversed": "Desarraigo, desconexión del cuerpo o dificultad para materializar."
     }
   ]
 }
-
