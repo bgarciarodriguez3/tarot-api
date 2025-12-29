@@ -1,1 +1,92 @@
+{
+  "id": "angeles",
+  "name": "Ángeles",
+  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_tarot_de_los_angeles.png",
+  "cards": [
+    {
+      "id": "arcangel_miguel",
+      "name": "Arcángel Miguel",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png",
+      "upright": "Protección divina, valentía y fuerza espiritual. Miguel te acompaña para cortar miedos y defender tu camino con determinación.",
+      "reversed": "Miedo a actuar, inseguridad o sensación de desprotección. Es momento de recuperar tu poder personal y pedir ayuda espiritual."
+    },
+    {
+      "id": "arcangel_gabriel",
+      "name": "Arcángel Gabriel",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png",
+      "upright": "Mensajes claros, revelaciones y guía divina. Gabriel anuncia noticias importantes y claridad en la comunicación.",
+      "reversed": "Confusión, dificultad para escuchar la intuición o mensajes ignorados. Necesitas silencio interior para comprender la señal."
+    },
+    {
+      "id": "arcangel_rafael",
+      "name": "Arcángel Rafael",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png",
+      "upright": "Sanación física, emocional y espiritual. Rafael trae alivio, equilibrio y procesos de curación profunda.",
+      "reversed": "Resistencia a sanar o heridas no atendidas. Es necesario cuidar cuerpo y alma con mayor conciencia."
+    },
+    {
+      "id": "arcangel_uriel",
+      "name": "Arcángel Uriel",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png",
+      "upright": "Claridad mental, ideas brillantes y soluciones prácticas. Uriel ilumina el camino con sabiduría.",
+      "reversed": "Bloqueo mental o exceso de preocupación. Es momento de confiar más en tu intuición que en el control."
+    },
+    {
+      "id": "angel_tiempo_divino",
+      "name": "Ángel del Tiempo Divino",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png",
+      "upright": "Todo llega en el momento perfecto. Confía en los tiempos del universo y en el proceso.",
+      "reversed": "Impaciencia o frustración por retrasos. El aprendizaje está en soltar la prisa y confiar."
+    },
+    {
+      "id": "angel_nuevo_comienzo",
+      "name": "Ángel del Nuevo Comienzo",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png",
+      "upright": "Renacimiento, oportunidades frescas y nuevos ciclos. Un inicio lleno de esperanza se abre ante ti.",
+      "reversed": "Miedo a empezar de nuevo o apego al pasado. Para avanzar, primero hay que soltar."
+    },
+    {
+      "id": "angel_suenos",
+      "name": "Ángel de los Sueños",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png",
+      "upright": "Mensajes a través de los sueños y la intuición. Escucha lo que tu alma te revela mientras descansas.",
+      "reversed": "Desconexión espiritual o sueños ignorados. Presta atención a las señales sutiles."
+    },
+    {
+      "id": "angel_abundancia",
+      "name": "Ángel de la Abundancia",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png",
+      "upright": "Prosperidad, gratitud y apertura a recibir. La abundancia fluye cuando confías.",
+      "reversed": "Bloqueos económicos o miedo a la escasez. Cambia la mentalidad para permitir el flujo."
+    },
+    {
+      "id": "arcangel_chamuel",
+      "name": "Arcángel Chamuel",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png",
+      "upright": "Amor incondicional, armonía y relaciones sanas. Chamuel ayuda a sanar el corazón.",
+      "reversed": "Conflictos emocionales o amor propio debilitado. Es momento de reconciliarte contigo."
+    },
+    {
+      "id": "arcangel_zadkiel",
+      "name": "Arcángel Zadkiel",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Zadkiel.png",
+      "upright": "Transmutación, perdón y liberación del pasado. Zadkiel transforma el dolor en sabiduría.",
+      "reversed": "Rencor o dificultad para perdonar. El perdón es la llave de tu libertad."
+    },
+    {
+      "id": "angel_guardian",
+      "name": "Ángel Guardián",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda.png",
+      "upright": "Protección constante y guía silenciosa. Nunca estás sola, tu ángel camina contigo.",
+      "reversed": "Sensación de abandono o desconexión espiritual. Recuerda que la protección sigue ahí."
+    },
+    {
+      "id": "angel_paz",
+      "name": "Ángel de la Paz",
+      "img": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Paz.png",
+      "upright": "Calma interior, serenidad y armonía emocional. La paz comienza dentro de ti.",
+      "reversed": "Ansiedad o conflicto interno. Respira, baja el ritmo y vuelve al centro."
+    }
+  ]
+}
 
