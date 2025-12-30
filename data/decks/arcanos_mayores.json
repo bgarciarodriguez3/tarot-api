@@ -1,140 +1,161 @@
 {
   "id": "arcanos_mayores",
   "name": "Arcanos Mayores",
-  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/back_arcanos.png",
+  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_Dorso_tarot_normal.png?v=6633393799201",
   "cards": [
     {
       "id": "el_loco",
       "name": "El Loco",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_loco.png?v=6633393958097",
       "upright": "El Loco representa nuevos comienzos, libertad, espontaneidad y fe en la vida. Es el salto al vacío confiando en que el universo sostiene el camino.",
       "reversed": "El Loco invertido indica imprudencia, miedo al cambio o decisiones tomadas sin conciencia. Advierte sobre la necesidad de mayor reflexión antes de actuar."
     },
     {
       "id": "el_mago",
       "name": "El Mago",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Mago.png?v=6633393959793",
       "upright": "El Mago simboliza poder personal, iniciativa y capacidad de manifestar. Todo lo necesario ya está disponible para crear la realidad deseada.",
       "reversed": "El Mago invertido habla de manipulación, inseguridad o talento mal utilizado. Puede indicar bloqueo creativo o falta de confianza en uno mismo."
     },
     {
       "id": "la_sacerdotisa",
       "name": "La Sacerdotisa",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Sacerdotisa.png?v=6633393887675",
       "upright": "La Sacerdotisa representa intuición, sabiduría interior y conexión espiritual profunda. Invita a escuchar el silencio y la voz interna.",
       "reversed": "La Sacerdotisa invertida señala desconexión interior, secretos ocultos o dificultad para confiar en la intuición. Puede haber confusión emocional."
     },
     {
       "id": "la_emperatriz",
       "name": "La Emperatriz",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Emperatriz.png?v=6633393918897",
       "upright": "La Emperatriz simboliza amor, fertilidad, creatividad y abundancia. Representa el cuidado, la belleza y el crecimiento natural.",
       "reversed": "La Emperatriz invertida indica bloqueo creativo, dependencia emocional o descuido personal. Llama a nutrirse a uno mismo antes de dar a otros."
     },
     {
       "id": "el_emperador",
       "name": "El Emperador",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Emperador.png?v=6633393926961",
       "upright": "El Emperador representa estructura, autoridad, estabilidad y liderazgo. Habla de orden, límites claros y seguridad material.",
       "reversed": "El Emperador invertido señala rigidez excesiva, abuso de poder o falta de control. Puede indicar caos interno o conflictos con figuras de autoridad."
     },
     {
       "id": "el_sumo_sacerdote",
       "name": "El Sumo Sacerdote",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Sumo_Sacerdote.png?v=6633393935505",
       "upright": "El Sumo Sacerdote simboliza tradición, guía espiritual y enseñanza. Representa valores, fe y aprendizaje a través de sistemas establecidos.",
       "reversed": "El Sumo Sacerdote invertido indica rebelión contra normas, dogmatismo o crisis de fe. Invita a encontrar la verdad interior más allá de lo impuesto."
     },
     {
       "id": "los_enamorados",
       "name": "Los Enamorados",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_Los_Enamorados.png?v=6633393910625",
       "upright": "Los Enamorados hablan de amor, unión y decisiones importantes alineadas con el corazón. Representan conexión auténtica y elección consciente.",
       "reversed": "Los Enamorados invertidos señalan conflictos emocionales, elecciones equivocadas o desequilibrio en relaciones. Puede haber duda o desarmonía."
     },
     {
       "id": "el_carro",
       "name": "El Carro",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Carro.png?v=6633393923729",
       "upright": "El Carro simboliza avance, determinación y victoria. Habla de control, disciplina y superación de obstáculos.",
       "reversed": "El Carro invertido indica pérdida de dirección, falta de control o avances bloqueados. Puede señalar impulsividad sin rumbo claro."
     },
     {
       "id": "la_fuerza",
       "name": "La Fuerza",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_fuerza.png?v=6633393989265",
       "upright": "La Fuerza representa valentía interior, paciencia y dominio emocional. Es el poder del amor y la compasión sobre la fuerza bruta.",
       "reversed": "La Fuerza invertida señala inseguridad, debilidad emocional o falta de confianza. Invita a reconectar con la autoestima y el autocontrol."
     },
     {
       "id": "el_ermitano",
       "name": "El Ermitaño",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Ermitano.png?v=6633393909521",
       "upright": "El Ermitaño simboliza introspección, búsqueda interior y sabiduría adquirida en soledad. Es tiempo de reflexión profunda.",
       "reversed": "El Ermitaño invertido indica aislamiento excesivo, miedo a mirar dentro o rechazo a la guía interior. Puede haber desconexión espiritual."
     },
     {
       "id": "la_rueda_de_la_fortuna",
       "name": "La Rueda de la Fortuna",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Rueda_De_La_Fortuna.png?v=6633393965953",
       "upright": "La Rueda de la Fortuna representa cambios inevitables, ciclos y destino. Todo se mueve y se transforma.",
       "reversed": "La Rueda de la Fortuna invertida señala resistencia al cambio, estancamiento o sensación de mala racha. Pide aceptar el flujo de la vida."
     },
     {
       "id": "la_justicia",
       "name": "La Justicia",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Justicia.png?v=6633393972821",
       "upright": "La Justicia simboliza equilibrio, verdad y responsabilidad. Habla de decisiones justas y consecuencias claras.",
       "reversed": "La Justicia invertida indica injusticias, desequilibrio o negación de la verdad. Puede señalar autoengaño o falta de responsabilidad."
     },
     {
       "id": "el_colgado",
       "name": "El Colgado",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Colgado.png?v=6633394040593",
       "upright": "El Colgado representa pausa, sacrificio consciente y cambio de perspectiva. A veces es necesario soltar para avanzar.",
       "reversed": "El Colgado invertido señala resistencia al cambio, sacrificios inútiles o estancamiento prolongado. Invita a soltar el control."
     },
     {
       "id": "la_muerte",
       "name": "La Muerte",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Muerte.png?v=6633393907361",
       "upright": "La Muerte simboliza transformación profunda, finales necesarios y renacimiento. Algo termina para dar paso a lo nuevo.",
       "reversed": "La Muerte invertida indica miedo al cambio, apego al pasado o transformación bloqueada. Aferrarse impide renacer."
     },
     {
       "id": "la_templanza",
       "name": "La Templanza",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Templanza.png?v=6633393920443",
       "upright": "La Templanza representa equilibrio, armonía y sanación. Habla de moderación y paciencia.",
       "reversed": "La Templanza invertida señala excesos, desequilibrio emocional o falta de integración. Pide recuperar el centro."
     },
     {
       "id": "el_diablo",
       "name": "El Diablo",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Diablo.png?v=6633393982705",
       "upright": "El Diablo simboliza ataduras, deseos materiales y dependencias. Revela aquello que esclaviza.",
       "reversed": "El Diablo invertido indica liberación, toma de conciencia y ruptura de cadenas. Es el inicio de la libertad."
     },
     {
       "id": "la_torre",
       "name": "La Torre",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Torre.png?v=6633393979425",
       "upright": "La Torre representa ruptura súbita, revelación y caída de estructuras falsas. Lo que no es sólido se derrumba.",
       "reversed": "La Torre invertida señala resistencia al cambio o crisis internas evitadas. La transformación se retrasa pero es inevitable."
     },
     {
       "id": "la_estrella",
       "name": "La Estrella",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Estrella.png?v=6633393976145",
       "upright": "La Estrella simboliza esperanza, fe y renovación espiritual. Trae calma después de la tormenta.",
       "reversed": "La Estrella invertida indica pérdida de fe, desaliento o desconexión espiritual. Invita a recuperar la confianza."
     },
     {
       "id": "la_luna",
       "name": "La Luna",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_La_Luna.png?v=6633393942289",
       "upright": "La Luna representa intuición, sueños y emociones profundas. Habla de lo oculto y del mundo interior.",
       "reversed": "La Luna invertida señala confusión aclarada, miedos revelados o engaños descubiertos. La verdad sale a la luz."
     },
     {
       "id": "el_sol",
       "name": "El Sol",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Sol.png?v=6633393917165",
       "upright": "El Sol simboliza éxito, alegría y claridad. Es luz, vitalidad y felicidad compartida.",
       "reversed": "El Sol invertido indica felicidad bloqueada, optimismo excesivo o dificultades para ver lo positivo."
     },
     {
       "id": "el_juicio",
       "name": "El Juicio",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_Juicio.png?v=6633393966318",
       "upright": "El Juicio representa despertar, llamado del alma y renacimiento. Es momento de responder a la verdad interior.",
       "reversed": "El Juicio invertido señala dudas, autojuicio o resistencia al llamado interno. Puede haber miedo a cambiar."
     },
     {
       "id": "el_mundo",
       "name": "El Mundo",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/arcanos_mayores_El_mundo.png?v=6633393930237",
       "upright": "El Mundo simboliza culminación, éxito y plenitud. Un ciclo se completa con armonía.",
       "reversed": "El Mundo invertido indica sensación de incompletitud, cierre pendiente o retraso en la realización personal."
     }
   ]
 }
-
