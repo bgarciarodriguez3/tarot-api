@@ -1,139 +1,154 @@
 {
   "id": "semilla_estelar",
   "name": "Camino de la Semilla Estelar",
-  "back": null,
+  "back": "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
   "cards": [
     {
       "id": "Tribu_del_Alma",
       "name": "Tribu del Alma",
-      "upright": "Tribu del Alma: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Tribu del Alma (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelarTribu_del_Alma.png",
+      "upright": "Texto de despertar: Tribu del Alma.",
+      "reversed": "Texto de bloqueo: Tribu del Alma."
     },
     {
       "id": "Sincronias_del_Universo",
       "name": "Sincronías del Universo",
-      "upright": "Sincronías del Universo: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Sincronías del Universo (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Semilla_del_Coraje",
-      "name": "Semilla del Coraje",
-      "upright": "Semilla del Coraje: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Semilla del Coraje (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Santuario_Interior",
-      "name": "Santuario Interior",
-      "upright": "Santuario Interior: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Santuario Interior (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Renacimiento_Estelar",
-      "name": "Renacimiento Estelar",
-      "upright": "Renacimiento Estelar: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Renacimiento Estelar (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Reconexion_con_el_Corazon",
-      "name": "Reconexión con el Corazón",
-      "upright": "Reconexión con el Corazón: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Reconexión con el Corazón (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Rayo_Dorado",
-      "name": "Rayo Dorado",
-      "upright": "Rayo Dorado: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Rayo Dorado (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Puente_entre_Mundos",
-      "name": "Puente entre Mundos",
-      "upright": "Puente entre Mundos: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Puente entre Mundos (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Portal_de_Encarnacion",
-      "name": "Portal de Encarnación",
-      "upright": "Portal de Encarnación: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Portal de Encarnación (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Origen_Galactico",
-      "name": "Origen Galáctico",
-      "upright": "Origen Galáctico: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Origen Galáctico (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Mision_de_Alma",
-      "name": "Misión de Alma",
-      "upright": "Misión de Alma: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Misión de Alma (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Memorias_de_Otras_Vidas",
-      "name": "Memorias de Otras Vidas",
-      "upright": "Memorias de Otras Vidas: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Memorias de Otras Vidas (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Luz_en_la_Sombra",
-      "name": "Luz en la Sombra",
-      "upright": "Luz en la Sombra: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Luz en la Sombra (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelar_Sincronias_del_Universo.png",
+      "upright": "Texto de despertar: Sincronías del Universo.",
+      "reversed": "Texto de bloqueo: Sincronías del Universo."
     },
     {
       "id": "Llamado_Estelar",
       "name": "Llamado Estelar",
-      "upright": "Llamado Estelar: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Llamado Estelar (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Hogar_en_la_Estrella",
-      "name": "Hogar en la Estrella",
-      "upright": "Hogar en la Estrella: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Hogar en la Estrella (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Guardianes_del_Umbral",
-      "name": "Guardianes del Umbral",
-      "upright": "Guardianes del Umbral: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Guardianes del Umbral (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "El_Llamado_de_la_Noche",
-      "name": "El Llamado de la Noche",
-      "upright": "El Llamado de la Noche: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "El Llamado de la Noche (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelar_Llamado_Estelar.png",
+      "upright": "Texto de despertar: Llamado Estelar.",
+      "reversed": "Texto de bloqueo: Llamado Estelar."
     },
     {
       "id": "Destino_Cuantico",
       "name": "Destino Cuántico",
-      "upright": "Destino Cuántico: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Destino Cuántico (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelar_Destino_Cuantico.png",
+      "upright": "Texto de despertar: Destino Cuántico.",
+      "reversed": "Texto de bloqueo: Destino Cuántico."
+    },
+    {
+      "id": "Santuario_Interior",
+      "name": "Santuario Interior",
+      "image": "Semilla_estelar_Santuario_Interior.png",
+      "upright": "Texto de despertar: Santuario Interior.",
+      "reversed": "Texto de bloqueo: Santuario Interior."
+    },
+    {
+      "id": "Guardianes_del_Umbral",
+      "name": "Guardianes del Umbral",
+      "image": "Semilla_estelar_Guardianes_del_Umbral.png",
+      "upright": "Texto de despertar: Guardianes del Umbral.",
+      "reversed": "Texto de bloqueo: Guardianes del Umbral."
+    },
+    {
+      "id": "Renacimiento_Estelar",
+      "name": "Renacimiento Estelar",
+      "image": "Semilla_estelar_Renacimiento_Estelar.png",
+      "upright": "Texto de despertar: Renacimiento Estelar.",
+      "reversed": "Texto de bloqueo: Renacimiento Estelar."
+    },
+    {
+      "id": "Hogar_en_la_Estrella",
+      "name": "Hogar en la Estrella",
+      "image": "Semilla_estelar_Hogar_en_la_Estrella.png",
+      "upright": "Texto de despertar: Hogar en la Estrella.",
+      "reversed": "Texto de bloqueo: Hogar en la Estrella."
     },
     {
       "id": "Contrato_Almico",
       "name": "Contrato Álmico",
-      "upright": "Contrato Álmico: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Contrato Álmico (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
-    },
-    {
-      "id": "Consejo_de_Guias",
-      "name": "Consejo de Guías",
-      "upright": "Consejo de Guías: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Consejo de Guías (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelar_Contrato_Almico.png",
+      "upright": "Texto de despertar: Contrato Álmico.",
+      "reversed": "Texto de bloqueo: Contrato Álmico."
     },
     {
       "id": "Codigos_de_Luz",
       "name": "Códigos de Luz",
-      "upright": "Códigos de Luz: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Códigos de Luz (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "image": "Semilla_estelar_Codigos_de_Luz.png",
+      "upright": "Texto de despertar: Códigos de Luz.",
+      "reversed": "Texto de bloqueo: Códigos de Luz."
     },
     {
-      "id": "Alianza_con_la_Tierra",
-      "name": "Alianza con la Tierra",
-      "upright": "Alianza con la Tierra: señala un avance en tu despertar. Confirma que vas por el camino correcto si actúas con coherencia, presencia y confianza.",
-      "reversed": "Alianza con la Tierra (invertida): indica bloqueo, confusión o resistencia. Puede haber miedo al cambio, desconexión de tu intuición o exceso de control. Respira, vuelve al cuerpo y da un paso pequeño pero honesto."
+      "id": "Reconexion_con_el_Corazon",
+      "name": "Reconexión con el Corazón",
+      "image": "Semilla_estelar_Reconexion_con_el_Cora.png",
+      "upright": "Texto de despertar: Reconexión con el Corazón.",
+      "reversed": "Texto de bloqueo: Reconexión con el Corazón."
+    },
+    {
+      "id": "Memorias_de_Otras_Vidas",
+      "name": "Memorias de Otras Vidas",
+      "image": "Semilla_estelar_Memorias_de_Otras_Vida.png",
+      "upright": "Texto de despertar: Memorias de Otras Vidas.",
+      "reversed": "Texto de bloqueo: Memorias de Otras Vidas."
+    },
+    {
+      "id": "Rayo_Dorado",
+      "name": "Rayo Dorado",
+      "image": "Semilla_estelar_Rayo_Dorado.png",
+      "upright": "Texto de despertar: Rayo Dorado.",
+      "reversed": "Texto de bloqueo: Rayo Dorado."
+    },
+    {
+      "id": "Semilla_del_Coraje",
+      "name": "Semilla del Coraje",
+      "image": "Semilla_estelar_Semilla_del_Coraje.png",
+      "upright": "Texto de despertar: Semilla del Coraje.",
+      "reversed": "Texto de bloqueo: Semilla del Coraje."
+    },
+    {
+      "id": "Portal_de_Encarnacion",
+      "name": "Portal de Encarnación",
+      "image": "Semilla_estelar_Portal_de_Encarnacion.png",
+      "upright": "Texto de despertar: Portal de Encarnación.",
+      "reversed": "Texto de bloqueo: Portal de Encarnación."
+    },
+    {
+      "id": "Puente_entre_Mundos",
+      "name": "Puente entre Mundos",
+      "image": "Semilla_estelar_Puente_entre_Mundos.png",
+      "upright": "Texto de despertar: Puente entre Mundos.",
+      "reversed": "Texto de bloqueo: Puente entre Mundos."
+    },
+    {
+      "id": "Origen_Galactico",
+      "name": "Origen Galáctico",
+      "image": "Semilla_estelar_Origen_Galactico.png",
+      "upright": "Texto de despertar: Origen Galáctico.",
+      "reversed": "Texto de bloqueo: Origen Galáctico."
+    },
+    {
+      "id": "Consejo_de_Guias",
+      "name": "Consejo de Guías",
+      "image": "Semilla_estelar_Consejo_de_Guias.png",
+      "upright": "Texto de despertar: Consejo de Guías.",
+      "reversed": "Texto de bloqueo: Consejo de Guías."
+    },
+    {
+      "id": "Luz_en_la_Sombra",
+      "name": "Luz en la Sombra",
+      "image": "Semilla_estelar_Luz_en_la_Sombra.png",
+      "upright": "Texto de despertar: Luz en la Sombra.",
+      "reversed": "Texto de bloqueo: Luz en la Sombra."
+    },
+    {
+      "id": "Mision_de_Alma",
+      "name": "Misión de Alma",
+      "image": "Semilla_estelar_Mision_de_Alma.png",
+      "upright": "Texto de despertar: Misión de Alma.",
+      "reversed": "Texto de bloqueo: Misión de Alma."
+    },
+    {
+      "id": "El_Llamado_de_la_Noche",
+      "name": "El Llamado de la Noche",
+      "image": "Semilla_estelar_El_Llamado_de_la_Noche.png",
+      "upright": "Texto de despertar: El Llamado de la Noche.",
+      "reversed": "Texto de bloqueo: El Llamado de la Noche."
     }
   ]
 }
