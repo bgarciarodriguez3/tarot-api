@@ -1,79 +1,161 @@
 {
-  "id": "angeles",
+  "id": "tarot_angeles",
   "name": "Tarot de los Ángeles",
-  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_tarot_de_los_angeles.png?width=1024&height=1536&v=6500945445227",
+  "back": "Angel_Dorso_tarot_de_los_angeles.png",
   "cards": [
     {
-      "id": "Angel_Arcangel_Miguel",
-      "name": "Arcángel Miguel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png?width=1024&height=1536&v=6500932438869",
-      "meaning": "Protección y valentía. Te guía para superar miedos y actuar con determinación."
-    },
-    {
-      "id": "Angel_Arcangel_Gabriel",
-      "name": "Arcángel Gabriel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png?width=1024&height=1536&v=6500932415931",
-      "meaning": "Mensajes claros. Es el momento de la comunicación, la pureza y las nuevas noticias."
-    },
-    {
-      "id": "Angel_Arcangel_Rafael",
-      "name": "Arcángel Rafael",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png?width=1024&height=1536&v=6500932435592",
-      "meaning": "Sanación. Sanación física, emocional o espiritual. Equilibrio en tu bienestar."
-    },
-    {
-      "id": "Angel_Arcangel_Uriel",
-      "name": "Arcángel Uriel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png?width=1024&height=1536&v=6500932419201",
-      "meaning": "Claridad mental. Trae sabiduría, ideas brillantes y solución a problemas complejos."
-    },
-    {
-      "id": "Angel_Angel_del_Tiempo_Divino",
-      "name": "Ángel del Tiempo Divino",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png?width=1024&height=1536&v=6500932422488",
-      "meaning": "Confía en los tiempos. Todo sucede cuando debe ser; la paciencia es tu mejor aliada ahora."
-    },
-    {
-      "id": "Angel_Angel_del_Nuevo_Comienzo",
-      "name": "Ángel del Nuevo Comienzo",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png?width=1024&height=1536&v=6500932425761",
-      "meaning": "Renacimiento. Cierra ciclos y prepárate para una etapa llena de frescura y luz."
-    },
-    {
-      "id": "Angel_Angel_de_los_Suenos",
-      "name": "Ángel de los Sueños",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png?width=1024&height=1536&v=6500932406109",
-      "meaning": "Escucha tu intuición. Presta atención a tus visiones y mensajes nocturnos."
-    },
-    {
-      "id": "Angel_Angel_de_la_Abundancia",
+      "id": "Angel_de_la_Abundancia",
       "name": "Ángel de la Abundancia",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png?width=1024&height=1536&v=6500932399547",
-      "meaning": "Prosperidad. La energía del flujo infinito de recursos está llegando a tu vida."
+      "image": "Angel_Angel_de_la_Abundancia.png",
+      "upright": "Ángel de la Abundancia: Representa la llegada de prosperidad, éxito y flujo positivo en todas las áreas de la vida. Indica que estás en sintonía con la fuente infinita del universo y que tus necesidades serán cubiertas con generosidad. Es un recordatorio de que la verdadera riqueza comienza en tu mente y corazón.",
+      "reversed": "Ángel de la Abundancia (invertida): Indica bloqueos en la manifestación, mentalidad de escasez o miedo a no tener suficiente. Sugiere que estás cerrando las puertas al flujo natural de recibir por falta de merecimiento o exceso de control material."
     },
     {
-      "id": "Angel_Arcangel_Chamuel",
-      "name": "Arcángel Chamuel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png?width=1024&height=1536&v=6500932442457",
-      "meaning": "Amor. Fomenta el amor propio, las relaciones armoniosas y la paz en el corazón."
+      "id": "Angel_de_la_Armonia",
+      "name": "Ángel de la Armonía",
+      "image": "Angel_Angel_de_la_Armonia.png",
+      "upright": "Ángel de la Armonía: Trae equilibrio a tus emociones, relaciones y entorno. Indica un periodo de paz interna donde los conflictos se resuelven y las energías se alinean. Te invita a buscar el punto medio y a cultivar la serenidad en tus decisiones.",
+      "reversed": "Ángel de la Armonía (invertida): Indica caos interno, discusiones o desequilibrio en tu vida cotidiana. Sugiere que estás permitiendo que factores externos perturben tu paz y que necesitas volver a tu centro para restaurar el orden."
     },
     {
-      "id": "Angel_Arcangel_Zadkiel",
-      "name": "Arcángel Zadkiel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Sin_titulo.png?width=1024&height=1536&v=6500932423153",
-      "meaning": "Transmutación. Perdón y transformación de energías negativas en positivas."
+      "id": "Angel_de_la_Claridad",
+      "name": "Ángel de la Claridad",
+      "image": "Angel_Angel_de_la_Claridad.png",
+      "upright": "Ángel de la Claridad: Disuelve la confusión y revela la verdad oculta. Indica un momento de revelación donde verás las situaciones tal cual son, permitiéndote tomar decisiones sabias y honestas. La luz de este ángel ilumina tus pensamientos.",
+      "reversed": "Ángel de la Claridad (invertida): Indica confusión mental, falta de dirección o engaños (propios o ajenos). Sugiere que no estás queriendo ver la realidad de una situación, prefiriendo mantenerte en la duda por miedo a la verdad."
     },
     {
-      "id": "Angel_Angel_de_la_Guarda",
-      "name": "Ángel de la Guarda",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda_c9b30d4b-7378-4e71-b96e-5da5d183341f.png?width=1024&height=1536&v=6500943468577",
-      "meaning": "Protección constante. Nunca estás solo; hay una presencia divina guiándote siempre."
+      "id": "Angel_de_la_Compasion",
+      "name": "Ángel de la Compasión",
+      "image": "Angel_Angel_de_la_Compasion.png",
+      "upright": "Ángel de la Compasión: Invita al perdón, la empatía y el amor incondicional. Indica una etapa de sanación a través de la comprensión de los procesos ajenos y propios. Te recuerda que la suavidad es una de tus mayores fortalezas.",
+      "reversed": "Ángel de la Compasión (invertida): Indica juicios severos, falta de empatía o rencor acumulado. Sugiere que estás siendo demasiado dura contigo misma o con los demás, bloqueando la sanación emocional por falta de perdón."
     },
     {
-      "id": "Angel_Arcangel_Jofiel",
-      "name": "Arcángel Jofiel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Jofiel.png?width=1024&height=1536&v=6500932402824",
-      "meaning": "Belleza y Sabiduría. Te ayuda a ver la hermosura en todas las cosas y a iluminar tus pensamientos."
+      "id": "Angel_de_la_Confianza",
+      "name": "Ángel de la Confianza",
+      "image": "Angel_Angel_de_la_Confianza.png",
+      "upright": "Ángel de la Confianza: Representa la seguridad en uno mismo y la fe en el plan divino. Indica que posees los recursos necesarios para avanzar sin miedo. Es un llamado a confiar en tus capacidades y en que el universo te sostiene.",
+      "reversed": "Ángel de la Confianza (invertida): Indica inseguridad, baja autoestima o duda constante. Sugiere que estás permitiendo que el miedo al fracaso paralice tus acciones y que necesitas recuperar la fe en tu propio valor."
+    },
+    {
+      "id": "Angel_de_la_Creatividad",
+      "name": "Ángel de la Creatividad",
+      "image": "Angel_Angel_de_la_Creatividad.png",
+      "upright": "Ángel de la Creatividad: Activa tu flujo inspirador y tu capacidad de manifestar ideas nuevas. Indica un periodo fértil para proyectos artísticos o soluciones ingeniosas. Te invita a expresar tu esencia única a través de la creación.",
+      "reversed": "Ángel de la Creatividad (invertida): Indica bloqueos creativos, rutina asfixiante o falta de inspiración. Sugiere que estás reprimiendo tus talentos por miedo al juicio o por estar demasiado enfocada en la lógica rígida."
+    },
+    {
+      "id": "Angel_de_la_Esperanza",
+      "name": "Ángel de la Esperanza",
+      "image": "Angel_Angel_de_la_Esperanza.png",
+      "upright": "Ángel de la Esperanza: Brilla en los momentos de oscuridad para recordarte que lo mejor está por venir. Indica renovación de la fe y la llegada de mejores tiempos. Es un bálsamo que calma la angustia y fortalece el espíritu.",
+      "reversed": "Ángel de la Esperanza (invertida): Indica desánimo, pesimismo o pérdida de fe. Sugiere que te sientes abrumada por los problemas actuales y no logras ver la luz al final del túnel; necesitas recordar que todo proceso es temporal."
+    },
+    {
+      "id": "Angel_de_la_Felicidad",
+      "name": "Ángel de la Felicidad",
+      "image": "Angel_Angel_de_la_Felicidad.png",
+      "upright": "Ángel de la Felicidad: Celebra la alegría de vivir, el entusiasmo y los momentos compartidos. Indica un periodo de plenitud emocional y bienestar. Te recuerda que la felicidad es un estado interno que puedes cultivar cada día.",
+      "reversed": "Ángel de la Felicidad (invertida): Indica tristeza pasajera, incapacidad para disfrutar el presente o buscar la satisfacción solo en lo externo. Sugiere que estás descuidando tu bienestar emocional por preocupaciones menores."
+    },
+    {
+      "id": "Angel_de_la_Gratitud",
+      "name": "Ángel de la Gratitud",
+      "image": "Angel_Angel_de_la_Gratitud.png",
+      "upright": "Ángel de la Gratitud: Multiplica tus bendiciones a través del reconocimiento de lo bueno que ya tienes. Indica que la clave para la expansión es valorar el presente. La gratitud abre las puertas a mayores milagros.",
+      "reversed": "Ángel de la Gratitud (invertida): Indica insatisfacción constante, quejas o ingratitud. Sugiere que estás tan enfocada en lo que falta que no logras ver la abundancia que ya te rodea, bloqueando así tu propia evolución."
+    },
+    {
+      "id": "Angel_de_la_Guia",
+      "name": "Ángel de la Guía",
+      "image": "Angel_Angel_de_la_Guia.png",
+      "upright": "Ángel de la Guía: Representa la dirección espiritual y las señales que el universo pone en tu camino. Indica que estás siendo protegida y orientada hacia tu propósito. Te invita a escuchar tu intuición y observar las sincronías.",
+      "reversed": "Ángel de la Guía (invertida): Indica desorientación, ignorar las señales o sentirse perdida. Sugiere que estás intentando forzar el camino por voluntad propia sin escuchar la sabiduría divina que intenta guiarte."
+    },
+    {
+      "id": "Angel_de_la_Justicia",
+      "name": "Ángel de la Justicia",
+      "image": "Angel_Angel_de_la_Justicia.png",
+      "upright": "Ángel de la Justicia: Trae equilibrio, integridad y resolución legal o kármica. Indica que la verdad prevalecerá y que recibirás lo que justamente te corresponde. Invita a actuar con rectitud y honestidad absoluta.",
+      "reversed": "Ángel de la Justicia (invertida): Indica injusticias, desequilibrios legales o falta de integridad. Sugiere complicaciones en trámites o que estás siendo víctima de una situación parcial; también advierte sobre no actuar bajo impulsos injustos."
+    },
+    {
+      "id": "Angel_de_la_Libertad",
+      "name": "Ángel de la Libertad",
+      "image": "Angel_Angel_de_la_Libertad.png",
+      "upright": "Ángel de la Libertad: Rompe las cadenas del miedo, el pasado y las limitaciones autoimpuestas. Indica un periodo de expansión y autonomía. Te invita a ser fiel a ti misma y a volar hacia tus verdaderos deseos.",
+      "reversed": "Ángel de la Libertad (invertida): Indica opresión, dependencia emocional o miedo a tomar decisiones propias. Sugiere que te sientes atrapada en situaciones o relaciones que limitan tu crecimiento y que temes dar el paso hacia la independencia."
+    },
+    {
+      "id": "Angel_de_la_Paciencia",
+      "name": "Ángel de la Paciencia",
+      "image": "Angel_Angel_de_la_Paciencia.png",
+      "upright": "Ángel de la Paciencia: Te enseña a confiar en los tiempos divinos y a cultivar la calma mientras los frutos maduran. Indica que todo llegará en su momento perfecto. Es un llamado a la quietud y a la perseverancia sin ansiedad.",
+      "reversed": "Ángel de la Paciencia (invertida): Indica impulsividad, frustración por retrasos o falta de constancia. Sugiere que estás intentando apresurar procesos que requieren tiempo natural, lo que podría llevarte a cometer errores por precipitación."
+    },
+    {
+      "id": "Angel_de_la_Paz",
+      "name": "Ángel de la Paz",
+      "image": "Angel_Angel_de_la_Paz.png",
+      "upright": "Ángel de la Paz: Trae serenidad profunda y calma después de la tormenta. Indica la resolución de conflictos internos y externos. Es un escudo protector contra el estrés y la ansiedad, invitándote al descanso y la contemplación.",
+      "reversed": "Ángel de la Paz (invertida): Indica agitación, ambiente hostil o conflicto mental. Sugiere que estás rodeada de drama o que tu mente no deja de dar vueltas sobre problemas, impidiéndote descansar y ver las soluciones con calma."
+    },
+    {
+      "id": "Angel_de_la_Proteccion",
+      "name": "Ángel de la Protección",
+      "image": "Angel_Angel_de_la_Proteccion.png",
+      "upright": "Ángel de la Protección: Representa el amparo divino y la seguridad energética. Indica que estás a salvo de influencias negativas y que tus proyectos están resguardados. Te invita a sentirte segura bajo el manto de tus guías.",
+      "reversed": "Ángel de la Protección (invertida): Indica vulnerabilidad, miedos infundados o falta de límites. Sugiere que te sientes desprotegida o que estás permitiendo que energías ajenas afecten tu bienestar por no saber decir 'no'."
+    },
+    {
+      "id": "Angel_de_la_Sabiduria",
+      "name": "Ángel de la Sabiduría",
+      "image": "Angel_Angel_de_la_Sabiduria.png",
+      "upright": "Ángel de la Sabiduría: Conecta con el conocimiento ancestral y la comprensión profunda de la vida. Indica un momento de aprendizaje elevado y madurez. Te invita a buscar las respuestas dentro de ti y a actuar con prudencia.",
+      "reversed": "Ángel de la Sabiduría (invertida): Indica ignorancia voluntaria, juicios erróneos o falta de introspección. Sugiere que estás repitiendo errores del pasado por no querer integrar las lecciones que la vida te ha presentado."
+    },
+    {
+      "id": "Angel_de_la_Sanacion",
+      "name": "Ángel de la Sanación",
+      "image": "Angel_Angel_de_la_Sanacion.png",
+      "upright": "Ángel de la Sanación: Trae restauración física, emocional y espiritual. Indica el fin de una etapa de dolor y el inicio de la recuperación. Es un canal de luz verde esmeralda que limpia tu cuerpo y tu alma.",
+      "reversed": "Ángel de la Sanación (invertida): Indica procesos de salud lentos, heridas emocionales abiertas o resistencia a soltar el papel de víctima. Sugiere que necesitas enfocarte más en tu autocuidado para permitir que la sanación ocurra."
+    },
+    {
+      "id": "Angel_de_la_Transformacion",
+      "name": "Ángel de la Transformación",
+      "image": "Angel_Angel_de_la_Transformacion.png",
+      "upright": "Ángel de la Transformación: Representa cambios profundos, renovación y el fin de un ciclo para que algo nuevo nazca. Indica una metamorfosis necesaria para tu evolución. No temas al cambio, es el vehículo de tu expansión.",
+      "reversed": "Ángel de la Transformación (invertida): Indica resistencia al cambio, estancamiento o miedo a soltar lo viejo. Sugiere que te aferras a situaciones caducas por temor a la incertidumbre, impidiendo que la nueva energía entre en tu vida."
+    },
+    {
+      "id": "Angel_del_Amor",
+      "name": "Ángel del Amor",
+      "image": "Angel_Angel_del_Amor.png",
+      "upright": "Ángel del Amor: Irradia amor incondicional, romance y conexiones profundas de alma. Indica la llegada de un vínculo especial o el fortalecimiento de la relación actual. Te recuerda que el amor es la fuerza más poderosa del universo.",
+      "reversed": "Ángel del Amor (invertida): Indica falta de amor propio, desengaños o bloqueos afectivos. Sugiere que estás cerrando tu corazón por heridas del pasado o que la relación actual necesita una revisión profunda desde la honestidad."
+    },
+    {
+      "id": "Angel_del_Coraje",
+      "name": "Ángel del Coraje",
+      "image": "Angel_Angel_del_Coraje.png",
+      "upright": "Ángel del Coraje: Te brinda la fuerza necesaria para enfrentar desafíos y superar obstáculos. Indica valentía y determinación. Es un impulso de fuego sagrado que te ayuda a dar el paso que tanto has postergado.",
+      "reversed": "Ángel del Coraje (invertida): Indica cobardía, indecisión o sentirse abrumada por los retos. Sugiere que estás permitiendo que el miedo te paralice y que necesitas conectar con tu fuerza interior para no rendirte ante las dificultades."
+    },
+    {
+      "id": "Angel_del_Perdon",
+      "name": "Ángel del Perdón",
+      "image": "Angel_Angel_del_Perdon.png",
+      "upright": "Ángel del Perdón: Facilita la liberación de resentimientos y culpas. Indica que es momento de soltar el peso del pasado para poder avanzar ligeros. El perdón es un regalo que te haces a ti misma para ser libre.",
+      "reversed": "Ángel del Perdón (invertida): Indica amargura, sed de venganza o incapacidad de perdonarse a una misma. Sugiere que el pasado te tiene prisionera y que la falta de perdón está afectando tu salud y tu paz mental."
+    },
+    {
+      "id": "Angel_del_Silencio",
+      "name": "Ángel del Silencio",
+      "image": "Angel_Angel_del_Silencio.png",
+      "upright": "Ángel del Silencio: Invita a la introspección, la meditación y la escucha interna. Indica que las respuestas que buscas no están afuera, sino en la quietud de tu ser. Es un tiempo de retiro necesario para la claridad.",
+      "reversed": "Ángel del Silencio (invertida): Indica miedo a la soledad, ruido mental excesivo o necesidad de hablar para no escuchar la propia verdad. Sugiere que estás huyendo de ti misma a través del caos externo."
     }
   ]
 }
