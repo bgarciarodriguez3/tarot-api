@@ -1,91 +1,79 @@
 {
   "id": "angeles",
   "name": "Tarot de los Ángeles",
-  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_tarot_de_los_angeles.png",
+  "back": "https://cdn.shopify.com/s/files/1/0000/0000/files/Dorso_tarot_de_los_angeles.png?width=1024&height=1536&v=6500945445227",
   "cards": [
     {
       "id": "Angel_Arcangel_Miguel",
       "name": "Arcángel Miguel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png",
-      "upright": "Protección y valentía",
-      "reversed": "En invertida: bloqueo o exceso de «protección y valentía»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Miguel.png?width=1024&height=1536&v=6500932438869",
+      "meaning": "Protección y valentía. Te guía para superar miedos y actuar con determinación."
     },
     {
       "id": "Angel_Arcangel_Gabriel",
       "name": "Arcángel Gabriel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png",
-      "upright": "Mensajes claros",
-      "reversed": "En invertida: bloqueo o exceso de «mensajes claros»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Gabriel.png?width=1024&height=1536&v=6500932415931",
+      "meaning": "Mensajes claros. Es el momento de la comunicación, la pureza y las nuevas noticias."
     },
     {
       "id": "Angel_Arcangel_Rafael",
       "name": "Arcángel Rafael",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png",
-      "upright": "Sanación",
-      "reversed": "En invertida: bloqueo o exceso de «sanación»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Rafael.png?width=1024&height=1536&v=6500932435592",
+      "meaning": "Sanación. Sanación física, emocional o espiritual. Equilibrio en tu bienestar."
     },
     {
       "id": "Angel_Arcangel_Uriel",
       "name": "Arcángel Uriel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png",
-      "upright": "Claridad mental",
-      "reversed": "En invertida: bloqueo o exceso de «claridad mental»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Uriel.png?width=1024&height=1536&v=6500932419201",
+      "meaning": "Claridad mental. Trae sabiduría, ideas brillantes y solución a problemas complejos."
     },
     {
       "id": "Angel_Angel_del_Tiempo_Divino",
       "name": "Ángel del Tiempo Divino",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png",
-      "upright": "Confía en los tiempos",
-      "reversed": "En invertida: bloqueo o exceso de «confía en los tiempos»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Tiempo_Divino.png?width=1024&height=1536&v=6500932422488",
+      "meaning": "Confía en los tiempos. Todo sucede cuando debe ser; la paciencia es tu mejor aliada ahora."
     },
     {
       "id": "Angel_Angel_del_Nuevo_Comienzo",
       "name": "Ángel del Nuevo Comienzo",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png",
-      "upright": "Renacimiento",
-      "reversed": "En invertida: bloqueo o exceso de «renacimiento»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_del_Nuevo_Comienzo.png?width=1024&height=1536&v=6500932425761",
+      "meaning": "Renacimiento. Cierra ciclos y prepárate para una etapa llena de frescura y luz."
     },
     {
       "id": "Angel_Angel_de_los_Suenos",
       "name": "Ángel de los Sueños",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png",
-      "upright": "Escucha tu intuición",
-      "reversed": "En invertida: bloqueo o exceso de «escucha tu intuición»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_los_Suenos.png?width=1024&height=1536&v=6500932406109",
+      "meaning": "Escucha tu intuición. Presta atención a tus visiones y mensajes nocturnos."
     },
     {
       "id": "Angel_Angel_de_la_Abundancia",
       "name": "Ángel de la Abundancia",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png",
-      "upright": "Prosperidad",
-      "reversed": "En invertida: bloqueo o exceso de «prosperidad»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Abundancia.png?width=1024&height=1536&v=6500932399547",
+      "meaning": "Prosperidad. La energía del flujo infinito de recursos está llegando a tu vida."
     },
     {
       "id": "Angel_Arcangel_Chamuel",
       "name": "Arcángel Chamuel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png",
-      "upright": "Amor",
-      "reversed": "En invertida: bloqueo o exceso de «amor»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Chamuel.png?width=1024&height=1536&v=6500932442457",
+      "meaning": "Amor. Fomenta el amor propio, las relaciones armoniosas y la paz en el corazón."
     },
     {
       "id": "Angel_Arcangel_Zadkiel",
       "name": "Arcángel Zadkiel",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Zadkiel.png",
-      "upright": "Transmutación",
-      "reversed": "En invertida: bloqueo o exceso de «transmutación»; revisa el miedo, la resistencia o la impaciencia."
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Sin_titulo.png?width=1024&height=1536&v=6500932423153",
+      "meaning": "Transmutación. Perdón y transformación de energías negativas en positivas."
     },
     {
       "id": "Angel_Angel_de_la_Guarda",
-      "name": "Ángel Guardián",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda.png",
-      "upright": "Protección constante",
-      "reversed": "En invertida: bloqueo o exceso de «protección constante»; revisa el miedo, la resistencia o la impaciencia."
+      "name": "Ángel de la Guarda",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Guarda_c9b30d4b-7378-4e71-b96e-5da5d183341f.png?width=1024&height=1536&v=6500943468577",
+      "meaning": "Protección constante. Nunca estás solo; hay una presencia divina guiándote siempre."
     },
     {
-      "id": "Angel_Angel_de_la_Paz",
-      "name": "Ángel de la Paz",
-      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Angel_de_la_Paz.png",
-      "upright": "Calma interior",
-      "reversed": "En invertida: bloqueo o exceso de «calma interior»; revisa el miedo, la resistencia o la impaciencia."
+      "id": "Angel_Arcangel_Jofiel",
+      "name": "Arcángel Jofiel",
+      "image": "https://cdn.shopify.com/s/files/1/0000/0000/files/Arcangel_Jofiel.png?width=1024&height=1536&v=6500932402824",
+      "meaning": "Belleza y Sabiduría. Te ayuda a ver la hermosura en todas las cosas y a iluminar tus pensamientos."
     }
   ]
 }
