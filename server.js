@@ -126,25 +126,10 @@ app.post("/tarot/reading", (req, res) => {
   try {
     const { productId, productTitle, deckId, selectedCards } = req.body || {};
 
-    if (!Array.isArray(selectedCards) || selectedCards.length === 0) {
-      return res.status(400).json({
-        error: "selectedCards debe ser un array con al menos 1 carta",
-      });
-    }
-
     const resolvedDeckId = resolveDeck({ productId, deckId, productTitle });
     if (!resolvedDeckId) {
       return res.status(400).json({
         error: "No pude determinar la baraja.",
-      });
-    }
-
-    const expected = expectedCardsFromProduct(productId);
-    if (expected && selectedCards.length !== expected) {
-      return res.status(400).json({
-        error: `Para este producto se esperan ${expected} cartas`,
-        expectedCards: expected,
-        receivedCards: selectedCards.length,
       });
     }
 
@@ -156,10 +141,28 @@ app.post("/tarot/reading", (req, res) => {
       });
     }
 
+    // SI NO HAY CARTAS SELECCIONADAS: Enviamos el mazo completo (Mesa Interactiva)
+    if (!Array.isArray(selectedCards) || selectedCards.length === 0) {
+      const fullDeckReading = deck.cards.map((card, index) => ({
+        position: index + 1,
+        cardId: card.id,
+        reversed: false,
+        card: card
+      }));
+
+      return res.json({
+        ok: true,
+        deckId: resolvedDeckId,
+        back: deck.back || null,
+        reading: fullDeckReading,
+      });
+    }
+
+    // SI HAY CARTAS SELECCIONADAS: Procesar tirada con significados
     const reversedIndexes = pickReversedIndexes(selectedCards.length);
 
     const reading = selectedCards.map((cardId, index) => {
-      const card = (deck.cards || []).find((c) => c.id === cardId) || null;
+      const card = (deck.cards || []).find((c) => String(c.id) === String(cardId)) || null;
       const isReversed = reversedIndexes.has(index);
 
       return {
@@ -168,8 +171,8 @@ app.post("/tarot/reading", (req, res) => {
         reversed: isReversed,
         card,
         meaning: isReversed
-          ? (card?.reversed || `Interpretación invertida de ${cardId}`)
-          : (card?.upright || `Interpretación directa de ${cardId}`),
+          ? (card?.reversed || `Interpretación invertida`)
+          : (card?.upright || `Interpretación directa`),
       };
     });
 
