@@ -3,159 +3,27 @@
   "name": "Camino de la Semilla Estelar",
   "back": "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
   "cards": [
-    {
-      "id": "Alianza_con_la_Tierra",
-      "name": "Alianza con la Tierra",
-      "image": "Semilla_estelar_Alianza_con_la_Tierra.png",
-      "upright": "Alianza con la Tierra: Recuerda que elegiste encarnar en este planeta por una razón sagrada. Es un llamado a anclar tu alma estelar, reconocer la importancia de tu cuerpo y entrar en un ciclo de reconexión profunda con la energía terrestre. Eres el puente entre los cielos y la Tierra.",
-      "reversed": "Alianza con la Tierra (invertida): Indica desarraigo, desconexión del cuerpo o dificultad para materializar la espiritualidad en el mundo físico. Invita a volver a lo simple y lo físico."
-    },
-    {
-      "id": "Codigos_de_Luz",
-      "name": "Códigos de Luz",
-      "image": "Semilla_estelar_Codigos_de_Luz.png",
-      "upright": "Códigos de Luz: Representan una transmisión directa de sabiduría de planos superiores para despertar tu ADN espiritual. Estás recibiendo una actualización vibratoria que activa memorias antiguas y dones dormidos.",
-      "reversed": "Códigos de Luz (invertida): Indica bloqueos energéticos o dificultad para integrar nuevas frecuencias. Sugiere la necesidad de enraizar antes de buscar más expansión."
-    },
-    {
-      "id": "Consejo_de_Guias",
-      "name": "Consejo de Guías",
-      "image": "Semilla_estelar_Consejo_de_Guias.png",
-      "upright": "Consejo de Guías: Representa el apoyo de maestros ascendidos y familia estelar que te brindan orientación y protección. Indica que no caminas sola; fuerzas elevadas iluminan tu intuición.",
-      "reversed": "Consejo de Guías (invertida): Indica desconfianza en la guía espiritual o dependencia excesiva de opiniones externas. La guía sigue presente, pero hay interferencia mental."
-    },
-    {
-      "id": "Contrato_Almico",
-      "name": "Contrato Álmico",
-      "image": "Semilla_estelar_Contrato_Almico.png",
-      "upright": "Contrato Álmico: Representa los acuerdos sagrados que tu alma estableció antes de encarnar. Indica encuentros predestinados y la activación de etapas cruciales en tu plan de vida.",
-      "reversed": "Contrato Álmico (invertida): Indica vínculos kármicos no comprendidos o relaciones repetitivas. Es un llamado a revisar lecciones pendientes para cerrar capítulos."
-    },
-    {
-      "id": "Destino_Cuantico",
-      "name": "Destino Cuántico",
-      "image": "Semilla_estelar_Destino_Cuantico.png",
-      "upright": "Destino Cuántico: Revela el potencial más elevado de tu alma y la apertura de líneas de tiempo. Tu energía actual define tu próximo capítulo.",
-      "reversed": "Destino Cuántico (invertida): Indica miedo a asumir el propio poder de manifestación o un bloqueo que te mantiene en una línea de tiempo limitada por el temor."
-    },
-    {
-      "id": "El_Llamado_de_la_Noche",
-      "name": "El Llamado de la Noche",
-      "image": "Semilla_estelar_El_Llamado_de_la_Noche.png",
-      "upright": "El Llamado de la Noche: Representa el despertar de tus sentidos internos a través de sueños e intuiciones profundas. La noche es un portal hacia tu verdad más pura.",
-      "reversed": "El Llamado de la_Noche (invertida): Indica negación del mundo interior o rechazo de los procesos inconscientes. Mensajes que aún no te sientes lista para integrar."
-    },
-    {
-      "id": "Guardianes_del_Umbral",
-      "name": "Guardianes del Umbral",
-      "image": "Semilla_estelar_Guardianes_del_Umbral.png",
-      "upright": "Guardianes del Umbral: Custodian las transiciones evolutivas. Indica que estás ante un umbral importante donde se requiere soltar versiones antiguas para avanzar.",
-      "reversed": "Guardianes del Umbral (invertida): Indica resistencia a enfrentar pruebas necesarias para tu crecimiento. La puerta se abrirá cuando elijas la coherencia sobre el miedo."
-    },
-    {
-      "id": "Hogar_en_la_Estrella",
-      "name": "Hogar en la Estrella",
-      "image": "Semilla_estelar_Hogar_en_la_Estrella.png",
-      "upright": "Hogar en la Estrella: Trae la energía del origen de tu alma. Un llamado a reconectar con tus raíces cósmicas y la verdad vibracional que vive dentro de ti.",
-      "reversed": "Hogar en la Estrella (invertida): Indica nostalgia paralizante o dificultad para sentirte en casa en la Tierra. Invita a crear raíces internas aquí y ahora."
-    },
-    {
-      "id": "Llamado_Estelar",
-      "name": "Llamado Estelar",
-      "image": "Semilla_estelar_Llamado_Estelar.png",
-      "upright": "Llamado Estelar: Es la vibración que despierta tu memoria más antigua. Un recordatorio sagrado de que elegiste esta encarnación por un propósito.",
-      "reversed": "Llamado Estelar (invertida): Evasión del llamado interior o miedo a escuchar la voz del alma. El mensaje sigue llegando aunque no se quiera atender."
-    },
-    {
-      "id": "Luz_en_la_Sombra",
-      "name": "Luz en la Sombra",
-      "image": "Semilla_estelar_Luz_en_la_Sombra.png",
-      "upright": "Luz en la Sombra: Momento alquímico para mirar lo oculto y transformarlo en sabiduría. La luz no llega a destruir tu sombra, sino a integrarla.",
-      "reversed": "Luz en la Sombra (invertida): Negación de aspectos internos o miedo a mirar la propia sombra. La luz necesita atravesar lo que se evita."
-    },
-    {
-      "id": "Memorias_de_Otras_Vidas",
-      "name": "Memorias de Otras Vidas",
-      "image": "Semilla_estelar_Memorias_de_Otras_Vida.png",
-      "upright": "Memorias de Otras Vidas: Apertura de tu campo akáshico. Integración de información antigua, dones y talentos acumulados en múltiples encarnaciones.",
-      "reversed": "Memorias de Otras Vidas (invertida): Patrones repetitivos no comprendidos o cargas kármicas activas influenciando el presente. Momento de liberar heridas antiguas."
-    },
-    {
-      "id": "Mision_de_Alma",
-      "name": "Misión de Alma",
-      "image": "Semilla_estelar_Mision_de_Alma.png",
-      "upright": "Misión de Alma: El propósito profundo por el cual encarnaste. No es algo que haces, sino algo que eres. Te pide autenticidad, no perfección.",
-      "reversed": "Misión de Alma (invertida): Confusión vocacional o desconexión del propósito. La misión sigue activa aunque ahora no se perciba con claridad."
-    },
-    {
-      "id": "Origen_Galactico",
-      "name": "Origen Galáctico",
-      "image": "Semilla_estelar_Origen_Galactico.png",
-      "upright": "Origen Galáctico: Despierta la memoria de tu existencia espiritual previa a la humana. Un recordatorio de tu linaje estelar y familia cósmica.",
-      "reversed": "Origen Galáctico (invertida): Negación de la sensibilidad espiritual o rechazo de la diferencia. Confusión sobre la identidad profunda del alma."
-    },
-    {
-      "id": "Portal_de_Encarnacion",
-      "name": "Portal de Encarnación",
-      "image": "Semilla_estelar_Portal_de_Encarnacion.png",
-      "upright": "Portal de Encarnación: El instante en que tu alma cruzó hacia la materia. Un acto consciente y viaje elegido con total intención.",
-      "reversed": "Portal de Encarnación (invertida): Dificultad para integrar lo espiritual con lo humano. Escapismo o desconexión del cuerpo y la vida práctica."
-    },
-    {
-      "id": "Puente_entre_Mundos",
-      "name": "Puente entre Mundos",
-      "image": "Semilla_estelar_Puente_entre_Mundos.png",
-      "upright": "Puente entre Mundos: Capacidad para moverte entre planos de conciencia. Funcionas como canal entre la materia y la luz.",
-      "reversed": "Puente entre Mundos (invertida): Dificultad para integrar lo sutil con lo práctico. Exceso de idealización que desconecta de la vida humana."
-    },
-    {
-      "id": "Rayo_Dorado",
-      "name": "Rayo Dorado",
-      "image": "Semilla_estelar_Rayo_Dorado.png",
-      "upright": "Rayo Dorado: Frecuencia de iluminación y soberanía del alma. Limpia densidades antiguas y revela la verdad detrás de las dudas.",
-      "reversed": "Rayo Dorado (invertida): Desvalorización personal o rechazo del propio poder espiritual. Talentos ocultos que aún no se reconocen."
-    },
-    {
-      "id": "Reconexion_con_el_Corazon",
-      "name": "Reconexión con el Corazón",
-      "image": "Semilla_estelar_Reconexion_con_el_Cora.png",
-      "upright": "Reconexión con el Corazón: Retorno a tu centro sagrado. Un llamado a la suavidad, al perdón y a la escucha de tu verdad interior.",
-      "reversed": "Reconexión con el Corazón (invertida): Bloqueo emocional o heridas no sanadas. Dificultad para expresar emociones auténticas."
-    },
-    {
-      "id": "Renacimiento_Estelar",
-      "name": "Renacimiento Estelar",
-      "image": "Semilla_estelar_Renacimiento_Estelar.png",
-      "upright": "Renacimiento Estelar: Marca un antes y un después. Momento de emerger en una nueva vibración, dejando atrás lo que pertenecía al ciclo anterior.",
-      "reversed": "Renacimiento Estelar (invertida): Resistencia al cambio profundo o apego al pasado. El renacimiento está listo pero aún no se ha aceptado."
-    },
-    {
-      "id": "Santuario_Interior",
-      "name": "Santuario Interior",
-      "image": "Semilla_estelar_Santuario_Interior.png",
-      "upright": "Santuario Interior: Templo sagrado que habita en ti. Necesidad de regresar a la calma y al silencio de tu esencia más pura.",
-      "reversed": "Santuario Interior (invertida): Dificultad para encontrar paz interna o ruido mental excesivo. Necesidad urgente de límites energéticos."
-    },
-    {
-      "id": "Semilla_del_Coraje",
-      "name": "Semilla del Coraje",
-      "image": "Semilla_estelar_Semilla_del_Coraje.png",
-      "upright": "Semilla del Coraje: Chispa divina de valentía y determinación. Fuerza silenciosa para tomar decisiones valientes y verdaderas.",
-      "reversed": "Semilla del Coraje (invertida): Desconexión con las señales internas o desconfianza en la guía del universo por exceso de mente racional."
-    },
-    {
-      "id": "Sincronias_del_Universo",
-      "name": "Sincronías del Universo",
-      "image": "Semilla_estelar_Sincronias_del_Universo.png",
-      "upright": "Sincronías del Universo: Señales y coincidencias que confirman que vas por el camino correcto. El universo responde a tu vibración.",
-      "reversed": "Sincronías del Universo (invertida): Desconexión con las señales por ruido mental. Las sincronías ocurren pero no están siendo observadas."
-    },
-    {
-      "id": "Tribu_del_Alma",
-      "name": "Tribu del Alma",
-      "image": "Semilla_estelarTribu_del_Alma.png",
-      "upright": "Tribu del Alma: Almas que han viajado contigo a través de vidas. Señal de encuentros y reconexiones que vibran en tu frecuencia.",
-      "reversed": "Tribu del Alma (invertida): Sensación de no pertenecer o aislamiento espiritual. Miedo a mostrarse tal como eres ante los demás."
-    }
+    { "id": "Alianza_con_la_Tierra", "name": "Alianza con la Tierra", "image": "Semilla_estelar_Alianza_con_la_Tierra.png" },
+    { "id": "Codigos_de_Luz", "name": "Códigos de Luz", "image": "Semilla_estelar_Codigos_de_Luz.png" },
+    { "id": "Consejo_de_Guias", "name": "Consejo de Guías", "image": "Semilla_estelar_Consejo_de_Guías.png" },
+    { "id": "Contrato_Almico", "name": "Contrato Álmico", "image": "Semilla_estelar_Contrato_Álmico.png" },
+    { "id": "Destino_Cuantico", "name": "Destino Cuántico", "image": "Semilla_estelar_Destino_Cuántico.png" },
+    { "id": "El_Llamado_de_la_Noche", "name": "El Llamado de la Noche", "image": "Semilla_estelar_El_Llamado_de_la_Noche.png" },
+    { "id": "Guardianes_del_Umbral", "name": "Guardianes del Umbral", "image": "Semilla_estelar_Guardianes_del_Umbral.png" },
+    { "id": "Hogar_en_la_Estrella", "name": "Hogar en la Estrella", "image": "Semilla_estelar_Hogar_en_la_Estrella.png" },
+    { "id": "Llamado_Estelar", "name": "Llamado Estelar", "image": "Semilla_estelar_Llamado_Estelar.png" },
+    { "id": "Luz_en_la_Sombra", "name": "Luz en la Sombra", "image": "Semilla_estelar_Luz_en_la_Sombra.png" },
+    { "id": "Memorias_de_Otras_Vidas", "name": "Memorias de Otras Vidas", "image": "Semilla_estelar_Memorias_de_Otras_Vidas.png" },
+    { "id": "Mision_de_Alma", "name": "Misión de Alma", "image": "Semilla_estelar_Misión_de_Alma.png" },
+    { "id": "Origen_Galactico", "name": "Origen Galáctico", "image": "Semilla_estelar_Origen_Galáctico.png" },
+    { "id": "Portal_de_Encarnacion", "name": "Portal de Encarnación", "image": "Semilla_estelar_Portal_de_Encarnación.png" },
+    { "id": "Puente_entre_Mundos", "name": "Puente entre Mundos", "image": "Semilla_estelar_Puente_entre_Mundos.png" },
+    { "id": "Rayo_Dorado", "name": "Rayo Dorado", "image": "Semilla_estelar_Rayo_Dorado.png" },
+    { "id": "Reconexion_con_el_Corazon", "name": "Reconexión con el Corazón", "image": "Semilla_estelar_Reconexión_con_el_Corazón.png" },
+    { "id": "Renacimiento_Estelar", "name": "Renacimiento Estelar", "image": "Semilla_estelar_Renacimiento_Estelar.png" },
+    { "id": "Santuario_Interior", "name": "Santuario Interior", "image": "Semilla_estelar_Santuario_Interior.png" },
+    { "id": "Semilla_del_Coraje", "name": "Semilla del Coraje", "image": "Semilla_estelar_Semilla_del_Coraje.png" },
+    { "id": "Sincronias_del_Universo", "name": "Sincronías del Universo", "image": "Semilla_estelar_Sincronías_del_Universo.png" },
+    { "id": "Tribu_del_Alma", "name": "Tribu del Alma", "image": "Semilla_estelar_Tribu_del_Alma.png" }
   ]
 }
