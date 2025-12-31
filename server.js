@@ -21,8 +21,7 @@ const MAX_REVERSED_PER_READING = 3;
 // Carpeta donde están tus JSON de barajas
 const DECKS_DIR = path.join(__dirname, "data", "decks");
 
-// Mapeo de productos Shopify -> deckId + cantidad esperada de cartas
-// Verificado con tus URLs reales de Shopify
+// Mapeo de productos Shopify verificado con tus enlaces reales
 const PRODUCTS = {
   // Tres Puertas del Destino (3 Cartas)
   "10493369745745": { deckId: "arcanos_mayores", cards: 3 },
@@ -56,7 +55,7 @@ function loadDeck(deckId) {
   return safeReadJson(p);
 }
 
-// Inferencia por texto (Mejorada para mayor precisión)
+// Inferencia por texto mejorada para Semilla Estelar y Ángeles
 function inferDeckIdFromText(text = "") {
   const p = (text || "").toLowerCase();
 
@@ -136,7 +135,7 @@ app.post("/tarot/reading", (req, res) => {
     const resolvedDeckId = resolveDeck({ productId, deckId, productTitle });
     if (!resolvedDeckId) {
       return res.status(400).json({
-        error: "No pude determinar la baraja. Envía deckId o productId.",
+        error: "No pude determinar la baraja.",
       });
     }
 
