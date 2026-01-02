@@ -1,19 +1,15 @@
-// server.js
-import express from "express";
-import cors from "cors";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+// server.js (CommonJS compatible con tu package.json)
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 
-/* -------------------- setup -------------------- */
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const PORT = process.env.PORT || 3000;
+// Asegúrate de que tus .json están en /data/decks
 const DECKS_DIR = process.env.DECKS_DIR || path.join(__dirname, "data", "decks");
 
 /* -------------------- helpers -------------------- */
@@ -32,9 +28,13 @@ function slugify(str = "") {
     .replace(/^_+|_+$/g, "");
 }
 
-// Normaliza deck + cartas a un formato único
 function normalizeDeck(deckRaw, fallbackId) {
-  const deckId = deckRaw.deckId || deckRaw.deck_id || fallbackId || slugify(deckRaw.deckName || deckRaw.deck_name || deckRaw.name);
+  const deckId =
+    deckRaw.deckId ||
+    deckRaw.deck_id ||
+    fallbackId ||
+    slugify(deckRaw.deckName || deckRaw.deck_name || deckRaw.name);
+
   const deckName = deckRaw.deckName || deckRaw.deck_name || deckRaw.name || deckId;
   const language = deckRaw.language || "es";
   const version = deckRaw.version || "1.0.0";
@@ -43,40 +43,28 @@ function normalizeDeck(deckRaw, fallbackId) {
   const cardsRaw = Array.isArray(deckRaw.cards) ? deckRaw.cards : [];
 
   const cards = cardsRaw.map((c, idx) => {
-    const id = c.id || c.cardId || c.card_id || `${deckId}_${String(idx + 1).padStart(3, "0")}`;
+    const id =
+      c.id ||
+      c.cardId ||
+      c.card_id ||
+      `${deckId}_${String(idx + 1).padStart(3, "0")}`;
+
     const name = c.name || c.title || id;
     const slug = c.slug || slugify(name);
     const image = c.image || c.img || null;
 
-    // Soporta ambos mundos: (upright.general/love/work/spiritualAdvice/angelAdvice/affirmation/ritual)
-    // y (upright.significado_general/amor/trabajo_proposito/consejo_espiritual)
     const up = c.upright || {};
     const rv = c.reversed || {};
 
+    // Normalizamos para que TODAS tengan los mismos campos
     const upright = {
-      general:
-        up.general ||
-        up.significado_general ||
-        "",
-      love:
-        up.love ||
-        up.amor ||
-        "",
-      work:
-        up.work ||
-        up.trabajo_proposito ||
-        "",
-      spiritualAdvice:
-        up.spiritualAdvice ||
-        up.consejo_espiritual ||
-        up.spiritual ||
-        "",
-      angelAdvice:
-        up.angelAdvice || "",
-      affirmation:
-        up.affirmation || "",
-      ritual:
-        up.ritual || ""
+      general: up.general || up.significado_general || "",
+      love: up.love || up.amor || "",
+      work: up.work || up.trabajo_proposito || "",
+      spiritualAdvice: up.spiritualAdvice || up.consejo_espiritual || up.spiritual || "",
+      angelAdvice: up.angelAdvice || "",
+      affirmation: up.affirmation || "",
+      ritual: up.ritual || ""
     };
 
     const reversed = {
@@ -133,17 +121,19 @@ app.get("/", (req, res) => {
   res.json({
     ok: true,
     message: "Tarot API online",
+    decksDir: DECKS_DIR,
     endpoints: {
       decks: "/api/decks",
       deck: "/api/decks/:deckId",
       cards: "/api/decks/:deckId/cards",
       card: "/api/decks/:deckId/cards/:cardId",
-      random: "/api/random?deckId=angeles"
+      random: "/api/random?deckId=angeles",
+      reload: "POST /api/reload"
     }
   });
 });
 
-// Lista decks
+// Lista de barajas
 app.get("/api/decks", (req, res) => {
   const list = Object.values(DECKS).map((d) => ({
     deckId: d.deckId,
@@ -156,32 +146,33 @@ app.get("/api/decks", (req, res) => {
   res.json(list);
 });
 
-// Deck completo
+// Baraja completa
 app.get("/api/decks/:deckId", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
   res.json(deck);
 });
 
-// Solo cartas de un deck
+// Cartas de una baraja
 app.get("/api/decks/:deckId/cards", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
   res.json(deck.cards);
 });
 
-// Carta concreta
+// Carta concreta por id o slug
 app.get("/api/decks/:deckId/cards/:cardId", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
 
-  const card = deck.cards.find((c) => c.id === req.params.cardId || c.slug === req.params.cardId);
-  if (!card) return res.status(404).json({ error: "Carta no encontrada" });
+  const key = req.params.cardId;
+  const card = deck.cards.find((c) => c.id === key || c.slug === key);
 
+  if (!card) return res.status(404).json({ error: "Carta no encontrada" });
   res.json(card);
 });
 
-// Random card (de un deck o global)
+// Random (por deck o global)
 app.get("/api/random", (req, res) => {
   const { deckId } = req.query;
 
@@ -195,16 +186,15 @@ app.get("/api/random", (req, res) => {
     });
   }
 
-  const allCards = Object.values(DECKS).flatMap((d) =>
+  const all = Object.values(DECKS).flatMap((d) =>
     d.cards.map((c) => ({ deckId: d.deckId, deckName: d.deckName, card: c }))
   );
 
-  if (!allCards.length) return res.status(500).json({ error: "No hay cartas cargadas" });
-
-  res.json(pickRandom(allCards));
+  if (!all.length) return res.status(500).json({ error: "No hay cartas cargadas" });
+  res.json(pickRandom(all));
 });
 
-// Reload decks (opcional, útil en dev)
+// Reload decks (útil en dev)
 app.post("/api/reload", (req, res) => {
   loadDecks();
   res.json({ ok: true, decks: Object.keys(DECKS) });
