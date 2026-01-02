@@ -1,357 +1,263 @@
 {
-  "deck": "Arcanos Mayores",
+  "name": "Arcanos Mayores",
+  "description": "Los grandes arquetipos del viaje del alma. Transformación, destino y conciencia.",
+  "back": "arcanos_mayores_back.png",
   "cards": [
     {
       "id": "el_loco",
       "name": "El Loco",
       "upright": {
-        "general": "El Loco te invita a dar un salto hacia lo desconocido, un salto que no se piensa: se siente.\n\nSu luz dorada simboliza ese impulso interno que intenta abrirse paso a pesar de tus miedos, como una chispa celestial guiándote hacia un nuevo destino.\n\nEstás entrando en un ciclo donde lo predecible deja de existir y lo mágico comienza a tomar forma.\n\nEl Loco te recuerda que no estás perdida, sino al borde de un camino que nunca antes habías recorrido.\n\nPsicológicamente, esta carta representa un momento de apertura, vulnerabilidad consciente y libertad interior.\n\nTe empuja a confiar en tu intuición más pura, esa voz antigua que sabe antes de que tú entiendas.\n\nSu energía astral te muestra que el vacío no es un abismo: es un portal.\n\nY que cada nuevo comienzo, por incierto que parezca, contiene una semilla de propósito divino.",
-        "love": "En lo afectivo, El Loco te pide que sueltes las expectativas rígidas y permitas que la energía fluya.\n\nPuedes sentirte impulsada a vivir algo nuevo, distinto o inesperado.\n\nEsta carta no habla de estabilidad, sino de explorar, arriesgarte y abrirte al juego del destino.\n\nPsicológicamente, indica una fase en la que el corazón desea experiencias auténticas, libres y espontáneas.\n\nSi estás en pareja, esta energía puede traer renovación o un cambio de rumbo que pide honestidad.\n\nSi estás soltera, abre un camino para encuentros que no siguen ninguna lógica… pero que despiertan tu alma.",
-        "work": "En lo profesional, El Loco te muestra que estás en un punto cero: una página en blanco.\n\nQuizá sientes la llamada de algo nuevo, un proyecto, un giro, una idea que vibra con fuerza.\n\nLa luz dorada en la carta representa que esta nueva ruta está alineada con tu expansión personal, aunque aún no la comprendas del todo.\n\nEl desafío psicológico es confiar sin garantías, sostenida únicamente por tu intuición y tu coraje.\n\nEs un buen momento para emprender, cambiar, estudiar o permitir que tu camino laboral evolucione sin forzar.\n\nEl Loco te dice: lo desconocido no es un peligro… es una oportunidad disfrazada.",
-        "spiritual": "El Loco te guía a soltar la necesidad de control y a entregarte al movimiento del universo.\n\nTu alma te pide un acto de fe, una acción que no surge de la mente sino de la conexión divina.\n\nEscucha la vibración dorada que se siente en tu pecho: es una señal de alineación.\n\nPermítete caminar hacia lo nuevo con el corazón abierto y la conciencia despierta.\n\nConfía en que los pasos que das, aunque parezcan ingenuos o arriesgados, están guiados por tus guías y por tu ser superior.\n\nEl salto no es un error: es tu destino activándose.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "El Loco te invita a dar un salto hacia lo desconocido con fe y apertura. Representa nuevos comienzos, libertad interior y confianza en el camino del alma.",
+        "love": "Apertura emocional, experiencias nuevas e inesperadas. Amor sin expectativas rígidas.",
+        "work": "Inicio de proyectos, cambios de rumbo, atreverse a algo nuevo.",
+        "spiritual": "Confía en tu intuición y permite que la vida te guíe.",
+        "affirmation": "Confío en el camino aunque no vea el destino."
       },
       "reversed": {
-        "meaning": "El Loco invertido señala imprudencia, miedo al cambio o decisiones tomadas sin conciencia. Puede indicar bloqueo por inseguridad o una huida del propio camino por temor a lo desconocido. Advierte sobre saltos impulsivos sin conexión interior."
+        "meaning": "Miedo al cambio, imprudencia o bloqueo por inseguridad."
       }
     },
     {
       "id": "el_mago",
       "name": "El Mago",
       "upright": {
-        "general": "El Mago despierta en ti el poder de manifestar aquello que hasta ahora solo vivía en tu mente o en tu corazón.\n\nLa luz dorada que lo rodea te recuerda que tu intención es capaz de mover energía y transformar tu realidad.\n\nEsta carta te anuncia un tiempo donde tus talentos dejan de estar dormidos y comienzan a ponerse al servicio de algo mayor.\n\nPsicológicamente, representa tu capacidad para enfocar, dirigir y hacer que tus ideas se vuelvan tangibles.\n\nTe dice que no necesitas esperar más: ya tienes frente a ti todas las herramientas —claridad, voluntad, creatividad y energía espiritual— para iniciar lo que deseas.\n\nEl Mago es la chispa que activa lo posible, el puente entre lo invisible y lo real.\n\nSu presencia te muestra que estás entrando en una fase de acción consciente, donde tu poder personal se expande y se convierte en obra.\n\nEres tú quien sostiene la varita. Eres tú quien inicia el camino.",
-        "love": "En el amor, El Mago habla de una conexión que puede materializarse si tú das el primer paso o tomas la iniciativa desde un lugar auténtico.\n\nPuede indicar alguien con una energía magnética, intensa y muy consciente de sí mismo que entra en tu vida.\n\nO también que tú recuperas el carisma, la chispa y la capacidad de atraer experiencias que resuenan con tu autoestima.\n\nSi estás en pareja, la carta señala un momento de renovación, comunicación más clara y proyectos conjuntos que fortalecen el vínculo.\n\nSi estás soltera, te invita a mostrar tu luz sin miedo: cuando tú brillas, lo correcto se acerca.",
-        "work": "El Mago marca un inicio poderoso en lo profesional.\n\nEs la carta del emprendimiento, la iniciativa y la creatividad que toma forma.\n\nSi estabas esperando una señal para empezar algo nuevo, esta es.\n\nLa energía dorada de la carta refleja talento, habilidad y la capacidad de influir positivamente en tu entorno laboral.\n\nEstás llamada a liderar, proponer, enseñar o crear algo que lleve tu sello único.\n\nPsicológicamente, es un momento de autoconfianza alta: lo que imaginas, puedes hacerlo.\n\nTu propósito se activa cuando confías en tu voz interior y en tus dones innatos.",
-        "spiritual": "El Mago te guía a recordar tu naturaleza creadora.\n\nEres capaz de transformar energía en realidad.\n\nLa varita simboliza tu intención consciente: allí donde pones tu foco, florece tu poder.\n\nHonra tu conexión con lo divino, pero también con tu cuerpo, tus manos y tu voz.\n\nHaz un acto concreto —por pequeño que sea— que materialice tu visión.\n\nEl universo se mueve cuando tú te mueves.\n\nTu magia está activa. Úsala.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "El Mago despierta tu poder creador. Todo lo que necesitas ya está en tus manos.",
+        "love": "Comunicación clara, magnetismo y manifestación consciente.",
+        "work": "Iniciativa, liderazgo y materialización de ideas.",
+        "spiritual": "Eres canal entre lo invisible y lo tangible.",
+        "affirmation": "Tengo el poder de crear mi realidad."
       },
       "reversed": {
-        "meaning": "El Mago invertido habla de manipulación, talento mal utilizado o falta de confianza en las propias capacidades. Puede indicar engaño, autoengaño o bloqueo creativo. La energía está dispersa y requiere reenfoque."
+        "meaning": "Manipulación, dispersión o falta de confianza en tus talentos."
       }
     },
     {
       "id": "la_sacerdotisa",
       "name": "La Sacerdotisa",
       "upright": {
-        "general": "La Sacerdotisa abre ante ti las puertas del conocimiento sutil, ese que no se aprende con los ojos sino con el alma.\n\nSu luz dorada, suave pero firme, revela lo que estaba oculto detrás de tus dudas o confusiones.\n\nEstás entrando en un tiempo donde la intuición se vuelve más fuerte que la razón, donde percibes verdades incluso antes de comprenderlas.\n\nPsicológicamente, esta carta representa tu subconsciente, tu sensibilidad profunda y tu capacidad para leer entre líneas.\n\nTe invita a confiar en tu percepción energética, en esas señales internas que te hablan a través de sueños, silencios y sensaciones.\n\nLa Sacerdotisa no te empuja a actuar; te pide observar, escuchar, permitir.\n\nTe recuerda que el misterio no es un obstáculo, sino una puerta hacia tu sabiduría interna.\n\nLo que buscas ya está dentro de ti, esperando ser escuchado.",
-        "love": "En el amor, La Sacerdotisa te pide paciencia, sensibilidad y escucha interna.\n\nPuede indicar sentimientos profundos no expresados, conexiones espirituales o vínculos que se gestan de forma silenciosa.\n\nPsicológicamente, te guía a no precipitarte ni forzar respuestas.\n\nSi estás en pareja, habla de mayor comprensión emocional, empatía y conexión intuitiva.\n\nSi estás soltera, anuncia una relación significativa que surge desde lo espiritual antes que lo físico.",
-        "work": "En lo profesional, La Sacerdotisa indica un momento de reflexión, análisis profundo y decisiones basadas en sabiduría interna.\n\nNo es tiempo de actuar impulsivamente, sino de observar, planificar y escuchar las señales.\n\nPuede anunciar el descubrimiento de un propósito más auténtico, uno que vibra con tu sensibilidad y tu visión espiritual.\n\nPsicológicamente, te guía a confiar en tu experiencia interna más que en la opinión externa.\n\nTu intuición será tu mayor herramienta en este período.",
-        "spiritual": "La Sacerdotisa te pide detenerte, respirar y escuchar tu alma.\n\nNo fuerces lo que aún no debe revelarse.\n\nConecta con tu luz interna, con tus sueños y con la energía sutil que te rodea.\n\nHay un conocimiento ancestral queriendo salir a través de ti.\n\nPermite que la sabiduría te encuentre en el silencio.\n\nEs en la quietud donde recibirás la respuesta que buscas.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Representa la sabiduría interior, el misterio y la intuición profunda.",
+        "love": "Conexiones espirituales, sentimientos profundos no expresados.",
+        "work": "Escucha interna antes de actuar.",
+        "spiritual": "El silencio revela la verdad.",
+        "affirmation": "Confío en mi intuición."
       },
       "reversed": {
-        "meaning": "La Sacerdotisa invertida señala desconexión de la intuición, secretos ocultos o confusión interna. Puede indicar dificultad para escuchar la voz interior o dependencia excesiva de opiniones externas."
+        "meaning": "Desconexión de la voz interior o confusión emocional."
       }
     },
     {
       "id": "la_emperatriz",
       "name": "La Emperatriz",
       "upright": {
-        "general": "La Emperatriz despierta en ti una energía de creación, fertilidad y expansión que nace desde el corazón y se manifiesta en todo lo que tocas.\n\nLa luz dorada que la envuelve habla de una fuerza femenina profunda que te impulsa a materializar ideas, vínculos y proyectos que nutren tu alma.\n\nElla te recuerda que tu vida está madura para florecer y que posees una belleza interna capaz de transformar tu entorno.\n\nPsicológicamente, esta carta representa tu autoestima, tu poder creador y la capacidad de dar y recibir amor sin miedo.\n\nLa Emperatriz te invita a abrazar tu plenitud, a escucharte con respeto y a reconocer que tus necesidades emocionales son tan sagradas como tus sueños.\n\nSu presencia marca un periodo donde tu intuición se mezcla con deseo, creatividad y una vibración armoniosa que te abre puertas.\n\nSu luz dorada revela que estás preparada para gestar algo grande, fértil y auténtico.\n\nTodo lo que nace ahora lleva tu esencia más luminosa.",
-        "love": "En el amor, La Emperatriz te envuelve en una energía cálida, afectiva y profundamente sensual.\n\nIndica relaciones que crecen, se fortalecen y encuentran estabilidad a través del cuidado mutuo.\n\nSi estás en pareja, habla de armonía, reconciliación, crecimiento emocional y un vínculo más consciente.\n\nSi estás soltera, atraes experiencias amorosas que reflejan tu amor propio y tu madurez emocional.\n\nTu energía es magnética, fértil y abierta: lo que vibra contigo se acerca sin esfuerzo.",
-        "work": "La Emperatriz señala un momento ideal para crear, expandir y materializar ideas con facilidad.\n\nSu luz dorada simboliza abundancia y crecimiento, especialmente en proyectos creativos o intuitivos.\n\nPsicológicamente, indica motivación alta, confianza en ti misma y capacidad de tomar decisiones desde equilibrio.\n\nEs favorable para emprender, lanzar ideas, atraer oportunidades o recibir reconocimiento.\n\nSi estabas esperando un impulso para avanzar, aquí está: lo que hagas ahora tiene potencial de prosperar.",
-        "spiritual": "La Emperatriz te pide que honres tu energía creadora.\n\nPermítete disfrutar, sentir, nutrir lo que amas.\n\nConecta con tu cuerpo y tus emociones.\n\nEscucha tu corazón como si fuera una guía divina.\n\nCuando tú te cuidas, tu mundo florece.\n\nTu poder es fértil, luminoso y sagrado: siembras luz en todo lo que tocas.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Creatividad, fertilidad y abundancia. Todo florece cuando te cuidas.",
+        "love": "Amor nutritivo, sensualidad y armonía.",
+        "work": "Crecimiento creativo y prosperidad.",
+        "spiritual": "Honra tu energía creadora.",
+        "affirmation": "Merezco recibir y crear abundancia."
       },
       "reversed": {
-        "meaning": "La Emperatriz invertida representa bloqueo creativo, carencia emocional o desequilibrio en el dar y recibir. Puede hablar de baja autoestima, descuido personal o relaciones que drenan energía."
+        "meaning": "Bloqueo creativo o carencia emocional."
       }
     },
     {
       "id": "el_emperador",
       "name": "El Emperador",
       "upright": {
-        "general": "El Emperador trae a tu vida una energía de estructura, orden y fortaleza que te ayuda a sostener lo que has construido y a avanzar con seguridad.\n\nLa luz dorada que rodea su figura refleja tu capacidad de tomar decisiones firmes desde un lugar de autoridad interna, no de imposición.\n\nPsicológicamente, esta carta representa límites sanos, liderazgo, claridad mental y fuerza de voluntad.\n\nEl Emperador te invita a asumir tu poder, organizar tu mundo interno y dirigir tu vida con estabilidad y propósito.\n\nSu energía te ayuda a salir del caos, tomar control y materializar lo que deseas desde una base sólida.\n\nSu presencia marca un ciclo donde la disciplina y el compromiso se convierten en aliados para alcanzar logros más grandes.\n\nTe recuerda que tu estructura interna es un templo que nadie puede derribar.",
-        "love": "En el amor, El Emperador habla de estabilidad, claridad y decisiones importantes.\n\nPuede indicar una relación que se hace más firme o un vínculo donde la comunicación madura ocupa un lugar central.\n\nPsicológicamente, te invita a poner límites, expresar tus necesidades y elegir desde el respeto propio.\n\nSi estás soltera, anuncia la llegada de una persona seria, estable y emocionalmente madura.\n\nSi estás en pareja, favorece compromisos sólidos, acuerdos importantes y una base más fuerte para el futuro.",
-        "work": "En lo profesional, El Emperador anuncia una etapa de organización, liderazgo y crecimiento sólido.\n\nTu energía se orienta a tomar decisiones estratégicas, asumir responsabilidades y dirigir tu vida laboral con claridad.\n\nPsicológicamente, representa seguridad, estructura mental y enfoque.\n\nFavorece ascensos, contratos, emprendimientos y proyectos que requieren firmeza.\n\nPuedes convertir una idea en algo real y estable si mantienes tu visión clara y tu constancia activa.",
-        "spiritual": "El Emperador te guía a construir desde la presencia consciente y el orden interno.\n\nTe pide que fortalezcas tus cimientos, que te valores y que reconozcas tu autoridad.\n\nNo temas poner límites, ni tomar tu lugar, ni dejar claro lo que necesitas.\n\nTu espíritu se fortalece cuando tomas el mando de tu vida.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Orden, estructura y liderazgo consciente.",
+        "love": "Estabilidad, límites sanos y compromiso.",
+        "work": "Autoridad, estrategia y solidez.",
+        "spiritual": "Construye desde bases firmes.",
+        "affirmation": "Tomo mi poder con seguridad."
       },
       "reversed": {
-        "meaning": "El Emperador invertido indica abuso de poder, rigidez extrema o pérdida de control. También puede señalar inseguridad disfrazada de autoridad o dificultad para establecer límites sanos."
+        "meaning": "Rigidez, control excesivo o inseguridad disfrazada."
       }
     },
     {
       "id": "el_sumo_sacerdote",
       "name": "El Sumo Sacerdote",
       "upright": {
-        "general": "El Sumo Sacerdote abre un portal de sabiduría ancestral que te conecta con enseñanzas profundas que ya viven dentro de ti, aunque aún no las hayas nombrado.\n\nLa luz dorada que rodea su figura representa el poder de la tradición, la ética interna y la guía espiritual que llega cuando estás preparada para recibirla.\n\nEsta carta te invita a escuchar tu voz más elevada, esa parte de ti que recuerda quién eres más allá del tiempo, del ruido y del miedo.\n\nPsicológicamente, simboliza tus valores, tus principios y la necesidad de encontrar un camino coherente con tu esencia.\n\nTe muestra que la estabilidad emocional y mental proviene de honrar aquello en lo que crees de verdad.\n\nTambién señala aprendizajes importantes, iniciaciones y revelaciones que llegan a través de maestros, señales o experiencias significativas.\n\nSu energía es la de la disciplina espiritual que te hace crecer sin perder tu alma.\n\nEl Sumo Sacerdote te recuerda que no caminas sola: fuerzas superiores te acompañan y te enseñan.",
-        "love": "En el amor, El Sumo Sacerdote habla de relaciones con propósito, profundidad y sentido espiritual.\n\nIndica vínculos que se transforman en caminos de crecimiento, donde ambos aprenden uno del otro.\n\nSi estás en pareja, favorece compromisos, conversaciones importantes y decisiones que fortalecen la estructura del vínculo.\n\nSi estás soltera, anuncia la llegada de una conexión no superficial: alguien que toca tu alma y despierta algo sagrado.\n\nPsicológicamente, te invita a elegir relaciones que respeten tus valores y no negocien tu autenticidad.",
-        "work": "En lo profesional, señala aprendizaje, estudio profundo, mentoría o la oportunidad de enseñar desde tu propia sabiduría.\n\nPuede indicar un trabajo donde lo espiritual, lo humano o lo educativo toma un papel central.\n\nPsicológicamente, simboliza actuar desde la ética, la coherencia y el propósito.\n\nEs ideal para formarte, evolucionar y transmitir lo aprendido.\n\nTambién puede señalar una oportunidad guiada por un mentor o un mensaje claro sobre cuál es tu camino.",
-        "spiritual": "El Sumo Sacerdote te pide que sigas la voz de tu alma, no la del miedo.\n\nEncuentra tus rituales sagrados y prácticas internas.\n\nRecuerda que eres canal de una sabiduría eterna que se expresa a través de ti.\n\nAbre el corazón a las señales y acepta la guía que llega desde lo alto.\n\nHonra tus valores: son tu templo interno.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Sabiduría espiritual, valores y guía superior.",
+        "love": "Relaciones con propósito y profundidad.",
+        "work": "Aprendizaje, mentoría y ética.",
+        "spiritual": "Confía en la guía divina.",
+        "affirmation": "Honro mis valores y mi verdad."
       },
       "reversed": {
-        "meaning": "El Sumo Sacerdote invertido habla de rebeldía interna, cuestionamiento de creencias impuestas o desconexión espiritual. Puede indicar hipocresía, dogmas limitantes o búsqueda espiritual sin guía interna."
+        "meaning": "Dogmas limitantes o desconexión espiritual."
       }
     },
     {
       "id": "los_enamorados",
       "name": "Los Enamorados",
       "upright": {
-        "general": "Los Enamorados iluminan un momento crucial donde tu corazón se abre, tu intuición se activa y tu alma reconoce un camino que ya estaba escrito para ti.\n\nLa luz dorada que envuelve esta carta refleja unión, deseo, conexión auténtica y decisiones que dan forma a tu destino emocional.\n\nPsicológicamente, representa la integración entre lo que sientes y lo que eliges, entre tu vulnerabilidad y tu fuerza.\n\nNo solo hablan de amor romántico: hablan de alineación interna y de escuchar lo que tu corazón lleva tiempo susurrando.\n\nSeñalan un cruce de caminos, una elección que pide claridad, honestidad y confianza en lo verdadero.\n\nSu energía es la del vínculo sagrado y del espejo que muestra quién eres a través del otro.\n\nCuando aparece, estás entrando en un ciclo donde el amor, la unión y la coherencia emocional se vuelven protagonistas.",
-        "love": "Traen pasión, conexión profunda y la posibilidad de una unión significativa.\n\nPueden anunciar un encuentro destinado o una relación que despierta algo antiguo y familiar.\n\nSi estás en pareja, habla de decisiones importantes, crecimiento mutuo y renovación emocional.\n\nSi estás soltera, anuncia una conexión que llega cuando estás lista para amar con más conciencia.\n\nPsicológicamente, te pide elegir el amor que te honra, no el que te limita.",
-        "work": "En lo profesional, marcan decisiones cruciales: qué camino tomar, qué proyecto seguir, qué propósito te llama.\n\nPuede indicar colaboración, sociedad u oportunidad que conecta con tu corazón.\n\nPsicológicamente, te habla de coherencia: tu trabajo debe estar alineado con tu pasión.\n\nTambién puede señalar elegir entre dos opciones: confía en tu intuición.",
-        "spiritual": "Te guían a escuchar tu corazón con honestidad.\n\nReconoce qué vibración resuena contigo y cuál no.\n\nElige con conciencia, no desde el miedo.\n\nTu alma sabe el camino, aunque tu mente lo cuestione.\n\nAma con verdad: contigo y con los demás.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Elecciones del corazón y alineación interna.",
+        "love": "Unión profunda y decisiones amorosas.",
+        "work": "Elegir un camino alineado con tu pasión.",
+        "spiritual": "Coherencia entre mente y corazón.",
+        "affirmation": "Elijo desde el amor y la verdad."
       },
       "reversed": {
-        "meaning": "Los Enamorados invertidos señalan conflictos en elecciones importantes, relaciones desequilibradas o decisiones tomadas desde el miedo. Puede indicar desalineación entre mente y corazón."
+        "meaning": "Conflictos internos o decisiones desde el miedo."
       }
     },
     {
       "id": "el_carro",
       "name": "El Carro",
       "upright": {
-        "general": "El Carro anuncia un momento de avance decidido, en el que tomas las riendas de tu vida con una fuerza interna que no se detiene ante dudas ni obstáculos.\n\nLa luz dorada refleja tu capacidad actual para moverte hacia adelante con claridad y firmeza.\n\nEstás entrando en una fase donde el impulso, la disciplina y la determinación te abren caminos.\n\nPsicológicamente, representa el dominio de tus emociones, la dirección consciente y la integración de tus luces y sombras para avanzar en equilibrio.\n\nTu poder no está en correr sin rumbo, sino en elegir una dirección y sostenerla.\n\nEs un símbolo de victoria interior: superar miedos, resistencias o patrones.\n\nActúa sin titubeos, confía en tu propósito y avanza con el corazón alineado.\n\nEstás preparada para ir más lejos de lo que imaginabas.",
-        "love": "Indica intensidad emocional y avances significativos.\n\nPuede señalar una relación que toma un rumbo claro y valiente.\n\nEn pareja, favorece superar crisis, hablar con madurez y avanzar a una etapa sólida.\n\nSoltera, anuncia un encuentro dinámico y con energía de lo nuevo.\n\nPsicológicamente, te invita a no dejar que tus miedos dirijan tu corazón: tú conduces tu camino emocional.",
-        "work": "Trae reconocimiento, logros y avance rápido.\n\nEs carta de éxito, disciplina y dirección clara.\n\nIndica que estás lista para asumir proyectos, liderar, decidir firme o iniciar algo poderoso.\n\nPsicológicamente, simboliza enfoque, fuerza de voluntad y capacidad de controlar desafíos.\n\nTu propósito se activa cuando eliges un camino y lo sostienes.\n\nTodo lo que inicies ahora puede llevarte muy lejos.",
-        "spiritual": "Te pide que tomes tu lugar, conduzcas tu destino sin miedo y avances con certeza.\n\nNo permitas que dudas ajenas frenen tu expansión.\n\nAvanza con confianza: el Universo se abre cuando tú te mueves.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Avance decidido, disciplina y victoria interior.",
+        "love": "Progreso emocional y claridad.",
+        "work": "Éxito por enfoque y determinación.",
+        "spiritual": "Dirige tu energía con conciencia.",
+        "affirmation": "Avanzo con confianza."
       },
       "reversed": {
-        "meaning": "El Carro invertido representa pérdida de dirección, falta de control o bloqueo por impulsividad. Indica avances frustrados o energía dispersa que necesita disciplina y enfoque."
+        "meaning": "Falta de dirección o energía dispersa."
       }
     },
     {
       "id": "la_fuerza",
       "name": "La Fuerza",
       "upright": {
-        "general": "La Fuerza despierta en ti una valentía profunda, suave pero invencible, que nace de la unión entre tu corazón y tu espíritu.\n\nLa figura radiante simboliza la capacidad de transformar lo salvaje en sabiduría y lo impulsivo en serenidad.\n\nPsicológicamente, representa dominio emocional, compasión hacia ti misma y fortaleza que proviene de tu sensibilidad.\n\nTu poder no es agresivo: es una calma firme con voluntad inquebrantable.\n\nEstás entrando en un ciclo donde enfrentarás desafíos desde el amor y no desde el miedo.\n\nLa energía dorada te recuerda que tu ternura también es autoridad.\n\nTu fuerza vive en mantenerte fiel a ti misma incluso en medio del caos.",
-        "love": "Habla de vínculos profundos, sinceros y valientes.\n\nIndica expresar emociones con autenticidad, sin ocultar vulnerabilidad.\n\nEn pareja, trae reconciliación, comprensión y superar tensiones desde empatía.\n\nSoltera, anuncia un encuentro fuerte y significativo que invita a abrirte con confianza.\n\nPsicológicamente, te recuerda que el amor verdadero te invita a ser tú con toda tu luz y matices.",
-        "work": "Te guía a actuar con determinación, paciencia y confianza.\n\nHabla de superar obstáculos y avanzar lento pero con certeza.\n\nPuede señalar crecimiento interno, madurez y constancia.\n\nPsicológicamente, representa autocontrol e inteligencia emocional y liderazgo desde la calma.\n\nTu propósito se fortalece cuando construyes con firmeza en lugar de reaccionar impulsivamente.",
-        "spiritual": "Tu corazón es tu arma más poderosa.\n\nSostén tu luz incluso cuando el camino sea desafiante.\n\nAbraza tus emociones y trata a tu alma con compasión.\n\nTu fuerza es sagrada.\n\nConfía: tienes dentro todo lo necesario para avanzar.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Valentía suave, dominio emocional y compasión.",
+        "love": "Amor valiente y sincero.",
+        "work": "Constancia y madurez emocional.",
+        "spiritual": "Tu corazón es tu poder.",
+        "affirmation": "Soy fuerte desde el amor."
       },
       "reversed": {
-        "meaning": "La Fuerza invertida habla de inseguridad, debilidad emocional o dificultad para gestionar impulsos. Puede indicar falta de confianza en uno mismo o represión de emociones."
+        "meaning": "Inseguridad o represión emocional."
       }
     },
     {
       "id": "el_ermitano",
       "name": "El Ermitaño",
       "upright": {
-        "general": "El Ermitaño te guía hacia un espacio interno donde la verdad no grita: susurra.\n\nLa luz dorada que sostiene es tu propia conciencia, claridad que se enciende cuando te alejas del ruido.\n\nInvita a retirarte del mundo externo para comprender tu mundo interno.\n\nPsicológicamente, simboliza introspección, autoconocimiento, madurez emocional y mirar tu sombra sin miedo.\n\nEs tiempo para entender patrones, sanar heridas y reconectar con tu ritmo.\n\nLas respuestas no están afuera: están en tu sabiduría interior.\n\nSu energía ilumina un camino silencioso hacia revelaciones sobre quién eres y hacia dónde vas.\n\nDetente, respira y recupera tu verdad.",
-        "love": "Señala proceso interno y pausa necesaria para entender lo que deseas y lo que ya no encaja.\n\nPuede indicar distanciamiento emocional como clarificación.\n\nEn pareja, invita al diálogo honesto y a comprender el espacio personal.\n\nSoltera, pide sanar, escucharte y permitir que el corazón se regenere.\n\nPsicológicamente, enseña a no conformarte: mereces un amor que resuene con tu esencia.",
-        "work": "Te lleva a reflexionar sobre tu camino, motivaciones y aspiraciones.\n\nPuede indicar estudio, investigación o trabajo interno silencioso que prepara nueva etapa.\n\nPsicológicamente, representa análisis, introspección y búsqueda de propósito.\n\nEs posible que sientas redefinir vocación o comprender qué te hace vibrar.\n\nLas mejores decisiones se toman cuando escuchas tu brújula interna.",
-        "spiritual": "Entra en el templo de tu alma.\n\nSilencio, descanso, contemplación.\n\nConfía en la luz dorada dentro de ti.\n\nNo temas caminar sola un tiempo: ahí llegan las revelaciones.\n\nTodo se aclarará cuando te escuches de verdad.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Introspección y búsqueda de verdad interior.",
+        "love": "Necesidad de espacio y claridad.",
+        "work": "Reflexión profunda y redefinición.",
+        "spiritual": "La luz está dentro de ti.",
+        "affirmation": "Encuentro respuestas en mi interior."
       },
       "reversed": {
-        "meaning": "El Ermitaño invertido señala aislamiento excesivo, evasión o miedo a mirar hacia dentro. Puede indicar soledad no elegida o rechazo a la introspección necesaria para avanzar."
+        "meaning": "Aislamiento excesivo o evasión."
       }
     },
     {
       "id": "la_rueda_de_la_fortuna",
       "name": "La Rueda de la Fortuna",
       "upright": {
-        "general": "La Rueda de la Fortuna anuncia un cambio profundo y necesario, un giro del destino que reordena tu vida desde la raíz.\n\nLa energía dorada refleja un movimiento divino que no puedes detener, pero sí abrazar.\n\nPsicológicamente, representa ciclos, aprendizajes, cierres y nuevas oportunidades que surgen de lo inesperado.\n\nNada permanece igual: lo estancado empieza a fluir, lo lejano se acerca.\n\nEs un tiempo donde sincronías y “casualidades” se multiplican, mostrando alineación con un cambio mayor.\n\nLa rueda gira para liberarte de viejas estructuras y abrir caminos nuevos.\n\nAcepta el movimiento: lo que llega te impulsa hacia tu destino más elevado.\n\nNo temas perder control: el Universo ya está guiando el proceso.",
-        "love": "Indica cambios importantes: encuentros inesperados, decisiones que transforman la relación o movimientos internos hacia algo más auténtico.\n\nEn pareja, puede significar renovación profunda o ajustar el rumbo.\n\nSoltera, trae energía de destino: alguien entra cuando menos lo esperas.\n\nPsicológicamente, invita a soltar el pasado y abrirte a nuevas posibilidades.\n\nEl amor se mueve a tu favor.",
-        "work": "Anuncia oportunidades inesperadas, cambios de trabajo, ascensos o giros que te acercan a tu propósito real.\n\nPsicológicamente, representa adaptabilidad, visión amplia y confianza en el cambio.\n\nMomento ideal para decisiones valientes, probar algo nuevo o decir sí a lo que te llama.\n\nEl movimiento te reubica donde puedes crecer más.\n\nNo resistas: fluye con el ciclo.",
-        "spiritual": "Tu vida entra en un nuevo nivel de energía.\n\nConfía en los cambios aunque no los comprendas todavía.\n\nEl Universo alinea personas, oportunidades y situaciones.\n\nPermite que el destino gire a tu favor.\n\nLo que es para ti se mueve hacia ti.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Cambios inevitables y destino en movimiento.",
+        "love": "Giros inesperados y sincronías.",
+        "work": "Oportunidades que llegan sin aviso.",
+        "spiritual": "Confía en los ciclos.",
+        "affirmation": "Fluyo con el cambio."
       },
       "reversed": {
-        "meaning": "La Rueda de la Fortuna invertida indica resistencia al cambio, ciclos repetitivos o sensación de estancamiento. Advierte sobre la necesidad de aceptar el movimiento natural de la vida."
+        "meaning": "Resistencia al cambio o estancamiento."
       }
     },
     {
       "id": "la_justicia",
       "name": "La Justicia",
       "upright": {
-        "general": "La Justicia aparece para alinearte con la verdad que necesitas ver, no con la que deseas escuchar.\n\nSu luz dorada representa claridad, equilibrio y sabiduría para decidir desde un lugar consciente, limpio y honesto.\n\nPsicológicamente, habla de responsabilidad emocional, asumir tu poder sin culpar ni justificar, y recuperar el orden interno.\n\nRecuerda que cada acción, pensamiento y elección ha tejido el camino actual.\n\nHoy estás llamada a elegir desde la madurez, no desde el impulso.\n\nAyuda a ver con objetividad, cortar confusión y volver al centro.\n\nEs un momento de claridad espiritual donde entiendes qué te pertenece, qué soltar y qué te corresponde por alineación.\n\nNada está en tu contra: el Universo pide actuar desde tu verdad más alta.",
-        "love": "Invita a honestidad contigo misma y a comunicar con claridad, sin máscaras ni silencios.\n\nPuede marcar decisiones: límites, compromisos o equilibrar lo que estaba desajustado.\n\nEn pareja, favorece conversaciones profundas que restablecen armonía y respeto.\n\nSoltera, pide elegir relaciones que te honren y dejar atrás vínculos que no corresponden a tu valor.\n\nEl amor florece cuando eres fiel a ti misma.",
-        "work": "Indica contratos, acuerdos, decisiones importantes o momento clave para organizar metas.\n\nSimboliza orden, claridad y actuar de forma justa contigo y con los demás.\n\nPsicológicamente, habla de asumir autoridad personal y no permitir que la duda decida.\n\nExcelente para resolver gestiones, legalizar proyectos, evaluar oportunidades o definir el camino con objetividad.\n\nTu propósito se alinea cuando eliges lo correcto, aunque no sea lo más fácil.",
-        "spiritual": "Corta lo que pesa, suelta lo que ya no vibra y elige lo que sostiene tu alma.\n\nActúa desde equilibrio.\n\nTu verdad es tu espada: úsala con sabiduría.\n\nTodo se ordena cuando te ordenas dentro.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Verdad, equilibrio y responsabilidad.",
+        "love": "Relaciones justas y honestas.",
+        "work": "Decisiones claras y contratos.",
+        "spiritual": "El orden interno trae paz.",
+        "affirmation": "Actúo desde mi verdad."
       },
       "reversed": {
-        "meaning": "La Justicia invertida habla de injusticias, desequilibrios o falta de honestidad, externa o interna. Puede señalar negación de responsabilidades o decisiones poco éticas."
+        "meaning": "Desequilibrios o falta de honestidad."
       }
     },
     {
       "id": "el_colgado",
       "name": "El Colgado",
       "upright": {
-        "general": "El Colgado te invita a detener el movimiento externo para que nazca un movimiento interno más profundo.\n\nSu luz dorada simboliza una pausa sagrada donde tus percepciones cambian y tu conciencia se expande.\n\nPsicológicamente, representa rendición, cambio de perspectiva, aceptación y ver la vida desde un ángulo nuevo.\n\nNo te pide renunciar: te pide soltar lo que ya no sirve.\n\nLa paciencia se vuelve herramienta espiritual y las respuestas surgen cuando dejas de forzarlas.\n\nEs un proceso de transición: no estás estancada, estás transformando tu mirada.\n\nAceptar la pausa es aceptar la evolución.\n\nDesde esta quietud brotará una revelación que abrirá un camino más sabio.",
-        "love": "Señala pausa, reflexión o redefinición emocional.\n\nNecesitas ver la relación desde otra perspectiva o liberar expectativas.\n\nEn pareja, favorece conversaciones honestas que cambian dinámicas.\n\nSoltera, invita a sanar heridas, soltar la prisa y permitir que el amor llegue cuando estés preparada.\n\nEs momento de entender patrones afectivos sin juicio.",
-        "work": "Indica reevaluación: cuestionar si lo que haces se alinea con tu propósito.\n\nPuede señalar retrasos, procesos lentos o esperar señal antes de actuar.\n\nPsicológicamente, representa comprensión profunda de motivaciones y de lo que deseas construir.\n\nBuen momento para reorganizar ideas, replantear metas o mirar el camino desde una perspectiva espiritual.\n\nLa pausa no es retroceso: es preparación.",
-        "spiritual": "Ríndete al proceso.\n\nDeja de luchar contra lo que necesita ser visto en calma.\n\nRespira, acepta y confía.\n\nEstás suspendida en un punto exacto para recibir iluminación.\n\nLo que parece detenido, pronto se moverá con claridad.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Pausa sagrada y cambio de perspectiva.",
+        "love": "Reflexión emocional.",
+        "work": "Reevaluación antes de avanzar.",
+        "spiritual": "La rendición trae claridad.",
+        "affirmation": "Confío en el proceso."
       },
       "reversed": {
-        "meaning": "El Colgado invertido representa bloqueo, sacrificios inútiles o resistencia a soltar. Puede indicar victimismo o estancamiento por no querer ver una nueva perspectiva."
+        "meaning": "Resistencia a soltar o victimismo."
       }
     },
     {
       "id": "la_muerte",
       "name": "La Muerte",
       "upright": {
-        "general": "La Muerte no anuncia un final trágico, sino una liberación profunda que transforma tu vida desde la raíz.\n\nLa luz dorada señala metamorfosis espiritual: viejas estructuras, emociones o patrones dejan de sostenerte para que puedas nacer de nuevo.\n\nPsicológicamente, representa desprendimiento, cierre, duelo, renacimiento y la valentía de soltar lo que ya no vibra.\n\nNo puedes avanzar cargando con lo que te drena.\n\nEl proceso puede sentirse intenso, pero hay una fuerza luminosa que te empuja a tu siguiente nivel.\n\nIncluso lo que termina cumple un propósito sagrado.\n\nAtraviesas una transición que abrirá una puerta antes invisible.\n\nPermítete morir para volver a nacer.",
-        "love": "Habla de transformaciones profundas dentro de ti o en la relación.\n\nPuede indicar romper un patrón tóxico, sanar una herida antigua o cerrar un ciclo agotado.\n\nEn pareja, invita a renovar el vínculo desde una verdad auténtica, aunque implique enfrentar lo evitado.\n\nSoltera, anuncia renacimiento emocional para recibir un amor más sano.\n\nSuelta lo que limita: ya no necesitas amar desde el miedo.",
-        "work": "Indica cambio de rumbo claro: cierre de etapas, transformación laboral o renacimiento vocacional.\n\nPuede señalar final de un proyecto o trabajo que ya no resonaba.\n\nInvita a aceptar que estás lista para algo más auténtico, aunque te saque de la zona de confort.\n\nEs ideal para iniciar un camino nuevo y alineado con tu alma.",
-        "spiritual": "No temas al cambio.\n\nAgradece lo que fue, honra lo que termina y permite que el Universo coloque lo que pertenece a tu nueva vibración.\n\nRíndete al proceso: lo que sueltas libera tu luz.\n\nEstás renaciendo.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Transformación profunda y renacimiento.",
+        "love": "Cierre de ciclos emocionales.",
+        "work": "Cambio de rumbo necesario.",
+        "spiritual": "Soltar libera tu luz.",
+        "affirmation": "Renazco con conciencia."
       },
       "reversed": {
-        "meaning": "La Muerte invertida señala miedo al cambio, apego al pasado o resistencia a cerrar ciclos. Indica transformaciones retrasadas que siguen siendo inevitables."
+        "meaning": "Miedo al cambio o apego al pasado."
       }
     },
     {
       "id": "la_templanza",
       "name": "La Templanza",
       "upright": {
-        "general": "La Templanza aparece para armonizar tu mundo interno, equilibrar tus emociones y recordarte que todo tiene un ritmo divino.\n\nLa energía dorada representa el arte de mezclar, integrar y sanar desde la suavidad y la paciencia.\n\nPsicológicamente, señala calma consciente: no fuerzas, no empujas, no corres: fluyes.\n\nInvita a unir opuestos: razón y emoción, acción y descanso, deseo y aceptación.\n\nEs un arcano de paz profunda, equilibrio emocional y reconexión con tu centro.\n\nLa luz astral recuerda que sanar no es un evento, sino un proceso sagrado.\n\nEntras en un periodo donde la serenidad es brújula.\n\nLa vida te pide suavidad.",
-        "love": "Trae armonía, reconciliación y entendimiento.\n\nEn pareja, suaviza tensiones y abre comunicación emocional más consciente.\n\nSoltera, anuncia amor tranquilo, equilibrado y sanador que llega sin prisa.\n\nEnseña a amar desde la calma, no desde la urgencia.\n\nEmociones se estabilizan y eliges con más claridad.",
-        "work": "Indica equilibrio, acuerdos, cooperación y proyectos que avanzan de forma estable.\n\nPuede señalar trabajo donde habilidades emocionales e intuición son claves.\n\nPsicológicamente, simboliza paciencia estratégica: hacer lo correcto en el momento correcto.\n\nExcelente para construir, negociar o sanar relaciones laborales.\n\nEl propósito se aclara cuando integras talentos con suavidad.",
-        "spiritual": "Confía en el ritmo divino.\n\nNada se retrasa: todo madura a su tiempo.\n\nRespira, integra, permite.\n\nTu alma encuentra equilibrio y ese equilibrio es poder.\n\nNo fuerces: fluye.\n\nEl Universo armoniza tu camino.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Equilibrio, armonía y sanación.",
+        "love": "Relaciones equilibradas.",
+        "work": "Avance sereno y cooperación.",
+        "spiritual": "Todo se integra a su tiempo.",
+        "affirmation": "Vivo en equilibrio."
       },
       "reversed": {
-        "meaning": "La Templanza invertida habla de desequilibrio, excesos o falta de armonía interna. Puede indicar desorden emocional o dificultad para integrar opuestos."
+        "meaning": "Excesos o desarmonía interna."
       }
     },
     {
       "id": "el_diablo",
       "name": "El Diablo",
       "upright": {
-        "general": "El Diablo no llega para asustarte, sino para mostrarte con honestidad aquello que te ata, te limita o te aleja de tu verdad.\n\nLa luz dorada revela que incluso las sombras sirven a un propósito: iluminar lo que necesita ser liberado.\n\nPsicológicamente, representa adicciones emocionales, miedos antiguos, apegos, pensamientos repetitivos o dinámicas que te mantienen en un ciclo.\n\nSu mensaje es claro: hay algo que sabes que debes transformar, pero aún no te atreves a mirar.\n\nInvita a ver tu sombra sin juicio, reconocer tu parte oculta y recuperar tu poder.\n\nNo viene a encadenarte, sino a mostrar dónde ya estabas encadenada.\n\nLa fuerza astral dorada indica que tienes el coraje para romper el patrón.\n\nPuedes liberarte. Y sabes exactamente de qué.",
-        "love": "Señala intensidad, atracción fuerte o vínculos con dependencia, obsesión o dinámicas poco sanas.\n\nEn pareja, invita a revisar patrones, celos, silencios o heridas.\n\nSoltera, puede indicar conexión magnética, pero también reconocer qué parte elige desde carencia y no desde amor propio.\n\nMereces un amor que libere, no que aprisione.\n\nTú decides cuándo romper la cadena.",
-        "work": "Habla de estrés, exceso de control, exigencia, autoexplotación o miedo a soltar un camino que ya no nutre.\n\nPsicológicamente, indica estar atrapada en un ciclo laboral que consume más de lo que aporta.\n\nPero muestra fuerza para liberarte, poner límites o elegir camino auténtico.\n\nPregunta clave: ¿trabajas por propósito o por miedo?",
-        "spiritual": "Mira tu sombra con valentía.\n\nAcepta lo que ves sin culpa para transformarlo.\n\nReconoce dónde entregaste tu poder y recupéralo.\n\nTu alma te llama a liberarte.\n\nRompe la cadena.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Apegos, sombras y verdades incómodas.",
+        "love": "Dependencias emocionales.",
+        "work": "Autoexigencia o estrés excesivo.",
+        "spiritual": "Mira tu sombra sin miedo.",
+        "affirmation": "Me libero de lo que me ata."
       },
       "reversed": {
-        "meaning": "El Diablo invertido representa liberación de ataduras, pero también negación de sombras internas. Puede indicar intentos de huir de dependencias sin haberlas sanado del todo."
+        "meaning": "Liberación incompleta o negación."
       }
     },
     {
       "id": "la_torre",
       "name": "La Torre",
       "upright": {
-        "general": "La Torre es un rayo divino que cae sobre estructuras internas que ya no podían sostenerte.\n\nLa luz dorada y violenta simboliza una ruptura necesaria, una verdad que se revela aunque sacuda tu mundo.\n\nPsicológicamente, habla de colapsos emocionales, revelaciones, cambios inesperados o la caída de una ilusión.\n\nNo destruye por destruir: destruye lo falso para dejar espacio a la verdad.\n\nPuede sentirse caótico, pero detrás hay un diseño sagrado que te libera de una prisión emocional o mental.\n\nLas estrellas doradas alrededor del derrumbe recuerdan que después del impacto llega claridad y reconstrucción.\n\nMarca un antes y un después: no volverás a ser la misma.\n\nY eso es exactamente lo que tu alma necesita.",
-        "love": "Señala una verdad que sale a la luz: conversación ineludible, revelación, final o cambio profundo.\n\nEn pareja, invita a romper dinámicas insanas, máscaras o silencios.\n\nSoltera, indica un despertar emocional que libera de patrones que hacían elegir desde la herida.\n\nPide valentía para aceptar lo que se revela.\n\nEl derrumbe es liberación.",
-        "work": "Puede señalar cambio drástico: ruptura con proyecto, renuncia, final de ciclo o giro inesperado.\n\nPsicológicamente, muestra que algo estaba construido sobre miedo, desgaste o inestabilidad.\n\nAunque duela, libera para conectar con verdadero propósito.\n\nDespués del derrumbe aparece una oportunidad antes invisible.",
-        "spiritual": "No resistas el cambio.\n\nAcepta lo que se derrumba: no era tuyo, no era verdadero, no era para tu siguiente nivel.\n\nConfía.\n\nDe las ruinas nacerá claridad.\n\nLa luz dorada está detrás del impacto.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Derrumbe de lo falso y revelación.",
+        "love": "Verdades que sacuden vínculos.",
+        "work": "Cambios bruscos necesarios.",
+        "spiritual": "La verdad libera.",
+        "affirmation": "Acepto el cambio."
       },
       "reversed": {
-        "meaning": "La Torre invertida señala cambios evitados, colapsos internos silenciosos o resistencia a una verdad necesaria. El derrumbe se retrasa, pero la estructura sigue siendo inestable."
+        "meaning": "Resistencia a un colapso inevitable."
       }
     },
     {
       "id": "la_estrella",
       "name": "La Estrella",
       "upright": {
-        "general": "La Estrella llega como un bálsamo energético que purifica tu mente, renueva tu esperanza y te reconecta con lo sagrado que habita en ti.\n\nLa luz dorada refleja un renacer suave y una energía celestial que guía hacia un futuro más luminoso.\n\nPsicológicamente, simboliza sanación emocional profunda, claridad espiritual y fe en tu propio camino.\n\nRecuerda que incluso después de la oscuridad siempre llega un resplandor.\n\nAbre un portal donde puedes soñar con libertad, confiar en tus dones y construir desde la inspiración.\n\nEs un momento donde intuición se vuelve más clara, emociones más ligeras y espíritu más conectado.\n\nTe dice que estás siendo guiada, acompañada y protegida por una fuerza superior.\n\nTu alma entra en un ciclo de luz.",
-        "love": "Trae armonía, esperanza y vínculos sanadores.\n\nEn pareja, anuncia reconciliación, comunicación abierta y renacer emocional.\n\nSoltera, indica la llegada de un amor auténtico, sano y profundamente espiritual.\n\nInvita a abrir el corazón sin miedo, confiando en que mereces amor luminoso.\n\nSana expectativas, cura heridas y devuelve ilusión.",
-        "work": "Habla de inspiración, claridad y oportunidades que llegan de forma fluida.\n\nBuen momento para proyectos creativos, espirituales o intuitivos.\n\nPsicológicamente, indica confianza en talentos, visión amplia y guía por intuición.\n\nPuede señalar reconocimientos, apoyo o ideas brillantes que abren caminos.\n\nEl propósito se ilumina cuando sigues lo que enciende tu alma.",
-        "spiritual": "Cree otra vez.\n\nConfía en tu luz y en el camino que se abre.\n\nRecibes guía divina a través de señales, sueños y sincronicidades.\n\nPermite elevarte por encima del miedo.\n\nEres luz, y tu luz está despertando.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
+        "general": "Esperanza, sanación y fe renovada.",
+        "love": "Vínculos sanadores.",
+        "work": "Inspiración y guía.",
+        "spiritual": "Confía en la luz.",
+        "affirmation": "La esperanza guía mi camino."
       },
       "reversed": {
-        "meaning": "La Estrella invertida habla de pérdida de fe, desaliento o desconexión espiritual. Puede indicar necesidad de sanar heridas emocionales para recuperar la esperanza."
+        "meaning": "Pérdida de fe o desaliento."
       }
     },
     {
       "id": "la_luna",
       "name": "La Luna",
       "upright": {
-        "general": "La Luna te sumerge en el reino profundo del subconsciente, donde sueños, sombras e intuiciones hablan un lenguaje antiguo.\n\nLa luz dorada y plateada refleja un periodo de emociones intensas, percepciones abiertas y sensibilidad como brújula espiritual.\n\nPsicológicamente, representa miedos, ilusiones, recuerdos y necesidad de distinguir entre intuición y fantasía.\n\nInvita a caminar despacio, observar reacciones internas y no dejarte llevar por suposiciones o proyecciones.\n\nSu energía muestra que algo pide ser comprendido, abrazado y transformado.\n\nEs un momento donde lo oculto sale a la superficie para liberarte.\n\nLa Luna ilumina sombras para integrarlas con amor.\n\nConfía en tu intuición, pero no te dejes arrastrar por el miedo.",
-        "love": "Habla de confusiones, miedos, expectativas o inseguridades que necesitan enfrentarse.\n\nPuede señalar malentendidos, silencios o emociones que aún no sabes expresar.\n\nEn pareja, invita a hablar con claridad, no suponer y explorar lo que sientes.\n\nSoltera, pide sanar heridas pasadas para no repetir patrones.\n\nNo todo lo que sientes es realidad: a veces es memoria emocional.",
-        "work": "Señala incertidumbres, dudas o falta de claridad.\n\nPuede indicar intuiciones poderosas, pero también miedo a equivocarte o dificultad para ver resultados.\n\nPsicológicamente, muestra inquietud y pide reflexión antes de actuar.\n\nEs tiempo para analizar, investigar y esperar claridad antes de decisiones importantes.\n\nEl propósito se revela en sueños, señales y sensaciones internas.",
-        "spiritual": "Confía en tu intuición sin dejarte dominar por el temor.\n\nIlumina sombras para reconocer límites.\n\nRespira, escucha y observa.\n\nLo confuso pronto se aclarará.\n\nTu alma atraviesa una purificación emocional.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
-      },
-      "reversed": {
-        "meaning": "La Luna invertida señala confusión interna, miedos ocultos o autoengaño. También puede indicar que verdades ocultas comienzan a salir a la luz, aunque aún incomoden."
-      }
-    },
-    {
-      "id": "el_sol",
-      "name": "El Sol",
-      "upright": {
-        "general": "El Sol irradia una energía de vitalidad, claridad y expansión que ilumina cada rincón de tu vida.\n\nLa luz dorada representa un renacimiento interno donde la alegría vuelve, despejando dudas.\n\nPsicológicamente, simboliza confianza, autoestima elevada, libertad emocional y reconocimiento de tu brillo.\n\nAnuncia éxito, claridad absoluta y resultados positivos.\n\nInvita a celebrar tu camino, reconocerte sin modestia falsa y permitir que la luz de tu alma brille.\n\nConfirma un periodo próspero donde todo se vuelve más liviano, sincero y auténtico.\n\nDisipa la sombra, revela la verdad y guía a plenitud.\n\nEs tu momento.",
-        "love": "Anuncia felicidad, apertura emocional y conexiones genuinas.\n\nEn pareja, marca armonía, alegría compartida y proyectos en común.\n\nSoltera, trae un amor radiante, claro y compatible.\n\nInvita a amar desde libertad, sin miedo.\n\nEs una carta de éxito emocional que ilumina tu camino afectivo.",
-        "work": "Señal de éxito, reconocimiento, logro y crecimiento.\n\nPuede indicar un proyecto que florece, oportunidad brillante o avance en propósito.\n\nPsicológicamente, señala claridad mental, creatividad activa y realización.\n\nTodo lo que emprendas ahora puede prosperar.\n\nCuando actúas desde tu luz, el mundo responde.",
-        "spiritual": "Permítete brillar.\n\nSuelta duda, carga y miedo al juicio ajeno.\n\nEres luz: deja que tu energía ilumine tu camino y el de los demás.\n\nAgradece lo que ha nacido dentro de ti.\n\nMomento de bendición.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
-      },
-      "reversed": {
-        "meaning": "El Sol invertido representa alegría bloqueada, baja energía vital o dificultad para ver lo positivo. Puede indicar optimismo reprimido o felicidad condicionada."
-      }
-    },
-    {
-      "id": "el_juicio",
-      "name": "El Juicio",
-      "upright": {
-        "general": "El Juicio marca un despertar espiritual profundo, un llamado interno que te invita a dejar atrás tu versión antigua y renacer en una frecuencia más elevada.\n\nLa energía dorada simboliza un acceso directo a tu verdad más pura, una revelación que te muestra con claridad quién eres ahora.\n\nPsicológicamente, representa liberación, perdón, comprensión, integración del pasado y salto evolutivo.\n\nTrae claridad repentina, decisiones firmes y una perspectiva amplia y luminosa.\n\nInvita a cerrar ciclos con consciencia, soltar culpas y recuperar energía vital.\n\nEs una resurrección emocional: algo dentro vuelve a la vida con más coherencia.\n\nTe prepara para tu siguiente nivel de expansión espiritual.",
-        "love": "Indica conversaciones importantes, claridad emocional y posibilidad de revivir algo que parecía apagado.\n\nEn pareja, llega renovación profunda y elevación del nivel de conciencia del vínculo.\n\nSoltera, anuncia un despertar emocional que te libera de patrones afectivos.\n\nPsicológicamente, pide mirar tu historia con compasión y abrir espacio para un amor alineado con tu nueva versión.",
-        "work": "Trae revelaciones, decisiones drásticas y oportunidades que clarifican tu propósito.\n\nPuede indicar cambio de vocación, una llamada verdadera o decidir sin miedo.\n\nPsicológicamente, representa alineación total entre lo que haces y lo que tu alma necesita.\n\nTodo lo que inicie bajo esta energía te lleva hacia tu misión real.\n\nEs tiempo de actuar desde tu verdad.",
-        "spiritual": "Libérate del pasado.\n\nPerdónate por lo que fuiste cuando no sabías lo que sabes ahora.\n\nEscucha la voz que te llama desde dentro: es tu alma despertando.\n\nResponde sin miedo.\n\nNace una nueva tú.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
-      },
-      "reversed": {
-        "meaning": "El Juicio invertido habla de culpa, autojuicio severo o miedo a escuchar el llamado del alma. Indica resistencia a una renovación profunda o a asumir la propia verdad."
-      }
-    },
-    {
-      "id": "el_mundo",
-      "name": "El Mundo",
-      "upright": {
-        "general": "El Mundo marca la culminación de un ciclo importante en tu vida, un círculo que finalmente se cierra para revelarte quién eres ahora y quién estás lista para ser.\n\nLa luz dorada que envuelve esta carta representa plenitud, realización espiritual y la integración de todas tus experiencias, tanto las dolorosas como las luminosas.\n\nPsicológicamente, simboliza logro, madurez emocional, expansión, armonía profunda contigo misma y con el camino que has recorrido.\n\nEl Mundo te muestra que no estás empezando desde cero: estás empezando desde la sabiduría que ganaste.\n\nEste arcano te anuncia un tiempo de éxito, de claridad y de recompensas por haber atravesado procesos internos complejos.\n\nTe invita a celebrar tu evolución, honrar tu historia y abrirte a un nuevo nivel de conciencia.\n\nTu alma llega a una fase de completitud, de conexión y de entendimiento profundo.\n\nEl Mundo es tu graduación espiritual.",
-        "love": "En el amor, El Mundo anuncia relaciones equilibradas, conscientes y alineadas con tu vibración actual.\n\nSi estás en pareja, señala una etapa de madurez, compromiso y armonía profunda donde ambos se comprenden desde un lugar elevado.\n\nSi estás soltera, indica la llegada de una conexión completa, auténtica y espiritualmente compatible.\n\nPsicológicamente, te recuerda que ya no atraes lo que te hiere: atraes lo que resuena contigo.\n\nEste arcano habla de amor real, sano y expansivo.",
-        "work": "En lo profesional, El Mundo marca éxito, cierre positivo de etapas, expansión laboral y oportunidades internacionales o de mayor alcance.\n\nPsicológicamente, representa maestría, integración de talentos y claridad sobre tu propósito.\n\nTodo lo que inicies ahora se basa en una versión tuya más madura y consciente.\n\nPuede anunciar reconocimientos, finalización de proyectos importantes o la llegada de una nueva etapa más próspera y estable.\n\nTu propósito se vuelve más grande, más definido y más luminoso.",
-        "spiritual": "Celebra tu camino.\n\nReconoce cuánto has crecido y honra cada paso que te trajo hasta aquí.\n\nAgradece el cierre de este ciclo y abre tus manos al nuevo capítulo que se acerca.\n\nTu alma está completando una vuelta entera de crecimiento.\n\nEstás preparada para lo que viene.",
-        "stellar": "",
-        "affirmation": "",
-        "ritual": ""
-      },
-      "reversed": {
-        "meaning": "El Mundo invertido señala ciclos incompletos, sensación de vacío o falta de cierre. Puede indicar logros que no se disfrutan o caminos que aún necesitan integración."
-      }
-    }
-  ]
-}
+        "general": "Subconsciente, intuición y emociones profundas.",
+        "love": "Confu
