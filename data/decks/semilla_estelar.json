@@ -1,362 +1,159 @@
 {
-  "deck": {
-    "id": "semilla_estelar",
-    "name": "Semilla Estelar",
-    "language": "es",
-    "version": "1.0.0",
-    "cards": [
-      {
-        "id": "alianza_con_la_tierra",
-        "name": "Alianza con la Tierra",
-        "upright": {
-          "general": "Alianza con la Tierra es la carta que te recuerda que, aunque tu alma tenga un origen estelar, elegiste encarnar en este planeta por una razón sagrada. No estás aquí por error: la Tierra te llamó, te acogió en su campo energético y te invitó a formar parte de su proceso evolutivo.\n\nCuando esta carta aparece, significa que estás entrando en un ciclo de reconexión profunda con la energía terrestre. Tu alma estelar desciende para anclarse, para sentir, para enraizar, para experimentar la materia. Es un llamado a reconocer la importancia de tu cuerpo, de la naturaleza, del presente y de la vida física en tu proceso espiritual.\n\nPsicológicamente, esta carta señala: necesidad de grounding, deseo de estabilidad emocional, conexión con la naturaleza y lo simple, equilibrio entre lo espiritual y lo terrenal, regreso al cuerpo y a las sensaciones, necesidad de descanso, nutrición y presencia.\n\nLa Tierra es un ser vivo. Un espíritu antiguo. Una conciencia que sostiene a quienes caminan sobre ella. A través de esta carta, la Tierra misma extiende su mano hacia ti y te dice: “Estás aquí para crecer conmigo. Tu luz y mi cuerpo forman un pacto sagrado.” Eres puente entre los cielos y la Tierra.",
-          "love": "En el amor, esta carta te invita a encarnar más tu presencia. A estar disponible, atenta, consciente. Si estás en pareja, esta energía estabiliza, nutre y fortalece el vínculo, ayudándolos a construir desde un lugar real y tangible. Si estás soltera, te recuerda que para manifestar un amor auténtico necesitas estar enraizada en tu propia vida, vibrando desde la presencia y no desde la ansiedad. El amor verdadero se planta en tierra fértil.",
-          "work": "En lo profesional, esta carta te guía hacia actividades que te alineen con lo práctico, lo tangible, lo sostenible, lo que te nutre y lo que te estabiliza. Puede indicar consolidación de proyectos, enfoque claro, materialización de ideas, decisiones realistas pero inspiradas y anclaje de tu misión estelar en el mundo físico. Es un tiempo ideal para organizar, construir, establecer bases sólidas y manifestar lo que has estado visualizando. Tu propósito necesita raíces para florecer.",
-          "spiritual": "Abre tus pies a la Tierra. Recuerda que tu cuerpo es parte del planeta y que a través de él recibes mensajes, señales y estabilidad emocional. La espiritualidad no es solo ascender: a veces es desarrollar el arte sagrado de habitar tu cuerpo y tu vida plenamente. Regresa al presente. Allí está todo lo que necesitas.",
-          "stellar": "Coloca tus pies firmes en el suelo, respira profundo y di: “Me alío con la Tierra. Honro su sostén y su sabiduría. Anclo mi luz en el mundo físico.” Siente cómo tu cuerpo se relaja al instante.",
-          "affirmation": "La Tierra me sostiene, me nutre y me guía. Estoy anclada, presente y alineada con mi propósito.",
-          "ritual": "1) Párate descalza sobre el suelo (o tierra, pasto, arena).\n2) Cierra los ojos y respira profundamente tres veces.\n3) Visualiza raíces de luz descendiendo desde tus pies hacia el corazón de la Tierra.\n4) Di: “Madre Tierra, recibe mi energía. Yo recibo la tuya. Juntas caminamos este propósito.”\n5) Permanece sintiendo la conexión. La energía se estabilizará en tu plexo solar y en tus piernas."
-        },
-        "reversed": {
-          "meaning": "Desarraigo, desconexión del cuerpo o dificultad para materializar la espiritualidad. Invita a volver a lo simple, lo físico y lo cotidiano."
-        }
+  "name": "Semilla Estelar",
+  "description": "Oráculo de origen cósmico, memoria del alma y despertar estelar.",
+  "back": "semilla_estelar_back.png",
+  "cards": [
+    {
+      "id": "alianza_con_la_tierra",
+      "name": "Alianza con la Tierra",
+      "upright": {
+        "general": "Alianza con la Tierra es la carta que te recuerda que, aunque tu alma tenga un origen estelar, elegiste encarnar en este planeta por una razón sagrada. No estás aquí por error: la Tierra te llamó, te acogió en su campo energético y te invitó a formar parte de su proceso evolutivo.\n\nCuando esta carta aparece, significa que estás entrando en un ciclo de reconexión profunda con la energía terrestre. Tu alma estelar desciende para anclarse, para sentir, para enraizar, para experimentar la materia.\n\nPsicológicamente señala grounding, estabilidad emocional, conexión con la naturaleza y equilibrio entre lo espiritual y lo terrenal.",
+        "love": "Invita a estar presente y disponible. En pareja estabiliza y nutre el vínculo; soltera, recuerda que el amor auténtico se manifiesta desde el enraizamiento.",
+        "work": "Materialización, consolidación de proyectos y bases sólidas. Tu propósito necesita raíces para florecer.",
+        "spiritual": "La espiritualidad también es habitar el cuerpo y el presente.",
+        "stellar": "Me alío con la Tierra. Anclo mi luz en el mundo físico.",
+        "affirmation": "La Tierra me sostiene y me guía.",
+        "ritual": "Descalza, visualiza raíces de luz desde tus pies al centro de la Tierra."
       },
-      {
-        "id": "codigos_de_luz",
-        "name": "Códigos de Luz",
-        "upright": {
-          "general": "Los Códigos de Luz representan una transmisión directa de energía, información y sabiduría proveniente de planos superiores, destinada a despertar partes dormidas de tu ADN espiritual. Son paquetes vibracionales que no siempre se comprenden con la mente, pero que transforman profundamente tu conciencia, tu intuición y tu energía.\n\nCuando esta carta aparece, significa que estás recibiendo una actualización vibratoria —una descarga energética— que activa memorias antiguas, dones espirituales y expansiones internas que estaban esperando el momento perfecto para despertar.\n\nEste proceso puede sentirse como claridad repentina, sensibilidad aumentada, emociones intensas o liberación, sueños simbólicos o lúcidos, intuiciones fuertes, percepciones nuevas o cambios en tu energía.\n\nLos Códigos de Luz llegan en forma de sincronías, meditaciones profundas, sonidos/números/símbolos repetidos, geometrías sagradas, encuentros significativos, luz solar o descargas intuitivas, mensajes canalizados.\n\nPsicológicamente, indica que tu alma se expande hacia un nivel superior de conciencia. Estás viviendo un despertar cuántico que te conecta con tu origen estelar y con capas elevadas de tu misión. No necesitas entenderlo todo. Solo necesitas permitir.",
-          "love": "En el amor, señala una expansión energética en el corazón: mayor intuición sobre tus vínculos, claridad sobre patrones afectivos, apertura a relaciones espirituales o profundas, encuentros destinados que activan tu alma. Si estás en pareja, eleva la vibración del vínculo y ayuda a sanar memorias; si estás soltera, podrías atraer una conexión con propósito. El amor también es un código: activa partes de ti que solo despiertan en presencia del alma adecuada.",
-          "work": "A nivel profesional/vocacional, anuncia descarga de inspiración, nuevas ideas, creatividad elevada y claridad sobre tu misión. Puede mostrarte nuevas habilidades, rutas, pasiones y posibilidades; e impulsar canalización, artes, sanación energética, proyectos espirituales, enseñanza y liderazgo desde la luz. Permite que las ideas fluyan sin tratar de controlarlas.",
-          "spiritual": "No bloquees la energía tratando de comprenderla. Los Códigos de Luz no se analizan: se integran. Permite que tu cuerpo, tu corazón y tu alma decodifiquen la información en silencio. La comprensión llega después.",
-          "stellar": "Cierra los ojos, respira y di: “Estoy lista para recibir los Códigos de Luz que elevan mi conciencia. Me abro a la activación divina.”",
-          "affirmation": "Integro los Códigos de Luz que mi alma necesita. Mi energía se expande y mi conciencia despierta.",
-          "ritual": "1) Enciende una vela blanca o dorada.\n2) Coloca tus manos sobre tu corazón o tu coronilla.\n3) Visualiza una lluvia de luz cayendo suavemente sobre ti.\n4) Repite: “Códigos de Luz, actívense en mí. Despierten mis dones, eleven mi vibración y revelen la sabiduría que ya habita en mi alma.”\n5) Permanece observando las sensaciones internas."
-        },
-        "reversed": {
-          "meaning": "Bloqueos energéticos, saturación espiritual o dificultad para integrar nuevas frecuencias. Necesidad de integrar antes de seguir expandiendo."
-        }
-      },
-      {
-        "id": "consejo_de_guias",
-        "name": "Consejo de Guías",
-        "upright": {
-          "general": "El Consejo de Guías representa el momento en que los seres de luz que acompañan tu camino —guías espirituales, maestros ascendidos, ancestros luminosos y familia estelar— se acercan para transmitirte orientación clara, protección y dirección divina.\n\nAparece cuando necesitas escuchar la voz de la sabiduría superior. Tu alma ha estado pidiendo señales y el Consejo responde: “Estamos aquí, te escuchamos, te acompañamos.”\n\nIndica que no estás tomando este camino sola. Hay fuerzas suaves pero firmes guiándote, iluminando tu intuición y cuidando cada paso.\n\nPsicológicamente simboliza guía interior fortalecida, intuición agudizada, necesidad de pausar y escuchar, sensación de compañía espiritual, confianza en lo invisible y claridad a través de señales. No estás perdida. Estás guiada.",
-          "love": "En el amor, te guía hacia relaciones que nutran tu alma y te alejen de conexiones que te desgastan. Si estás en pareja, ayuda a comprender el propósito espiritual del vínculo; si estás soltera, prepara encuentros significativos alineados con tu vibración. Te protege de lo que no es para ti y te acerca a lo que tu corazón merece.",
-          "work": "En lo profesional, indica inspiración y dirección para decisiones alineadas con tu propósito. Puedes sentir impulsos intuitivos, ideas “descargadas” o claridad repentina. Tus guías trabajan contigo cuando sigues tu intuición, escuchas señales, confías en sincronismos y honras tu verdad interna.",
-          "spiritual": "Haz silencio. Respira. Permite que la voz del alma suba. Tus guías hablan con suavidad: corazonadas, sueños, señales repetidas, encuentros y sensaciones internas. Confía en lo que sientes.",
-          "stellar": "Di: “Consejo de Guías, muéstrenme el camino más elevado. Pongo mi mente en silencio para escuchar su sabiduría.”",
-          "affirmation": "Confío en mis guías. Estoy acompañada, protegida y guiada hacia mi mejor destino.",
-          "ritual": "1) Enciende una vela blanca o azul celeste.\n2) Manos en el corazón.\n3) Visualiza un círculo de seres luminosos alrededor de ti.\n4) Di: “Consejo de Guías, abro mi energía para recibir su orientación. Guíen mis pasos, iluminen mi camino, muéstrenme la verdad.”\n5) Permanece en silencio y observa sensaciones sutiles."
-        },
-        "reversed": {
-          "meaning": "Desconfianza en la guía espiritual, dependencia excesiva de opiniones externas o bloqueo del canal intuitivo. La guía sigue presente, aunque no se escuche."
-        }
-      },
-      {
-        "id": "contrato_almico",
-        "name": "Contrato Álmico",
-        "upright": {
-          "general": "El Contrato Álmico representa los acuerdos que tu alma estableció antes de encarnar: aprendizajes, personas, caminos y misiones elegidas con intención.\n\nAparece cuando un acuerdo está activo y pide atención. Indica encuentros predestinados, situaciones repetitivas hasta ser entendidas, personas que regresan por propósito, aprendizajes inevitables, cierres kármicos y activación de una etapa crucial.\n\nPsicológicamente te recuerda que no estás castigada: lo que vives tiene propósito profundo. Este contrato es amoroso, no punitivo. Un acuerdo sagrado se activa o llega a su resolución.",
-          "love": "Habla de conexiones del alma: relaciones kármicas, almas compañeras, reencuentros de otras vidas, vínculos que vienen a enseñar/sanar/liberar, cierres necesarios y un amor destinado que se acerca. Lo destinado no se pierde.",
-          "work": "Indica que tu camino laboral forma parte del plan álmico: trabajos o proyectos que te acercan a tu misión, aprendizajes cruciales, cierres antes de un nuevo comienzo y personas clave. Confirma que lo que vives tiene sentido desde un nivel superior.",
-          "spiritual": "No luches contra tu camino. Ábrete a la posibilidad de que estás donde necesitas estar. Honra lecciones, conexiones, cierres y comienzos. Tu alma sabe y recuerda.",
-          "stellar": "Manos al corazón: “Acepto los contratos que elevan mi alma. Suelto los que ya han cumplido su propósito. Honro mi camino sagrado.”",
-          "affirmation": "Honro el plan de mi alma. Todo en mi camino tiene un propósito profundo y amoroso.",
-          "ritual": "1) Enciende una vela blanca o morada.\n2) En papel escribe: “¿Qué debo aprender ahora?” y “¿Qué se repite?”\n3) Respira 3 veces.\n4) Visualiza un pergamino de luz.\n5) Di: “Activo el recuerdo de mi contrato álmico. Estoy lista para ver, sanar y avanzar con amor.”\n6) Observa qué sensación/imagen aparece."
-        },
-        "reversed": {
-          "meaning": "Vínculos kármicos no comprendidos, relaciones repetitivas o acuerdos del alma pendientes de sanar. Necesidad de cerrar pactos antiguos."
-        }
-      },
-      {
-        "id": "destino_cuantico",
-        "name": "Destino Cuántico",
-        "upright": {
-          "general": "Destino Cuántico revela el potencial más elevado de tu alma: una línea de tiempo donde tus decisiones, energía y conciencia se alinean con tu propósito superior. No es destino fijo, sino vibracional.\n\nIndica un punto clave donde múltiples posibilidades se abren. Recuerda que tu futuro no está escrito: estás co-creando. Tu vibración actual define tu camino; puedes saltar a una línea más elevada.\n\nPsicológicamente habla de expansión de conciencia, decisiones trascendentes, aumento del poder personal, manifestación acelerada, cambios en la percepción del tiempo, conexión con tu versión más elevada y activación del potencial del alma.",
-          "love": "En amor, alineación vibracional: encuentro con amor predestinado, reencuentro kármico sanado, evolución del vínculo, salto cuántico dentro de la relación, soltar viejas líneas temporales de dolor. El amor destinado llega cuando vibras con tu verdad.",
-          "work": "En propósito, apertura de caminos: nuevas oportunidades, decisiones que marcan trayectoria, claridad de misión, manifestación rápida de proyectos, transición a un camino más auténtico o salto vibracional en el trabajo actual. Actúa desde expansión, no desde miedo.",
-          "spiritual": "El universo te invita a elegir más alto, más consciente y más alineado con tu versión destinada. Tu alma ya conoce el camino; tu tarea es elegirlo.",
-          "stellar": "Mano en corazón y plexo: “Me alineo con mi destino cuántico. Elijo mi línea de tiempo más elevada.”",
-          "affirmation": "Estoy creando mi destino cuántico. Mi energía abre caminos, mi alma guía mi futuro.",
-          "ritual": "1) Enciende una vela dorada o blanca.\n2) Dibuja/visualiza 3 líneas: pasado, presente, futuro cuántico.\n3) Respira 3 veces.\n4) Declara: “Elijo mi línea de tiempo más elevada. Me muevo hacia mi destino cuántico con claridad, poder y confianza.”\n5) Visualiza caminar hacia la tercera línea."
-        },
-        "reversed": {
-          "meaning": "Bloqueo para elegir una línea de tiempo más elevada, miedo a decidir o aferrarse a patrones antiguos. La expansión existe, pero no se está tomando el paso."
-        }
-      },
-      {
-        "id": "el_llamado_de_la_noche",
-        "name": "El Llamado de la Noche",
-        "upright": {
-          "general": "El Llamado de la Noche representa el momento en que tus sentidos internos se despiertan mientras el mundo duerme. Es la invitación a entrar en territorios sutiles del alma: sueños lúcidos, intuiciones profundas, mensajes simbólicos y revelaciones silenciosas.\n\nAparece en etapas de sensibilidad psíquica elevada, sueños significativos o proféticos, activación de dones intuitivos, comunicaciones espirituales, despertares nocturnos y sensaciones energéticas profundas.\n\nLa noche no es oscuridad: es un portal. Psicológicamente simboliza introspección profunda, conexión con lo invisible, activación del inconsciente, necesidad de silencio y contemplación, apertura psíquica e intuición agudizada.\n\nTu alma te está llamando desde dentro… y ahora estás lista para escuchar.",
-          "love": "En amor, muestra conexiones más allá de lo racional: presentimientos acertados, sueños con alguien significativo, telepatía emocional, sensación de alma gemela y profundización espiritual del vínculo. Si estás soltera, el universo prepara un encuentro energético importante.",
-          "work": "En trabajo/propuesta, indica inspiración nocturna, creatividad profunda e ideas que llegan como descargas. Tiempo ideal para escribir, canalizar, meditar, crear y recibir guía. Tu misión se revela cuando permites que la quietud te hable.",
-          "spiritual": "No ignores mensajes que llegan en sueños, silencios y sensaciones nocturnas. La noche es tu maestra; confía en lo que sientes cuando todo está en calma.",
-          "stellar": "Antes de dormir: “Me abro a los mensajes de la noche. Que mi alma me hable con claridad, verdad y luz.”",
-          "affirmation": "La noche me revela lo que mi alma ya sabe. Recibo con claridad todos los mensajes que llegan a mí.",
-          "ritual": "1) Antes de dormir, enciende una vela o coloca una luz suave.\n2) Siéntate en silencio y respira 3 veces.\n3) Visualiza la noche como un manto estelar.\n4) Declara: “Me abro al llamado de la noche. Escucho la voz de mi alma. Recibo guía en sueños, visión y sensación.”\n5) Deja un cuaderno junto a la cama para registrar lo que llegue al despertar."
-        },
-        "reversed": {
-          "meaning": "Negación del mundo interior, miedo al silencio o rechazo de procesos inconscientes. La noche trae mensajes que aún no se quieren escuchar."
-        }
-      },
-      {
-        "id": "guardianes_del_umbral",
-        "name": "Guardianes del Umbral",
-        "upright": {
-          "general": "Los Guardianes del Umbral son fuerzas antiguas de luz que custodian portales sagrados, transiciones evolutivas y puntos críticos de tu camino. Indican que estás frente a un umbral importante: un salto cuántico hacia una nueva etapa de conciencia.\n\nPara cruzarlo necesitas soltar peso, despedir versiones antiguas y elevar tu vibración. No bloquean por castigo: protegen por amor.\n\nPsicológicamente simbolizan pruebas internas, confrontación con miedos, crecimiento acelerado, cierre de ciclos, madurez espiritual, responsabilidad energética y transición hacia una nueva versión de ti.",
-          "love": "En amor, punto decisivo: revisar patrones a soltar, dinámicas que requieren madurez, vínculos que ya cumplieron propósito y cuáles pueden acompañarte al siguiente nivel. Si estás soltera, preparación para una relación más elevada.",
-          "work": "En misión/profesión, transición importante: cierre necesario, nuevo inicio, oportunidad significativa, expansión inesperada, activación de misión más elevada y superar un miedo clave. Para avanzar, liberar duda, indecisión, autoexigencia y sabotaje.",
-          "spiritual": "No temas: son protectores. Piden coherencia (alma, mente, palabra y acción alineadas). Confía: estás más lista de lo que crees.",
-          "stellar": "Di: “Guardianes del Umbral, muéstrenme lo que debo liberar para avanzar.”",
-          "affirmation": "Estoy lista para cruzar al siguiente nivel de mi camino. Suelto lo viejo y avanzo con fuerza, luz y propósito.",
-          "ritual": "1) Enciende una vela blanca o morada.\n2) Coloca dos objetos simulando columnas de un portal.\n3) Respira 3 veces.\n4) Visualiza un umbral luminoso.\n5) Di: “Dejo atrás lo que ya no me pertenece. Activo mi paso hacia la nueva versión de mí.”\n6) Cruza entre los objetos como atravesando el portal.\n7) Siente la liberación."
-        },
-        "reversed": {
-          "meaning": "Miedo a atravesar una transformación importante o resistencia a enfrentar pruebas necesarias. El umbral no es castigo, sino iniciación."
-        }
-      },
-      {
-        "id": "hogar_en_la_estrella",
-        "name": "Hogar en la Estrella",
-        "upright": {
-          "general": "Hogar en la Estrella trae la energía del verdadero origen de tu alma. No es un lugar geográfico: es una frecuencia, una familia, un recuerdo.\n\nIndica que tu alma recuerda su hogar original y te llama a reconectar con raíces cósmicas, tribu galáctica y verdad vibracional.\n\nPsicológicamente habla de nostalgia espiritual, sensación de ser diferente, deseo de pertenecer, atracción por lo estelar y comprensión de que tu alma es más antigua que tu vida actual.\n\nEste hogar no es un destino al que debas volver: es una vibración que puedes traer aquí para iluminar tu camino. Tu hogar estelar vive dentro de ti.",
-          "love": "En amor, conexiones espirituales profundas que trascienden la encarnación: alma gemela, compañero de alma, reencuentros armonizados, relaciones predestinadas. Si estás soltera, una conexión de alma se acerca.",
-          "work": "En propósito, retorno a tu esencia: tu misión no es encajar, sino recordar quién eres. Tiempo ideal para expresar tu verdad, crear desde autenticidad y confiar en dones intuitivos. Tu propósito: sembrar conciencia en la Tierra.",
-          "spiritual": "Dentro de ti vibra tu hogar estelar. La nostalgia no es tristeza: es recordatorio de grandeza. Reconoce tu origen, pero honra tu misión en la Tierra.",
-          "stellar": "“Reconozco mi hogar estelar. Llevo su luz dentro de mí. Estoy acompañada en cada paso.”",
-          "affirmation": "Yo soy luz estelar encarnada. Mi hogar vive en mi corazón y mi alma nunca está sola.",
-          "ritual": "1) Enciende una vela blanca o azul.\n2) Mira el cielo nocturno (o visualízalo).\n3) Respira 3 veces y di: “Muéstrenme mi hogar.”\n4) Permite que una estrella brille para ti.\n5) Lleva esa luz al corazón.\n6) Declara: “Activo la memoria de mi hogar estelar. Camino en la Tierra con la luz de mis ancestros cósmicos.”"
-        },
-        "reversed": {
-          "meaning": "Nostalgia paralizante, desarraigo o dificultad para sentir hogar en uno mismo. Invita a crear raíces internas aquí y ahora."
-        }
-      },
-      {
-        "id": "llamado_estelar",
-        "name": "Llamado Estelar",
-        "upright": {
-          "general": "El Llamado Estelar despierta tu memoria más antigua: la que proviene de tu origen en las estrellas. Indica que una parte profunda de tu alma está recordando quién eres más allá de tu identidad humana.\n\nEs una comunicación sutil de guías, familia estelar o conciencia superior invitándote a regresar a tu propósito. No estás aquí por casualidad: elegiste esta encarnación.\n\nPsicológicamente representa despertares súbitos, intuiciones fuertes, búsqueda interior, sensibilidad elevada y percepción expandida. Es un llamado a recordar y asumir tu luz.",
-          "love": "En amor, conexiones kármicas y vínculos de otras vidas. En pareja: elevar vibración y sanar memorias; soltera: sentir la presencia energética de un amor destinado. El alma reconoce antes que los ojos.",
-          "work": "Despertar vocacional: impulso de cambiar de rumbo, estudiar algo nuevo, ayudar/sanar/guiar, interés por lo espiritual/cuántico/galáctico. Inicio de alineación con tu verdadero propósito.",
-          "spiritual": "Escucha. Detente. No necesitas entenderlo todo: solo decir “Estoy lista.”",
-          "stellar": "“Guías estelares, muéstrenme el camino que mi alma ya conoce.”",
-          "affirmation": "Escucho el llamado de mi alma. Me alineo con mi misión estelar y recuerdo quién soy.",
-          "ritual": "1) Enciende una luz tenue (vela blanca/dorada/azul).\n2) Mano en corazón y otra en plexo.\n3) Respira profundo y visualiza un haz de luz descendiendo del cosmos.\n4) Repite: “Activo mi memoria estelar. Activo mi misión. Activo mi despertar.”"
-        },
-        "reversed": {
-          "meaning": "Evasión del llamado interior, distracción constante o miedo a escuchar la voz del alma. El mensaje sigue llegando aunque se evite."
-        }
-      },
-      {
-        "id": "luz_en_la_sombra",
-        "name": "Luz en la Sombra",
-        "upright": {
-          "general": "Luz en la Sombra es el momento alquímico en el que tu alma te invita a mirar lo reprimido o negado… no para juzgarlo, sino para transformarlo en sabiduría. Tu sombra no es enemiga: se formó para protegerte.\n\nAparece cuando estás lista para ver con amor lo que antes daba miedo mirar: heridas, patrones repetitivos, miedos antiguos, mecanismos de defensa y memorias kármicas.\n\nPsicológicamente representa introspección, integración emocional, ruptura de patrones, sanación y liberación de autoexigencia.\n\nLa luz no destruye la sombra: la integra. Tu sombra guarda un don. Es la semilla de tu transformación.",
-          "love": "En amor, revela patrones afectivos, heridas que influyen en relaciones, miedos a abandono/vulnerabilidad y dinámicas heredadas. En pareja: conversación sincera y transformadora; soltera: limpiar patrones para atraer amor sano. El amor verdadero no teme a la sombra: la atraviesa contigo.",
-          "work": "En trabajo/misión, muestra miedos/creencias que frenan: miedo a mostrar dones, temor al éxito/fracaso, autoexigencia, inseguridad, bloqueos creativos. La sombra busca protegerte; ahora puedes avanzar con conciencia. Integrarla fortalece tu propósito.",
-          "spiritual": "No huyas de lo que duele: escúchalo. La sombra quiere liberarte. Muestra dónde aún necesitas amor. Lo oscuro de hoy será tu sabiduría de mañana.",
-          "stellar": "Manos al corazón: “Acepto mi luz y acepto mi sombra. Todo en mí es parte del camino.”",
-          "affirmation": "Abrazo mi sombra con amor. La luz dentro de mí transforma todo lo que toco.",
-          "ritual": "1) Enciende una vela blanca y una negra (o violeta).\n2) Colócalas frente a frente.\n3) Siéntate entre ambas y respira 3 veces.\n4) Visualiza tu sombra sosteniendo una pequeña luz.\n5) Di: “Transformo, integro y libero. Mi sombra es luz en crecimiento. Me acepto completamente.”\n6) Siente la fusión en tu pecho."
-        },
-        "reversed": {
-          "meaning": "Negación de aspectos internos, miedo a mirar la propia sombra o autoengaño. La luz no desaparece, pero necesita atravesar lo que se evita."
-        }
-      },
-      {
-        "id": "memorias_de_otras_vidas",
-        "name": "Memorias de Otras Vidas",
-        "upright": {
-          "general": "Las Memorias de Otras Vidas representan la apertura del campo akáshico: acceso a experiencias, dones, heridas y aprendizajes acumulados a lo largo de múltiples encarnaciones.\n\nAparece cuando tu alma está lista para recordar de manera vibracional: talentos naturales, miedos que no pertenecen a esta vida, afinidades inexplicables… todo proviene de memorias multidimensionales.\n\nIndica integración de información antigua para la evolución actual: dones se activan, intuición se intensifica y tu alma te guía a comprender quién eres.\n\nPsicológicamente simboliza patrones repetitivos de otras vidas, conexiones kármicas, sabiduría interna recordada, intuiciones espontáneas y desbloqueo de capacidades antiguas.",
-          "love": "En amor, habla de vínculos que cruzan vidas: almas compañeras, relaciones kármicas, reencuentros pendientes o pactos previos. En pareja, una historia conjunta influye; soltera, un encuentro puede activar memorias profundas. El alma reconoce antes de recordar.",
-          "work": "En propósito, indica que grandes talentos provienen de vidas anteriores: sanación, energía, espiritualidad, enseñanza, arte, canalización, guía, liderazgo, magia, ancestral o estelar. Tu misión se activa cuando reconoces quién has sido.",
-          "spiritual": "Confía en lo que resuena sin explicación. Las memorias akáshicas se recuerdan con el alma. Permite recordar con suavidad y sin prisa.",
-          "stellar": "“Abro mis registros internos. Permito que mi alma me muestre lo que ya estoy lista para recordar.”",
-          "affirmation": "Recuerdo lo que mi alma ya sabe. Mis vidas pasadas me guían, me fortalecen y me iluminan.",
-          "ritual": "1) Enciende una vela morada o blanca.\n2) Visualiza una gran biblioteca de luz.\n3) Imagina un libro que brilla y se acerca.\n4) Manos al corazón: “Activo la memoria de mis otras vidas. Permito que la sabiduría regrese. Solo recibo aquello que eleva mi camino.”\n5) Siente la ola de energía abriendo tu campo."
-        },
-        "reversed": {
-          "meaning": "Patrones repetitivos no comprendidos, cargas kármicas activas o heridas antiguas influyendo en el presente. Momento de tomar conciencia para liberar."
-        }
-      },
-      {
-        "id": "mision_de_alma",
-        "name": "Misión de Alma",
-        "upright": {
-          "general": "La Misión de Alma representa el propósito profundo por el cual encarnaste y la razón por la que tu alma eligió este planeta, esta época y este cuerpo.\n\nIndica un punto clave donde la vida te empuja hacia lo que te expande. La misión no es tarea: es frecuencia. No es algo que haces, sino algo que eres.\n\nPsicológicamente revela despertar de talentos, intuiciones que redirigen, incomodidad con lo no alineado, necesidad de expresar verdad, apertura a caminos espirituales/creativos y conexiones significativas.\n\nLa misión no pide perfección: pide autenticidad.",
-          "love": "En amor, habla de relaciones vinculadas a tu evolución. En pareja, el vínculo puede despertar aspectos de misión o propósito compartido. Soltera, podrías conocer a alguien que impulse tu crecimiento. El amor auténtico respira en la dirección del alma.",
-          "work": "En lo laboral, señala giro hacia actividades que te permitan compartir luz, sanar/guíar, crear con propósito, enseñar desde experiencia y trabajar desde autenticidad. Si hay desalineación, confirma que tu alma llama a decisiones coherentes.",
-          "spiritual": "Tu misión no necesita ser descubierta: necesita ser recordada. Observa lo que te enciende y expande: ahí está la pista.",
-          "stellar": "Di: “Alma mía, muéstrame lo que vine a hacer, lo que vine a dar, lo que vine a recordar.”",
-          "affirmation": "Honro la misión de mi alma. Camino con propósito, con verdad y con la luz que traje a este mundo.",
-          "ritual": "1) Enciende una vela dorada o blanca.\n2) Escribe 3 cosas que te encienden el corazón.\n3) Visualiza un haz de luz descendiendo del cosmos a tu coronilla.\n4) Di: “Activo el recuerdo de mi misión de alma. Con claridad, con confianza, con amor.”\n5) Deja llegar imágenes o palabras."
-        },
-        "reversed": {
-          "meaning": "Confusión vocacional, desconexión del propósito o sensación de vacío. La misión sigue activa, aunque no se perciba con claridad."
-        }
-      },
-      {
-        "id": "origen_galactico",
-        "name": "Origen Galáctico",
-        "upright": {
-          "general": "El Origen Galáctico despierta la memoria más antigua: antes de ser humana, fuiste luz. Indica que tu alma recuerda su procedencia y linaje estelar.\n\nPuede resonar con orígenes como Pleyadiano, Arcturiano, Siriano, Andromedano, Liriano u otros.\n\nNo es concepto: es vibración. Puede traer sensación de no encajar del todo, pero sentir propósito de estar aquí.\n\nPsicológicamente representa sensibilidad elevada, anhelo de hogar, tendencia a ayudar/sanar y sabiduría recordada. Te pide abrazar tu rareza como don.",
-          "love": "En amor, conexiones kármicas o vínculos que trascienden esta vida: almas compañeras, amor de misma familia estelar o relaciones que despiertan conciencia. Soltera, un encuentro destinado puede activar memoria estelar.",
-          "work": "Influye directo en misión: llamada a guiar, sanar, enseñar, activar, crear o transformar; proyectos de conciencia, energía, espiritualidad, creatividad o servicio. Tu propósito no es convencional: vienes a abrir caminos.",
-          "spiritual": "Recuerda y vuelve al centro. Tu origen vive en tu ADN energético. Cuanto más honres tu esencia, más claro tu rumbo.",
-          "stellar": "“Reconozco mi origen. Me alineo con mi linaje estelar y permito que su sabiduría me guíe.”",
-          "affirmation": "Recuerdo mi origen estelar. Mi alma es antigua, sabia y profundamente guiada.",
-          "ritual": "1) Enciende una vela blanca o azul.\n2) Visualiza un cielo estrellado infinito.\n3) Siente una estrella que brilla: tu estrella de origen.\n4) Manos al corazón: “Activo la memoria de mi origen. Me conecto con mi linaje, recibo guía, recibo luz, recibo propósito.”\n5) Permanece sintiendo la energía."
-        },
-        "reversed": {
-          "meaning": "Negación de la sensibilidad espiritual o rechazo de la diferencia. Confusión sobre identidad profunda o miedo a aceptar el origen del alma."
-        }
-      },
-      {
-        "id": "portal_de_encarnacion",
-        "name": "Portal de Encarnación",
-        "upright": {
-          "general": "El Portal de Encarnación representa el instante en que tu alma cruzó a la materia para llegar a la Tierra. Recuerda que tu existencia es un acto consciente.\n\nAparece cuando entras en reconexión con propósito de encarnación: recordar por qué viniste, qué vienes a transformar y qué luz sembrar.\n\nTambién se activa en cambios profundos y renacimientos dentro de la misma vida.\n\nPsicológicamente simboliza reinicios, integración de heridas tempranas, realineación con misión, aceptación del camino humano y reconexión espiritual. Te invita a ver tu vida como viaje sincronizado para tu evolución.",
-          "love": "En amor, relaciones significativas del camino evolutivo: vínculos de contrato álmico, conexiones que catalizan crecimiento y personas que ayudan a recordar quién eres. Cada alma es un maestro del portal.",
-          "work": "En lo profesional, alineamiento con misión: claridad vocacional, cambio de rumbo, activación de talentos dormidos e impulso a roles auténticos. Si hay incomodidad, un nuevo portal se abre.",
-          "spiritual": "Honra tu historia. Incluso lo difícil formó parte del portal. Abre los brazos al siguiente nivel de evolución.",
-          "stellar": "Manos al corazón: “Me alineo con el propósito de mi encarnación. Acepto mi misión. Me entrego al camino que mi alma ha elegido.”",
-          "affirmation": "Honro mi encarnación. Mi vida es un portal sagrado que me guía hacia mi propósito.",
-          "ritual": "1) Siéntate con una vela blanca o dorada.\n2) Visualiza un gran portal de luz.\n3) Respira 3 veces y cruza manos sobre el corazón.\n4) Declara: “Activo mi portal de encarnación. Recuerdo mi propósito. Acepto mi camino. Me alineo con la luz de mi alma.”\n5) Permanece sintiendo expansión y limpieza."
-        },
-        "reversed": {
-          "meaning": "Dificultad para integrar lo espiritual con lo humano. Escapismo, idealización o desconexión del cuerpo y la vida práctica."
-        }
-      },
-      {
-        "id": "puente_entre_mundos",
-        "name": "Puente entre Mundos",
-        "upright": {
-          "general": "Puente entre Mundos representa tu capacidad innata para moverte entre planos de conciencia, realidades vibracionales y dimensiones energéticas. Funciona como canal, portal e intermediaria entre materia y luz.\n\nAparece cuando tu intuición se intensifica, sueños se vuelven simbólicos, recibes mensajes espontáneos, percibes energías ajenas o te conectas en meditación. Eres guía: un puente viviente.\n\nConfirma etapa de acceso elevado a intuición y sabiduría multidimensional.",
-          "love": "En amor, conexiones que trascienden lo físico: vínculo telepático, sueños compartidos, encuentros destinados que activan memorias. No todos entienden tu mundo, pero quien sea para ti podrá caminar entre mundos contigo.",
-          "work": "En propósito, misión ligada a canalización, sanación energética, mediumnidad, artes intuitivas, terapia/guía, activación cuántica, enseñanza de conciencia y acompañamiento emocional. Puedes traducir lo invisible a formas comprensibles.",
-          "spiritual": "No temas lo que percibes. Sensibilidad no es fragilidad. Confía en mensajes, sensaciones y señales: lo que baja es guía, no confusión.",
-          "stellar": "“Me abro a mi naturaleza multidimensional. Honro mi capacidad de ser puente entre mundos.”",
-          "affirmation": "Soy un puente entre mundos. Mi alma canaliza luz, guía y sabiduría desde planos superiores.",
-          "ritual": "1) Enciende una vela blanca o azul celeste.\n2) Siéntate con columna recta y respira 3 veces.\n3) Visualiza una columna de luz descendiendo al coronilla.\n4) Déjala bajar al corazón.\n5) Declara: “Activo mi canal de luz. Me convierto en puente entre lo visible y lo invisible. Recibo, integro y transmito sabiduría estelar.”\n6) Permanece en silencio."
-        },
-        "reversed": {
-          "meaning": "Dificultad para integrar lo espiritual con lo humano. Escapismo, exceso de idealización o desconexión del cuerpo y la vida práctica."
-        }
-      },
-      {
-        "id": "rayo_dorado",
-        "name": "Rayo Dorado",
-        "upright": {
-          "general": "El Rayo Dorado representa la frecuencia de iluminación, soberanía del alma y despertar del poder interno. Ilumina tu campo, limpia densidades antiguas y revela la verdad detrás de dudas, miedos y sombras.\n\nPsicológicamente manifiesta claridad mental/emocional, autoestima fortalecida, activación del plexo solar, revelaciones, empoderamiento y comprensión de valor.\n\nNo solo ilumina: transforma. Disuelve narrativas y autoengaños, y te ayuda a reclamar tu lugar desde autenticidad.",
-          "love": "En amor, trae claridad y verdad. En pareja, ilumina dinámicas y abre conversaciones sinceras; soltera, atraes relaciones auténticas compatibles con tu vibración. El amor que mereces celebra tu luz.",
-          "work": "En lo profesional, anuncia éxito, reconocimiento, talentos visibles y dirección clara. Ideal para emprender, enseñar, liderar, iniciar proyectos, tomar decisiones y mostrar valor sin miedo.",
-          "spiritual": "Suelta la culpa por brillar. Tu luz no es arrogancia: es conciencia, verdad y propósito. Permite que tu alma ilumine lo que tocas.",
-          "stellar": "Mano al plexo: “Activo el Rayo Dorado en mí. Reconozco mi poder, mi verdad y mi luz divina.”",
-          "affirmation": "La luz dorada vive en mí. Me permito brillar con fuerza, verdad y propósito.",
-          "ritual": "1) Enciende una vela dorada o amarilla.\n2) Manos en plexo solar.\n3) Visualiza un rayo dorado descendiendo desde las estrellas.\n4) Repite: “Rayo Dorado, despierta mi poder interno. Ilumina mi camino, revela mi verdad, expande mi conciencia.”\n5) Permanece sintiendo la luz."
-        },
-        "reversed": {
-          "meaning": "Desvalorización personal, duda sobre el propio brillo o rechazo del propio poder espiritual. Talentos ocultos que aún no se reconocen."
-        }
-      },
-      {
-        "id": "reconexion_con_el_corazon",
-        "name": "Reconexión con el Corazón",
-        "upright": {
-          "general": "Reconexión con el Corazón es el retorno a tu centro más sagrado: donde tu alma habla con claridad y tu verdad interior se expresa sin filtros.\n\nIndica que tu corazón pide atención, espacio y escucha. Llama a la suavidad, amor propio, perdón y autenticidad.\n\nPsicológicamente representa sanación emocional, apertura del chakra corazón, liberación de bloqueos, integración de heridas y descanso espiritual.\n\nCuando habitas el corazón, todo se ordena; cuando te alejas, el mundo se confunde.",
-          "love": "Profundamente sanadora. En pareja: conversaciones honestas y espacio para que el amor respire. Soltera: el amor llega cuando tu corazón está disponible, no desde la ansiedad. Cuando eliges desde el corazón, eliges bien.",
-          "work": "Invita a elegir lo que realmente te mueve: camino auténtico, proyectos que resuenen, soltar lo que no vibra y abrirte a profesiones de empatía, creatividad o sanación. El propósito se aclara al decidir desde el corazón, no desde el miedo.",
-          "spiritual": "Regresa a ti. El corazón es el punto donde tu alma y el universo se encuentran. Escucha más lo que sientes y menos lo que temes.",
-          "stellar": "“Me reconecto con mi corazón. Permito que mi alma me hable desde dentro.”",
-          "affirmation": "Escucho la sabiduría de mi corazón. Mi verdad interior me guía con amor y claridad.",
-          "ritual": "1) Enciende una vela rosa o verde.\n2) Manos sobre el corazón.\n3) Respira 3 veces visualizando luz rosada expandiéndose.\n4) Declara: “Activo mi corazón estelar. Sanación, apertura y verdad. Me reconecto con mi esencia divina.”\n5) Permanece sintiendo expansión."
-        },
-        "reversed": {
-          "meaning": "Bloqueo emocional, heridas no sanadas o dificultad para sentir/expresar emociones auténticas. Invita a abrir el corazón con suavidad y sin juicio."
-        }
-      },
-      {
-        "id": "renacimiento_estelar",
-        "name": "Renacimiento Estelar",
-        "upright": {
-          "general": "Renacimiento Estelar marca un antes y un después: transformación profunda y resurgir. Indica que completaste un proceso interno y estás lista para emerger en una nueva vibración.\n\nPuede ser renacimiento energético, emocional, espiritual y a veces físico.\n\nPsicológicamente señala liberación de cargas, finalización de etapa kármica, ascensión vibratoria, cambio de identidad interna, despertar de capacidades y claridad sobre quién eres ahora.\n\nEres una versión diferente: más ligera, consciente y alineada. El universo acompaña tu expansión.",
-          "love": "En amor, nace una nueva forma de relacionarte: más consciente, libre, honesta y auténtica. En pareja: renovación o evolución; soltera: llega un amor que resuena con tu nueva vibración, no con heridas antiguas.",
-          "work": "En lo profesional, ciclo nuevo: cambio de propósito, nuevo proyecto, claridad vocacional, abandonar lo que no vibra, despertar talentos. Recuperas poder, dirección y motivación. Lo que antes era difícil se vuelve fluido.",
-          "spiritual": "Abraza la nueva versión. No mires atrás con culpa. Honra lo vivido y permite que la vida te muestre lo que viene. Confía en el proceso cósmico.",
-          "stellar": "“Renazco en luz. Me alineo con mi frecuencia más elevada. Acepto mi nuevo camino.”",
-          "affirmation": "Estoy renaciendo. Mi alma se expande y mi camino se ilumina. Soy la nueva versión de mí misma.",
-          "ritual": "1) Enciende una vela blanca o dorada.\n2) En un papel escribe lo que dejas atrás.\n3) En otro, lo que deseas recibir.\n4) Di: “Dejo atrás lo que ya no vibra conmigo. Renazco en una nueva luz.”\n5) Rompe/quema (si es seguro) el primer papel.\n6) Guarda el segundo.\n7) Visualiza luz expandiéndose desde el corazón."
-        },
-        "reversed": {
-          "meaning": "Resistencia al cambio profundo, miedo a soltar identidad antigua o apego al pasado. El renacimiento está preparado, pero no se acepta."
-        }
-      },
-      {
-        "id": "santuario_interior",
-        "name": "Santuario Interior",
-        "upright": {
-          "general": "El Santuario Interior es el templo sagrado dentro de ti: un espacio intocable donde tu luz se restablece y tu verdad se escucha con claridad.\n\nAparece cuando necesitas regresar a la calma, al silencio y a la paz interna. Habla de descanso emocional, saturación de estímulos, necesidad de límites energéticos, recargar el aura y volver al cuerpo/respiración/presencia.\n\nCuando te desconectas del santuario, te pierdes; cuando vuelves, todo tiene sentido.",
-          "love": "En amor, pide priorizarte sin culpa. La intimidad nace cuando estás en paz contigo. En pareja: fortalecer tu espacio personal; soltera: recordar que la relación más importante es contigo. Quien sea para ti honrará tu espacio sagrado.",
-          "work": "En lo profesional, necesidad de recuperar energía, reorganizar prioridades, evitar agotamiento, pausar antes de actuar y proteger creatividad. El propósito florece desde serenidad, no desde saturación.",
-          "spiritual": "Regresa a tu respiración. Tu santuario es portal directo al alma. Cuida ese espacio como un templo.",
-          "stellar": "Manos al corazón: “Entro en mi santuario interior. Aquí recuerdo quién soy. Aquí vuelvo a casa.”",
-          "affirmation": "Mi interior es un templo de luz. Encuentro paz, claridad y verdad dentro de mí.",
-          "ritual": "1) Busca un lugar en silencio.\n2) Siéntate y enciende una vela blanca o rosa.\n3) Respira 3 veces.\n4) Visualiza un espacio en tu pecho (jardín/templo/círculo de luz).\n5) Declara: “Activo mi santuario interior. Este es mi espacio seguro, mi refugio, mi hogar.”\n6) Permanece sintiendo la paz expandirse."
-        },
-        "reversed": {
-          "meaning": "Dificultad para encontrar paz interna, ruido mental o desconexión del espacio sagrado personal. Necesidad urgente de silencio y autocuidado."
-        }
-      },
-      {
-        "id": "semilla_del_coraje",
-        "name": "Semilla del Coraje",
-        "upright": {
-          "general": "La Semilla del Coraje es la chispa divina que tu alma plantó en ti: valentía consciente para atravesar desafíos humanos y espirituales.\n\nAparece cuando es momento de activar coraje interno: valor suave y luminoso que sostiene cuando crees desmoronarte.\n\nIndica fase de decisiones valientes (no siempre fáciles, sí verdaderas). Psicológicamente simboliza fortaleza emocional, resiliencia, superación de miedos, confianza en el camino y determinación sagrada.\n\nNo viniste a vivir pequeña: viniste a expandirte y ocupar tu lugar sin disculpas.",
-          "love": "En amor, valor para abrir el corazón: permitirte sentir, comunicar o recibir. En pareja: conversaciones importantes y autenticidad; soltera: amar requiere coraje y verdad, no riesgo. El amor destinado honra tu esencia.",
-          "work": "En lo profesional, paso audaz: iniciar proyecto, dejar camino que no resuena, mostrar dones, liderar, aceptar oportunidad, romper autosabotaje. El propósito necesita valentía tanto como talento.",
-          "spiritual": "No esperes sentirte lista: el coraje aparece cuando actúas. Da el paso, habla tu verdad, honra intuición. Tu alma te sostiene.",
-          "stellar": "Manos al plexo: “Activo la semilla del coraje en mí. Me permito avanzar con firmeza, amor y verdad.”",
-          "affirmation": "Soy valiente. Mi alma me guía. Actúo con coraje, claridad y propósito.",
-          "ritual": "1) Enciende vela dorada/roja/amarilla.\n2) Manos en plexo y respira 3 veces.\n3) Visualiza chispa dorada creciendo en fuego sagrado.\n4) Declara: “Activa en mí la semilla del coraje. Que mi alma guíe mis pasos y mi luz sostenga mi camino.”\n5) Siente la fuerza."
-        },
-        "reversed": {
-          "meaning": "Bloqueo para actuar por miedo o inseguridad. El coraje sigue ahí, pero no está siendo activado."
-        }
-      },
-      {
-        "id": "sincronias_del_universo",
-        "name": "Sincronías del Universo",
-        "upright": {
-          "general": "Las Sincronías del Universo son la forma en que la existencia te habla cuando tu energía está alineada. Son señales, coincidencias, repeticiones, encuentros inesperados y oportunidades que se abren como si el universo acomodara piezas.\n\nAparecen cuando pensamientos, emociones y acciones están en coherencia. Nada es casualidad: cada sincronicidad dice “Vas por el camino correcto.”\n\nPsicológicamente señalan alineación con propósito, apertura de caminos, claridad sobre decisiones, intuición activada, manifestación acelerada y confianza en la vida.",
-          "love": "En amor, encuentros significativos, señales repetidas sobre una persona, intuiciones claras y mensajes que confirman lo que el corazón siente. El amor también se anuncia con sincronías.",
-          "work": "En lo profesional, oportunidades alineadas, puertas que se abren sin esfuerzo, ideas que llegan de la nada, personas que aparecen para ayudar, confirmaciones sobre decisiones. Las sincronías muestran hacia dónde ir.",
-          "spiritual": "Presta atención: números, nombres, palabras, canciones, sueños, encuentros… todo contiene mensajes. Camina con ojos del alma abiertos.",
-          "stellar": "“Universo, muéstrame la señal más clara. Estoy lista para recibir guía a través de tus sincronías.”",
-          "affirmation": "Estoy alineada con el universo. Las sincronías guían mi camino con claridad y amor.",
-          "ritual": "1) Enciende una vela blanca o dorada.\n2) Escribe una pregunta/decisión.\n3) Respira 3 veces.\n4) Di: “Querido universo, guíame. Muéstrame señales claras y repetidas que me indiquen mi camino más elevado.”\n5) Guarda el papel bajo la almohada o en altar y observa los días siguientes."
-        },
-        "reversed": {
-          "meaning": "Desconexión con las señales, exceso de mente racional o desconfianza en la guía del universo. Las sincronías ocurren, pero no se observan ni interpretan."
-        }
-      },
-      {
-        "id": "tribu_del_alma",
-        "name": "Tribu del Alma",
-        "upright": {
-          "general": "La Tribu del Alma son las almas que han viajado contigo a través de vidas, planos y dimensiones. Se reconocen más allá del tiempo.\n\nAparece cuando estás llamando o siendo llamada por miembros de tu tribu espiritual. Llegan cuando estás lista para expandirte, sanar, recordar o avanzar.\n\nPuede manifestarse como amistades profundas, personas nuevas con familiaridad inmediata, maestros/guías, conexiones que activan recuerdos.\n\nPsicológicamente simboliza sentirte comprendida, encontrar lugar, atraer relaciones alineadas, soltar vínculos que ya no resuenan, sentir apoyo y recordar que no caminas sola.",
-          "love": "En amor, conexiones profundas y predestinadas: relación de almas compañeras, vínculo con propósito, reencuentro de otras vidas. En pareja, confirma propósito evolutivo; soltera, anuncia alguien que abre un nuevo capítulo emocional.",
-          "work": "En lo profesional, misión conectada con otras almas: colaboradores, apoyo, inspiración y comunidad alineada. Tu propósito no se cumple sola: se expande en conexión.",
-          "spiritual": "Abre el corazón a nuevas conexiones y suelta lo que ya cumplió función. El universo no quita: reemplaza con algo más alineado. La intuición reconoce a la tribu.",
-          "stellar": "“Llamo a mi Tribu del Alma. Que lleguen quienes resuenen con mi luz.”",
-          "affirmation": "Atraigo a mi Tribu del Alma. Estoy rodeada de almas que me elevan, me sostienen y me acompañan.",
-          "ritual": "1) Enciende vela rosa/blanca/azul.\n2) Manos en corazón.\n3) Visualiza un círculo de luz con seres luminosos.\n4) Declara: “Invoco a mi Tribu del Alma. Que quienes compartan mi propósito y mi vibración aparezcan en mi camino.”\n5) Siente la energía cálida y expansiva."
-        },
-        "reversed": {
-          "meaning": "Sensación de no pertenecer, aislamiento o dificultad para encontrar personas afines. Puede haber heridas de rechazo o miedo a mostrarse. La tribu existe, pero aún no te permites reconocerla."
-        }
+      "reversed": {
+        "meaning": "Desarraigo o dificultad para materializar la espiritualidad."
       }
-    ]
-  }
+    },
+
+    {
+      "id": "codigos_de_luz",
+      "name": "Códigos de Luz",
+      "upright": {
+        "general": "Representan transmisiones energéticas que activan memorias, dones y expansiones internas. No se comprenden con la mente: se integran.",
+        "love": "Expansión del corazón y claridad en vínculos.",
+        "work": "Descarga de inspiración y activación de talentos.",
+        "spiritual": "Permite la activación sin control.",
+        "stellar": "Estoy lista para recibir los Códigos de Luz.",
+        "affirmation": "Integro los Códigos de Luz que mi alma necesita.",
+        "ritual": "Visualiza una lluvia de luz cayendo suavemente sobre ti."
+      },
+      "reversed": {
+        "meaning": "Saturación espiritual o dificultad para integrar frecuencias nuevas."
+      }
+    },
+
+    {
+      "id": "consejo_de_guias",
+      "name": "Consejo de Guías",
+      "upright": {
+        "general": "Indica guía, protección y acompañamiento espiritual activo.",
+        "love": "Relaciones alineadas con tu alma.",
+        "work": "Dirección intuitiva clara para decisiones.",
+        "spiritual": "Escucha señales, sueños y corazonadas.",
+        "stellar": "Consejo de Guías, muéstrenme el camino.",
+        "affirmation": "Estoy guiada y protegida.",
+        "ritual": "Visualiza un círculo de seres luminosos a tu alrededor."
+      },
+      "reversed": {
+        "meaning": "Bloqueo del canal intuitivo o desconfianza en la guía."
+      }
+    },
+
+    {
+      "id": "contrato_almico",
+      "name": "Contrato Álmico",
+      "upright": {
+        "general": "Acuerdos del alma activos que traen aprendizajes, encuentros y cierres.",
+        "love": "Conexiones kármicas y vínculos del alma.",
+        "work": "Tu camino laboral forma parte del plan del alma.",
+        "spiritual": "Honra las lecciones y confía.",
+        "stellar": "Acepto y honro mis contratos álmicos.",
+        "affirmation": "Todo en mi camino tiene propósito.",
+        "ritual": "Visualiza un pergamino de luz activándose."
+      },
+      "reversed": {
+        "meaning": "Contratos no comprendidos o ciclos kármicos pendientes."
+      }
+    },
+
+    {
+      "id": "destino_cuantico",
+      "name": "Destino Cuántico",
+      "upright": {
+        "general": "Múltiples líneas de tiempo se abren. Tu vibración elige el camino.",
+        "love": "Alineación vibracional en relaciones.",
+        "work": "Saltos cuánticos y oportunidades.",
+        "spiritual": "Elige tu versión más elevada.",
+        "stellar": "Me alineo con mi destino cuántico.",
+        "affirmation": "Creo mi futuro con conciencia.",
+        "ritual": "Visualiza elegir la línea de tiempo más elevada."
+      },
+      "reversed": {
+        "meaning": "Miedo a decidir o aferrarse a lo antiguo."
+      }
+    },
+
+    {
+      "id": "luz_en_la_sombra",
+      "name": "Luz en la Sombra",
+      "upright": {
+        "general": "Integración de heridas y patrones. La sombra guarda un don.",
+        "love": "Sanación de patrones afectivos.",
+        "work": "Liberar miedos que frenan el propósito.",
+        "spiritual": "La luz integra, no juzga.",
+        "stellar": "Acepto mi luz y mi sombra.",
+        "affirmation": "Mi sombra se transforma en sabiduría.",
+        "ritual": "Visualiza luz abrazando tu sombra."
+      },
+      "reversed": {
+        "meaning": "Negación de aspectos internos."
+      }
+    },
+
+    {
+      "id": "mision_de_alma",
+      "name": "Misión de Alma",
+      "upright": {
+        "general": "Recuerdo del propósito por el cual encarnaste.",
+        "love": "Relaciones alineadas con tu evolución.",
+        "work": "Camino vocacional auténtico.",
+        "spiritual": "La misión se recuerda, no se busca.",
+        "stellar": "Muéstrame mi misión.",
+        "affirmation": "Honro la misión de mi alma.",
+        "ritual": "Escribe lo que enciende tu corazón."
+      },
+      "reversed": {
+        "meaning": "Confusión vocacional o desconexión temporal."
+      }
+    },
+
+    {
+      "id": "renacimiento_estelar",
+      "name": "Renacimiento Estelar",
+      "upright": {
+        "general": "Transformación profunda y nueva identidad vibracional.",
+        "love": "Relaciones alineadas con tu nueva versión.",
+        "work": "Nuevo ciclo profesional.",
+        "spiritual": "Confía en la expansión.",
+        "stellar": "Renazco en luz.",
+        "affirmation": "Estoy renaciendo.",
+        "ritual": "Deja atrás lo viejo y recibe lo nuevo."
+      },
+      "reversed": {
+        "meaning": "Resistencia al cambio."
+      }
+    },
+
+    {
+      "id": "tribu_del_alma",
+      "name": "Tribu del Alma",
+      "upright": {
+        "general": "Almas que resuenan contigo a través de vidas.",
+        "love": "Conexiones profundas y predestinadas.",
+        "work": "Comunidad alineada con tu misión.",
+        "spiritual": "No caminas sola.",
+        "stellar": "Llamo a mi Tribu del Alma.",
+        "affirmation": "Estoy rodeada de almas afines.",
+        "ritual": "Visualiza un círculo de luz con tu tribu."
+      },
+      "reversed": {
+        "meaning": "Sensación de no pertenecer o aislamiento."
+      }
+    }
+  ]
 }
