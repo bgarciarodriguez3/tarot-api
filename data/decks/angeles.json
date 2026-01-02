@@ -1,8 +1,7 @@
 {
-  "deckId": "angeles",
-  "deckName": "Ángeles",
-  "language": "es",
-  "version": "1.0.0",
+  "name": "Ángeles",
+  "description": "Mensajes, guía y protección de los ángeles y arcángeles.",
+  "back": "angeles_back.png",
   "cards": [
     {
       "id": "angeles_001",
@@ -10,214 +9,225 @@
       "slug": "angel-de-la-abundancia-prosperidad",
       "image": "angeles/angel-de-la-abundancia.png",
       "upright": {
-        "general": "La energía del Ángel de la Abundancia irrumpe como una corriente suave pero poderosa que despierta en ti la certeza de que eres merecedora de todo lo bueno que la vida quiere ofrecerte.\nSu presencia se percibe como una luz dorada y verde que fluye hacia tu campo energético, abriendo caminos, disolviendo bloqueos y activando la vibración de prosperidad en cada rincón de tu ser.\nEste ángel no solo habla de dinero o recursos materiales, sino de una abundancia integral: emocional, espiritual, creativa, relacional y vital.\nEs la energía que te recuerda que el universo está lleno de oportunidades infinitas y que tú, como alma encarnada, tienes el derecho natural de recibirlas.\nCuando aparece esta carta, te anuncia que algo importante está por expandirse en tu vida.\nPuede ser un proyecto, una relación, una idea, un ingreso, una oportunidad o incluso un nuevo nivel de autoestima.\nLa abundancia no siempre llega desde fuera: muchas veces comienza dentro, como una semilla que despierta en tu corazón y se expande hacia tu realidad.\nPsicológicamente, simboliza merecimiento, confianza en la vida, apertura para recibir, liberación de creencias limitantes y la capacidad de crear desde la plenitud en lugar de la carencia.\nEl Ángel de la Abundancia trabaja sobre patrones subconscientes heredados o aprendidos que han limitado tu forma de prosperar.\nSu energía disuelve miedos al éxito, culpa por recibir, y viejas ideas de sacrificio o sufrimiento.\nEsta carta confirma que estás entrando en un ciclo de expansión.\nLas puertas que parecían cerradas comienzan a abrirse, las oportunidades fluyen con mayor facilidad y tu frecuencia vibratoria se eleva hacia una vida más próspera, equilibrada y abundante.",
-        "love": "En el amor, esta carta anuncia una expansión emocional.\nSi estás en pareja, favorece la abundancia afectiva: más gestos, más conexión, más armonía y más entrega mutua.\nSi estás soltera, la energía de la abundancia te prepara para recibir un amor sano, nutritivo y alineado con tu valor.\nSu mensaje es:\nEl amor también es abundancia; se multiplica cuando lo compartes contigo misma primero.",
-        "work": "En lo profesional, esta carta es extremadamente positiva.\nAnuncia crecimiento, nuevas oportunidades, reconocimiento, ideas inspiradas, proyectos que prosperan y caminos que se abren con facilidad inesperada.\nTambién puede indicar mejoras financieras, aumento de ingresos o una nueva fase de estabilidad económica.\nPsicológicamente, te ayuda a confiar en tus talentos y a actuar desde una mentalidad expansiva en lugar de limitante.\nTodo lo que emprendas desde la inspiración tiene un gran potencial de florecer bajo esta energía.",
-        "spiritualAdvice": "El Ángel de la Abundancia te invita a abrir el corazón al merecimiento.\nLa prosperidad comienza a fluir cuando sueltas la resistencia, la autoexigencia y el miedo a recibir demasiado.\nPermite que la vida te sorprenda, que te bendiga y que te muestre que dar y recibir son una misma danza.",
-        "angelAdvice": "Haz una pausa, coloca las manos abiertas hacia arriba y di:\n“Estoy lista para recibir. Permite que la abundancia fluya hacia mí con facilidad y alegría.”\nSiente cómo tu energía se expande.",
-        "affirmation": "“Merezco abundancia ilimitada. Permito que la prosperidad llegue a mi vida con facilidad y gratitud.”",
-        "ritual": "Busca un billete, una moneda o un objeto que represente abundancia para ti.\nSostenlo entre tus manos y cierra los ojos.\nVisualiza una luz dorada envolviendo ese objeto y expandiéndose hacia tu pecho.\nDi:\n“Ángel de la Abundancia, activa el flujo de prosperidad en mi vida.\nAbro mis caminos, abro mi energía y recibo todo lo bueno que el universo tiene para mí.”\nRespira profundamente y mantén el objeto cerca de ti durante todo el día."
+        "general": "La energía del Ángel de la Abundancia despierta la certeza de que eres merecedora de todo lo bueno. Su luz dorada y verde disuelve bloqueos y activa prosperidad integral: material, emocional, espiritual y creativa.",
+        "love": "Expansión afectiva y apertura para recibir un amor sano y nutritivo.",
+        "work": "Crecimiento, reconocimiento y oportunidades económicas favorables.",
+        "spiritualAdvice": "Abre tu corazón al merecimiento. Dar y recibir son la misma danza.",
+        "angelAdvice": "Estoy lista para recibir. Permito que la abundancia fluya hacia mí.",
+        "affirmation": "Merezco abundancia ilimitada.",
+        "ritual": "Visualiza luz dorada activando el flujo de prosperidad en tu vida."
       },
       "reversed": {
-        "meaning": "El Ángel de la Abundancia invertido habla de bloqueos económicos, miedo a la escasez o dificultad para recibir. Invita a revisar creencias limitantes sobre merecimiento y prosperidad."
+        "meaning": "Bloqueos de merecimiento o miedo a la escasez."
       }
     },
+
     {
       "id": "angeles_002",
       "name": "Ángel de la Guarda – Cuidado",
       "slug": "angel-de-la-guarda-cuidado",
       "image": "angeles/angel-de-la-guarda.png",
       "upright": {
-        "general": "La presencia del Ángel de la Guarda es una de las energías más puras, tiernas y constantes del plano espiritual.\nEste ángel te acompaña desde antes de tu nacimiento y permanece contigo en cada paso, incluso en aquellos en los que has sentido que caminabas sola.\nSu luz blanca y cálida envuelve tu alma como un manto protector que te recuerda que siempre hay una fuerza divina sosteniéndote, aun cuando tus pensamientos se nublan o tus emociones pesan.\nCuando aparece esta carta, te habla de un momento en el que necesitas contención, seguridad y calma interior.\nEl Ángel de la Guarda llega para recordarte que no tienes que enfrentarlo todo sin apoyo; que puedes pedir guía, ayuda, claridad y protección en cualquier instante.\nSu energía suaviza la carga emocional, disipa la sensación de desorientación y despierta en ti una confianza renovada en la vida.\nPsicológicamente, este ángel simboliza seguridad emocional, autoapoyo, confianza en el camino, suavidad interior y la capacidad de reconectar con tu propio refugio interno.\nSu presencia te invita a descansar, a permitirte cuidar tu energía, a soltar el peso que no te corresponde y a reconectar con la sensación de que estás acompañada, guiada y amada por una presencia invisible pero constante.\nEste ángel te recuerda que tu intuición siempre ha sido un puente entre tú y lo divino, y que esa voz suave dentro de ti es, muchas veces, su manera de dirigirse a tu corazón.\nEsta carta es un abrazo profundo del universo:\nUn recordatorio de que no estás sola.\nUn susurro que dice: “Estoy contigo”.",
-        "love": "En el amor, este ángel trae protección emocional, comprensión más profunda y suavidad afectiva.\nSi estás en pareja, ayuda a estabilizar el vínculo, sanar tensiones y promover una conexión más tierna y segura.\nSi estás soltera, te pide que recuerdes que tu valor no depende de la presencia de nadie más: tú eres suficiente, completa y digna de un amor sano.\nSu mensaje es:\nEl amor comienza cuando te sientes acompañada por ti misma.",
-        "work": "En lo profesional, el Ángel de la Guarda te señala que estás siendo guiada hacia decisiones que te darán paz mental y estabilidad.\nEs una energía que armoniza ambientes laborales, protege tus procesos y te ayuda a tomar elecciones alineadas con tu bienestar interior.\nPsicológicamente, te recuerda que puedes avanzar sin presión, que estás siendo apoyada espiritualmente y que cada paso, incluso los más pequeños, está siendo guiado.",
-        "spiritualAdvice": "Tu Ángel de la Guarda te pide que te entregues a su protección.\nDescansa en su amor.\nPermite que te sostenga cuando tu mente se agota y cuando tu corazón necesita un refugio.\nConfía: no estás sola, nunca lo has estado.",
-        "angelAdvice": "Coloca tu mano en tu pecho y di:\n“Ángel de mi Guarda, acompáñame hoy. Permíteme sentir tu presencia y tu guía.”\nSiente cómo la energía se suaviza a tu alrededor.",
-        "affirmation": "“Estoy guiada, sostenida y acompañada en cada paso. La vida me cuida, la luz me protege y nunca camino sola.”",
-        "ritual": "Abraza tus propios hombros como si abrazaras a tu ángel.\nRespira profundo y visualiza un resplandor blanco envolviéndote con cariño.\nDi:\n“Ángel de mi Guarda, protégeme, guíame y acompáñame.\nQue tu luz me envuelva y me sostenga en cada paso.”\nPermanece unos instantes sintiendo la ternura de su presencia."
+        "general": "Presencia protectora constante que te recuerda que nunca estás sola. Su luz blanca brinda contención y calma.",
+        "love": "Protección emocional y vínculos más seguros.",
+        "work": "Guía suave hacia decisiones alineadas con tu bienestar.",
+        "spiritualAdvice": "Descansa en la certeza de que estás acompañada.",
+        "angelAdvice": "Ángel de mi Guarda, acompáñame hoy.",
+        "affirmation": "Estoy guiada y protegida.",
+        "ritual": "Visualiza un manto de luz blanca envolviéndote."
       },
       "reversed": {
-        "meaning": "El Ángel Guardián invertido señala sensación de soledad, abandono o desconexión espiritual. Es un recordatorio de que la protección sigue presente, aunque no siempre se perciba."
+        "meaning": "Sensación de soledad o desconexión espiritual."
       }
     },
+
     {
       "id": "angeles_003",
       "name": "Ángel de los Sueños – Intuición",
       "slug": "angel-de-los-suenos-intuicion",
       "image": "angeles/angel-de-los-suenos.png",
       "upright": {
-        "general": "La energía del Ángel de los Sueños llega como un velo suave que envuelve tu conciencia y te invita a ingresar en los reinos sutiles de la intuición, la simbología y el lenguaje del alma.\nEste ángel actúa entre mundos: el de la vigilia y el del sueño, el consciente y el inconsciente, lo visible y lo invisible. Es el puente que te permite comprender mensajes que no llegan por la mente lógica, sino por la vía profunda del sentimiento, la visión y la sensibilidad ampliada.\nCuando esta carta aparece, significa que estás entrando en un periodo donde tu intuición se vuelve más aguda, tus sueños más reveladores y tu sensibilidad más fina y despierta.\nEs un recordatorio de que tu alma siempre está hablándote, incluso cuando duermes, y que tus sueños contienen claves, señales, respuestas y memorias que tu consciencia diurna no siempre consigue descifrar.\nPsicológicamente, este ángel simboliza autoconexión profunda, sabiduría interior, sensibilidad elevada, imaginación creativa, y capacidad para leer la energía más allá de lo evidente.\nSu presencia te ayuda a confiar en tus corazonadas, a escuchar tus presentimientos y a reconocer que aquello que sientes sin explicación muchas veces es tu verdad más pura.\nEste ángel también actúa como un guardián nocturno: protege tus sueños, limpia tu campo energético mientras duermes y te guía hacia experiencias oníricas que tienen un propósito espiritual.\nAl venir a ti, trae revelaciones importantes, aperturas de consciencia y una invitación a prestarle más atención a los mensajes que tu alma lleva tiempo enviándote.\nEsta carta confirma que la respuesta que estás buscando te será revelada de una forma simbólica: una visión, una sensación, un sueño, un presentimiento.\nTu intuición está más despierta que nunca.",
-        "love": "En el amor, el Ángel de los Sueños anuncia claridad emocional que llega a través de intuiciones, sueños significativos o sensaciones profundas.\nSi estás en pareja, esta energía ayuda a comprender la dinámica emocional del vínculo desde un ángulo más sensible y espiritual.\nSi estás soltera, te indica que tu alma ya sabe quién se acerca, incluso antes de que ese encuentro ocurra en lo físico.\nSu mensaje es:\nEl corazón percibe verdades que aún no se manifestaron. Escúchalo.",
-        "work": "En lo profesional, esta carta te invita a confiar más en tu intuición que en la lógica rígida.\nTus ideas creativas, tus corazonadas y tus visiones internas tienen un propósito.\nLos proyectos que nazcan de tus sueños —tanto los nocturnos como los del alma— tienen un gran potencial de florecer.\nPsicológicamente, te permite conectar con inspiración pura, desbloqueos creativos y soluciones que llegan en momentos inesperados, especialmente durante el descanso.\nTu propósito se hace más claro cuando escuchas la sabiduría de tu interior.",
-        "spiritualAdvice": "El Ángel de los Sueños te pide que prestes atención a todo aquello que sientes sin explicación.\nTu alma te está enviando mensajes a través de imágenes, símbolos, emociones y sensaciones corporales.\nNo ignores tu intuición:\nes tu brújula más confiable.",
-        "angelAdvice": "Antes de dormir, coloca tus manos sobre tu corazón y di:\n“Ángel de los Sueños, muéstrame lo que debo saber. Guíame a través de mis visiones nocturnas.”\nAbre tu campo para recibir.",
-        "affirmation": "“Mi intuición es clara y profunda. Mis sueños me revelan caminos, mensajes y respuestas alineadas con mi verdad.”",
-        "ritual": "Antes de dormir, coloca un vaso de agua o un cuarzo (amatista, cuarzo rosa o lapislázuli) en tu mesita de noche.\nRespira profundamente y di:\n“Ángel de los Sueños, protege mi descanso, limpia mi energía y muéstrame en sueños lo que mi alma necesita ver.”\nAl despertar, bebe un sorbo del agua o toma el cuarzo y anota lo primero que recuerdes, aunque sea una sensación.\nLos mensajes más importantes suelen llegar en los primeros segundos."
+        "general": "Puente entre consciente e inconsciente. Activa intuición, sueños reveladores y mensajes del alma.",
+        "love": "Claridad emocional que llega por sensaciones y presentimientos.",
+        "work": "Inspiración creativa y soluciones intuitivas.",
+        "spiritualAdvice": "Escucha lo que sientes sin explicación.",
+        "angelAdvice": "Muéstrame lo que debo saber a través de mis sueños.",
+        "affirmation": "Mi intuición es clara y profunda.",
+        "ritual": "Pide guía antes de dormir y anota lo que recuerdes al despertar."
       },
       "reversed": {
-        "meaning": "Esta carta invertida indica desconexión de la intuición, sueños ignorados o mensajes del subconsciente no atendidos. Puede señalar cansancio espiritual o necesidad de descanso profundo."
+        "meaning": "Desconexión de la intuición o mensajes ignorados."
       }
     },
+
     {
       "id": "angeles_004",
       "name": "Ángel del Nuevo Comienzo – Renacimiento",
       "slug": "angel-del-nuevo-comienzo-renacimiento",
       "image": "angeles/angel-del-nuevo-comienzo.png",
       "upright": {
-        "general": "La energía del Ángel del Nuevo Comienzo llega como el primer rayo de sol después de una larga noche: suave, cálida, esperanzadora, pero también poderosa y llena de promesas.\nEste ángel se manifiesta cuando un ciclo interno o externo ha llegado a su cierre natural y tu alma se prepara para renacer en una versión más auténtica, más consciente y más luminosa de ti misma.\nCuando aparece esta carta, es señal de que estás atravesando un portal energético importante.\nPuede que aún no lo veas con claridad, pero ya estás dejando atrás capas, historias, viejos miedos y formas de vivir que ya no resonaban con tu verdad actual.\nEl Ángel del Nuevo Comienzo te acompaña en este tránsito y te recuerda que todo renacer necesita un pequeño acto de fe: soltar lo que fue para abrir espacio a lo que quiere llegar.\nPsicológicamente, esta carta representa renovación emocional, cambio de identidad, valentía para avanzar, recuperación de vitalidad, y apertura hacia lo desconocido.\nEste ángel te muestra que la vida es un continuo movimiento de muerte y renacimiento: no muere quien tú eres, sino lo que ya no te sostiene.\nSu energía se siente como una invitación cálida a liberarte del pasado, de la culpa, del miedo a equivocarte o del apego a lo conocido.\nTe recuerda que tu alma está lista para expandirse hacia un territorio nuevo donde tu luz podrá brillar con más fuerza.\nEsta carta es una señal clara de que un capítulo termina con amor y otro comienza con propósito.",
-        "love": "En el amor, el Ángel del Nuevo Comienzo anuncia aperturas emocionales, nuevas etapas y oportunidades para amar de una forma más consciente.\nSi estás en pareja, esta energía puede indicar renovación del vínculo, un inicio fresco o una nueva forma de conectar.\nSi estás soltera, habla de un renacimiento interno que te prepara para recibir un amor más compatible con tu vibración actual.\nSu mensaje es:\nEl amor más bello llega cuando tú renaces primero.",
-        "work": "En lo profesional, esta carta indica cambios positivos: nuevos proyectos, nuevas oportunidades, nuevos talentos que se despiertan o caminos que antes no te habías permitido explorar.\nEs una energía ideal para reinventarte, tomar decisiones valientes y dar un paso hacia aquello que realmente te inspira.\nPsicológicamente, te ayuda a soltar expectativas viejas, roles impuestos o formas de trabajar que ya no te llenan.\nTodo lo que comience bajo esta energía tiene un gran potencial de crecimiento.",
-        "spiritualAdvice": "El Ángel del Nuevo Comienzo te pide que confíes en el proceso de renacer.\nEl pasado ya cumplió su propósito.\nHonra lo que fue, agradece lo aprendido y permítete avanzar sin miedo.\nEstás entrando a una nueva frecuencia, más elevada y más coherente con tu esencia.",
-        "angelAdvice": "Coloca tus manos en tu corazón y di:\n“Me abro plenamente a mi nuevo comienzo. Guíame hacia mi renacimiento con amor y claridad.”\nSiente la expansión suave que comienza en tu pecho.",
-        "affirmation": "“Me permito renacer. Cada día soy una versión más auténtica, más libre y más luminosa de mí misma.”",
-        "ritual": "Toma una hoja en blanco.\nEscribe aquello de lo que deseas liberarte: emociones, situaciones, hábitos, pensamientos o vínculos.\nDobla la hoja con cuidado mientras dices:\n“Agradezco lo que fue. Me libero y renazco en una nueva energía.”\nSi es seguro, quema la hoja o rómpela en pedazos pequeños.\nLuego coloca tus manos sobre tu corazón y visualiza una luz dorada naciendo desde tu interior, expandiéndose con fuerza y llenándote de vitalidad nueva."
+        "general": "Cierre de ciclos y apertura a una nueva etapa más auténtica.",
+        "love": "Renovación emocional y nuevos comienzos.",
+        "work": "Cambios positivos y reinvención.",
+        "spiritualAdvice": "Suelta el pasado y confía en tu renacer.",
+        "angelAdvice": "Me abro a mi nuevo comienzo.",
+        "affirmation": "Me permito renacer.",
+        "ritual": "Libera lo viejo y visualiza luz naciendo en tu interior."
       },
       "reversed": {
-        "meaning": "El Ángel del Nuevo Comienzo invertido señala miedo a empezar de nuevo o apego a situaciones que ya cumplieron su ciclo. Puede indicar oportunidades rechazadas por inseguridad."
+        "meaning": "Miedo a empezar de nuevo o apego al pasado."
       }
     },
+
     {
       "id": "angeles_005",
       "name": "Ángel del Tiempo Divino – Sincronía",
       "slug": "angel-del-tiempo-divino-sincronia",
       "image": "angeles/angel-del-tiempo-divino.png",
       "upright": {
-        "general": "La energía del Ángel del Tiempo Divino llega como un susurro suave que te invita a soltar la ansiedad por controlar los ritmos de la vida y a confiar en que todo tiene un orden sagrado.\nSu presencia no es ruidosa ni imponente; es la calma que se instala cuando comprendes que el universo nunca se equivoca en sus tiempos, que cada puerta se abre cuando tu alma está lista y no cuando tu mente lo exige.\nEste ángel trabaja sobre tu línea de tiempo, acomodando sincronías, encuentros fortuitos, señales repetidas y coincidencias que no son coincidencias.\nEs el guardián de los momentos exactos, de los ciclos perfectos, de las pausas necesarias y de los inicios que ocurren justo en el instante en que una nueva versión de ti emerge.\nCuando esta carta aparece, estás entrando en un periodo donde las piezas comienzan a encajar casi por sí solas.\nNo necesitas forzar, insistir o empujar:\nlo que es para ti ya está alineándose, y lo que no es para ti se está desvaneciendo con suavidad.\nPsicológicamente, este ángel representa paciencia consciente, confianza, desapego, aceptación de los ritmos naturales, y alineación con la sabiduría de la vida.\nTe invita a entender que no estás retrasada ni adelantada: estás exactamente en el punto del camino donde tu alma debe estar.\nLa energía del Tiempo Divino limpia la urgencia, calma la mente inquieta y disuelve la impaciencia que genera sufrimiento.\nTe muestra que hay un flujo natural guiando tu destino y que, al rendirte a él, entras en estados más elevados de paz.\nCuando este ángel se hace presente, es señal de que algo importante está siendo preparado en lo invisible para manifestarse en lo visible.",
-        "love": "En el amor, esta carta anuncia sincronías poderosas: encuentros inesperados, mensajes significativos, aperturas emocionales y conexiones que llegan en el momento perfecto.\nSi estás en pareja, el Tiempo Divino ayuda a que el vínculo avance al ritmo adecuado, sin presiones ni aceleraciones forzadas.\nSi estás soltera, es señal de que alguien está acercándose a tu vida cuando ambos estén vibracionalmente alineados.\nSu mensaje es:\nNo tienes que perseguir el amor; el amor te encuentra cuando estás lista.",
-        "work": "En lo profesional, este ángel indica que un proyecto, una oportunidad, una confirmación o un camino está madurando a su propio ritmo.\nPuede que aún no tengas la señal que buscas, pero el universo ya está moviendo las piezas a tu favor.\nPsicológicamente, te invita a construir sin prisa, a confiar en tu proceso y a entender que las pausas también hacen parte del propósito.\nBajo esta energía, tus decisiones se vuelven más intuitivas y menos impulsivas.\nTodo lo que nace en el tiempo correcto prospera.",
-        "spiritualAdvice": "El Ángel del Tiempo Divino te pide que sueltes la urgencia y te abras a la confianza.\nLo que es para ti no puede perderte.\nY lo que no es para ti, no puede quedarse.\nRíndete al ritmo perfecto del universo.\nA veces los milagros necesitan tiempo.",
-        "angelAdvice": "Cierra los ojos, respira profundamente y pronuncia:\n“Confío en el tiempo perfecto para mí. Guíame hacia lo que es mío por destino.”\nPermite que tu cuerpo se relaje al instante.",
-        "affirmation": "“Confío en el tiempo divino. Todo llega cuando estoy lista y todo fluye en perfecta sincronía.”",
-        "ritual": "Coloca un objeto simbólico frente a ti (un reloj, un cuarzo, una vela o algo que represente ciclos).\nRespira profundamente tres veces y observa el objeto en silencio.\nDi:\n“Ángel del Tiempo Divino, alineo mi energía con el ritmo perfecto del universo.\nGuía mis pasos y sincroniza mis caminos con mi mayor bien.”\nPermanece unos minutos sintiendo cómo tu energía se armoniza con un ritmo más lento, más consciente, más perfecto."
+        "general": "Todo sucede en el momento perfecto. Confía en los ritmos del universo.",
+        "love": "Encuentros y avances sincronizados.",
+        "work": "Proyectos madurando a su debido tiempo.",
+        "spiritualAdvice": "Suelta la urgencia y confía.",
+        "angelAdvice": "Confío en el tiempo perfecto para mí.",
+        "affirmation": "Todo llega cuando estoy lista.",
+        "ritual": "Respira y entrégate al flujo natural."
       },
       "reversed": {
-        "meaning": "Esta carta invertida habla de impaciencia, ansiedad por resultados o frustración por retrasos. El mensaje es aprender a confiar en los ritmos del universo y soltar el control."
+        "meaning": "Impaciencia o ansiedad por resultados."
       }
     },
+
     {
       "id": "angeles_006",
       "name": "Arcángel Chamuel – Amor",
       "slug": "arcangel-chamuel-amor",
       "image": "angeles/arcangel-chamuel.png",
       "upright": {
-        "general": "La energía del Arcángel Chamuel se presenta como un halo rosado, cálido y vibrante que envuelve tu corazón con una dulzura capaz de disolver tensiones antiguas, heridas emocionales y bloqueos afectivos que quizás llevabas mucho tiempo cargando.\nChamuel es el arcángel del amor puro, del amor que no exige, no presiona, no condiciona; el amor que sostiene, que acaricia, que nutre y que te recuerda que el verdadero afecto nace del alma, no del miedo.\nSu presencia indica que estás entrando en un periodo donde tu corazón comienza a abrirse de manera más consciente.\nNo es un amor impulsivo, sino uno profundo, luminoso y enraizado en la autenticidad.\nChamuel te invita a observar tus relaciones desde un lugar más compasivo, más maduro y más sereno, liberando expectativas rígidas y conectando con el amor que fluye sin esfuerzo.\nPsicológicamente, esta carta representa autoestima, amor propio, equilibrio emocional, vulnerabilidad consciente y reconciliación interna.\nChamuel te recuerda que antes de recibir amor externo debes recordarte el amor que mereces internamente; que las conexiones más armoniosas surgen cuando no buscas llenar vacíos, sino compartir plenitud.\nSu luz rosa trabaja sobre traumas del corazón, memorias afectivas, apegos, decepciones pasadas y patrones repetitivos.\nAporta una vibración tan suave que es capaz de sanar sin dolor, de liberar sin ruptura, de transformar sin caos.\nEsta carta es un portal emocional: te conduce hacia un amor más auténtico, más alineado, más luminoso y más verdadero.\nChamuel viene a recordarte que tú mereces un amor que te haga crecer, que te sostenga y que honre tu esencia.",
-        "love": "En el amor, Chamuel anuncia dulzura, reconciliación, ternura y expansión afectiva.\nSi estás en pareja, esta energía fortalece el vínculo, genera comprensión mutua y abre espacio para conversaciones emocionales profundas que traen armonía.\nSi estás soltera, es señal de que tu corazón está preparándose para atraer un amor compatible con tu vibración más elevada.\nSu mensaje es:\nEl amor llega cuando tu corazón está listo, no cuando tu mente lo exige.\nChamuel te ayuda a sanar el miedo al rechazo, la inseguridad emocional y la sensación de “no ser suficiente”.\nSu luz te recuerda que eres digna de un amor que refleje tu propia belleza interior.",
-        "work": "En el ámbito profesional, Chamuel trae armonía en ambientes laborales, cooperación, relaciones sanas y decisiones basadas en el corazón más que en el miedo.\nEs una carta que favorece trabajos vinculados al cuidado, a la creatividad, a la conexión humana y a proyectos que nacen de la pasión auténtica.\nPsicológicamente, te ayuda a encontrar equilibrio entre responsabilidad y bienestar emocional, recordándote que puedes trabajar con más amor, más suavidad y más coherencia contigo misma.\nChamuel te invita a sanar tu relación con la productividad, dejando atrás el autosacrificio para trabajar desde el placer y la inspiración.",
-        "spiritualAdvice": "El Arcángel Chamuel te pide que mires tu corazón con honestidad.\n¿Dónde estás reteniendo amor?\n¿Dónde estás dando más de lo que recibes?\n¿Dónde estás negando tus deseos emocionales por miedo a ser vulnerable?\nSu energía te invita a abrirte nuevamente a la ternura, a confiar en el amor que llega y a permitir que la vida derrita las corazas que ya cumplieron su función.",
-        "angelAdvice": "Coloca tus manos en tu corazón y di:\n“Chamuel, llena mi corazón de amor, compasión y armonía. Enséñame a amar y a recibir amor desde la luz.”\nSiente una suave expansión en tu pecho.",
-        "affirmation": "“Soy amor, doy amor y recibo amor. Mi corazón se abre a conexiones auténticas, sanas y luminosas.”",
-        "ritual": "Encuentra un espacio tranquilo.\nEnciende una vela rosa o coloca un cuarzo rosa entre tus manos.\nCierra los ojos y visualiza una luz rosada rodeando tu corazón como un abrazo cálido.\nDi en voz suave:\n“Arcángel Chamuel, disuelve mis miedos, libérame del dolor antiguo y abre mi corazón al amor que merezco.”\nPermanece unos minutos respirando profundamente, dejando que la energía rosa se expanda dentro y alrededor de ti."
+        "general": "Amor puro, compasión y sanación del corazón.",
+        "love": "Dulzura, reconciliación y apertura afectiva.",
+        "work": "Armonía y cooperación.",
+        "spiritualAdvice": "Ámate con la misma ternura que deseas recibir.",
+        "angelAdvice": "Llena mi corazón de amor y armonía.",
+        "affirmation": "Soy amor y recibo amor.",
+        "ritual": "Visualiza luz rosada envolviendo tu corazón."
       },
       "reversed": {
-        "meaning": "Chamuel invertido habla de conflictos emocionales, heridas del corazón o falta de amor propio. Puede indicar relaciones desequilibradas o dificultad para perdonar, tanto a otros como a uno mismo."
+        "meaning": "Heridas emocionales o falta de amor propio."
       }
     },
+
     {
       "id": "angeles_007",
       "name": "Arcángel Gabriel – Mensajes",
       "slug": "arcangel-gabriel-mensajes",
       "image": "angeles/arcangel-gabriel.png",
       "upright": {
-        "general": "La energía del Arcángel Gabriel llega como un rayo blanco luminoso que atraviesa las capas de tu mente y tu alma para traer claridad, dirección y revelaciones profundas.\nSu presencia es como una bocanada de aire puro que despeja el ruido mental y te permite escuchar la verdad que brota desde tu interior, esa que muchas veces queda opacada por la prisa, la duda o las voces ajenas.\nCuando Gabriel se manifiesta, significa que estás ingresando en un periodo de despertar intuitivo, donde todo lo que estaba confuso comienza a organizarse en tu mente como piezas de un rompecabezas que finalmente encajan.\nEsta carta anuncia mensajes importantes: ya sea a través de sueños, señales, conversaciones inesperadas, pensamientos repetitivos o intuiciones fuertes que no puedes ignorar.\nPsicológicamente, Gabriel simboliza claridad mental, expresión auténtica, verdad interior, y el poder de decir lo que sientes sin miedo.\nTrae la energía del renacimiento interno: aquello que estaba bloqueado se desbloquea, aquello que no sabías cómo expresar finalmente encuentra palabras.\nSu luz blanca estimula tu visión interna, tu creatividad y tu capacidad de comunicar desde un lugar más elevado y conectado.\nTe ayuda a reconocer la diferencia entre el ruido y la sabiduría, entre la opinión y la intuición, entre lo que tu mente quiere y lo que tu alma realmente te está diciendo.\nEsta carta confirma que el universo está tratando de hablarte.\nPresta atención a los símbolos, al cuerpo, a las corazonadas, a los susurros internos.\nEl mensaje que buscas ya te está buscando a ti.",
-        "love": "En el amor, Gabriel trae claridad emocional, conversaciones sinceras y apertura del corazón.\nSi estás en pareja, esta energía favorece el entendimiento, la expresión honesta y la sanación a través del diálogo.\nSi estás soltera, te invita a escuchar tu intuición: te está guiando hacia relaciones más alineadas, auténticas y luminosas.\nSu mensaje es:\nEl amor verdadero comienza cuando te permites decir tu verdad emocional.",
-        "work": "En lo profesional, Gabriel ilumina ideas, abre puertas creativas y activa tu inspiración.\nSi has estado confundida, bloqueada o indecisa, esta carta trae dirección y nuevos caminos posibles.\nEs el arcángel de los comunicadores, artistas, terapeutas, guías, maestros y cualquier persona cuyo propósito esté ligado a transmitir luz.\nPsicológicamente, te ayuda a ordenar tus procesos internos, a poner en palabras tus talentos y a manifestar proyectos que nacen del alma.\nTodo lo que emprendas desde tu autenticidad tendrá éxito bajo esta energía.",
-        "spiritualAdvice": "El Arcángel Gabriel te pide que escuches —no con los oídos, sino con el corazón.\nLa respuesta que buscas no llega de afuera, sino desde un lugar profundo dentro de ti.\nSilencio, intuición, presencia: ahí están las claves.\nConfía en la primera sensación.\nConfía en el mensaje que ya estás recibiendo.",
-        "angelAdvice": "Toma un respiro profundo y di:\n“Gabriel, abre mis caminos y muéstrame el mensaje que debo recibir.”\nPermanece atenta a las señales en las próximas 72 horas.",
-        "affirmation": "“Recibo con claridad los mensajes del universo. Mi intuición me guía con amor y precisión.”",
-        "ritual": "Busca un lugar tranquilo y enciende una vela blanca.\nToma papel y lápiz.\nCierra los ojos y respira lentamente hasta sentir tu energía calmada.\nDi:\n“Arcángel Gabriel, ilumina mi mente y mi corazón. Permite que escriba aquello que mi alma quiere decirme.”\nAbre los ojos y escribe sin pensar durante 3 minutos.\nLo que salga será tu mensaje canalizado."
+        "general": "Claridad, revelaciones y comunicación divina.",
+        "love": "Conversaciones honestas y apertura emocional.",
+        "work": "Inspiración y expresión creativa.",
+        "spiritualAdvice": "Escucha el mensaje interior.",
+        "angelAdvice": "Muéstrame el mensaje que debo recibir.",
+        "affirmation": "Recibo con claridad los mensajes del universo.",
+        "ritual": "Escribe libremente lo que surja."
       },
       "reversed": {
-        "meaning": "Gabriel invertido habla de confusión, mensajes no escuchados o bloqueo en la comunicación. Puede indicar miedo a expresar la verdad o a recibir noticias que impliquen cambios importantes."
+        "meaning": "Confusión o bloqueo en la comunicación."
       }
     },
+
     {
       "id": "angeles_008",
       "name": "Arcángel Jofiel – Armonía",
       "slug": "arcangel-jofiel-armonia",
       "image": "angeles/arcangel-jofiel.png",
       "upright": {
-        "general": "La energía del Arcángel Jofiel desciende como un rayo dorado suave, cálido y delicado que embellece tu mente, tu entorno y tu mundo interior.\nSu presencia se siente como una brisa que ordena tus pensamientos, aclara tus emociones y transforma el caos interno en un paisaje de serenidad. Jofiel es el arcángel de la armonía, la belleza divina y la elevación de la percepción; es quien te ayuda a ver lo sagrado incluso en los detalles cotidianos.\nCuando Jofiel aparece en tu lectura, te anuncia la llegada de un periodo donde la confusión comienza a disiparse, la energía se suaviza y todo empieza a fluir con más ligereza.\nNo es una armonía superficial, sino profunda: una que reorganiza tus prioridades, limpia tu campo mental y te permite ver la vida desde un lugar más luminoso, más equilibrado y más consciente.\nPsicológicamente, esta carta representa paz interna, claridad emocional, estabilidad mental, optimismo renovado y una comprensión más compasiva de ti misma.\nJofiel te invita a observar la vida con ojos suaves, a encontrar la belleza en tu camino y a reconocer que la armonía se crea desde dentro, no desde lo externo.\nSu luz actúa en tu espacio interno como un ordenamiento amoroso: limpia pensamientos repetitivos, disuelve tensiones, calma la mente hiperactiva y te ayuda a restaurar un ritmo emocional más amable.\nLa energía de Jofiel te enseña a vivir con más calma, más aceptación y más gratitud.\nEsta carta te recuerda que cuando tu mente se embellece, todo en tu vida comienza a embellecerse también.",
-        "love": "En el amor, Jofiel aporta suavidad, claridad emocional y equilibrio.\nSi estás en pareja, esta energía disuelve tensiones, mejora la comunicación y abre paso a una convivencia más limpia y serena.\nSi estás soltera, Jofiel te prepara internamente para atraer relaciones más armoniosas, donde no hay lucha sino fluidez, donde no hay estrés sino conexión auténtica.\nSu mensaje es:\nCuando tu energía está en calma, atraes vínculos que vibran en calma también.",
-        "work": "En lo laboral, Jofiel trae orden mental, creatividad renovada y claridad para organizar tus prioridades con más sabiduría.\nEsta carta indica que estás en un momento ideal para estructurar ideas, planificar proyectos y simplificar procesos.\nPsicológicamente, te ayuda a encontrar belleza incluso en lo rutinario, transformando la obligación en propósito y el esfuerzo en satisfacción.\nJofiel te guía hacia un estilo de trabajo más equilibrado, sostenible y emocionalmente consciente.",
-        "spiritualAdvice": "El Arcángel Jofiel te pide que limpies tu mente de pensamientos innecesarios y abras espacio para la paz.\nTodo se vuelve más ligero cuando eliges mirar tu vida con más amor y más gratitud.\nLa armonía que buscas fuera empieza dentro de ti.\nHaz las paces con tu historia, con tu presente y contigo misma.",
-        "angelAdvice": "Toma una respiración profunda y di:\n“Jofiel, embellece mi mente y mi energía. Lléname de paz y armonía divina.”\nSiente cómo una luz dorada se instala en tu pecho.",
-        "affirmation": "“La paz y la belleza divina habitan en mí. Todo en mi vida se armoniza con suavidad y claridad.”",
-        "ritual": "Ordena un pequeño espacio de tu hogar o tu escritorio.\nHazlo con intención consciente, moviendo cada objeto desde un lugar de calma.\nCuando termines, coloca tus manos sobre tu corazón y di:\n“Arcángel Jofiel, armoniza mi energía como he armonizado este espacio. Trae paz a mi mente, equilibrio a mi alma y belleza a mi camino.”\nRespira profundo y siente cómo la calma se expande dentro de ti."
+        "general": "Paz, belleza y orden interior.",
+        "love": "Relaciones más serenas.",
+        "work": "Claridad mental y organización.",
+        "spiritualAdvice": "La armonía comienza dentro.",
+        "angelAdvice": "Embellece mi mente y mi energía.",
+        "affirmation": "La paz habita en mí.",
+        "ritual": "Ordena un espacio con intención."
       },
       "reversed": {
-        "meaning": "Esta carta invertida habla de ansiedad, conflicto interno o dificultad para encontrar calma. Puede indicar necesidad de bajar el ritmo y reconectar con el silencio interior."
+        "meaning": "Ansiedad o desorden emocional."
       }
     },
+
     {
       "id": "angeles_009",
       "name": "Arcángel Miguel – Protección",
       "slug": "arcangel-miguel-proteccion",
       "image": "angeles/arcangel-miguel.png",
       "upright": {
-        "general": "La presencia del Arcángel Miguel irrumpe como un rayo azul que atraviesa cualquier sombra emocional, mental o energética que haya estado interfiriendo en tu camino.\nSu energía es firme, protectora y profundamente liberadora: actúa como una espada que corta lo innecesario y una armadura luminosa que te envuelve en un aura de fortaleza y verdad.\nCuando Miguel aparece, indica que entras en una fase en la cual recuperas tu poder interno.\nLas dudas que antes debilitaban tu voluntad comienzan a desvanecerse y surge en ti una valentía renovada —un fuego sagrado que te recuerda quién eres en esencia, sin distorsiones ni interferencias externas.\nPsicológicamente, esta carta representa límites sanos, claridad, capacidad de decisión y un profundo fortalecimiento emocional.\nEs el momento de elegirte, de proteger tu paz, de honrar tus intuiciones y de actuar desde tu autoridad interior.\nMiguel te ayuda a liberarte de energías pesadas, relaciones drenantes, pensamientos que te sabotean y miedos heredados.\nSu luz te alinea con tu verdad más alta y abre el camino hacia una versión más segura, estable y consciente de ti misma.\nEsta carta confirma que estás siendo guiada y resguardada mientras atraviesas un proceso de determinación, empoderamiento y expansión espiritual.\nNada puede dañarte cuando estás alineada con esta fuerza divina.",
-        "love": "En el amor, Miguel aporta claridad, honestidad emocional y protección del corazón.\nSi estás en pareja, ayuda a fortalecer la comunicación, alinear expectativas y limpiar la energía del vínculo.\nSi estás soltera, te invita a soltar patrones afectivos que ya no vibran contigo y abrirte a relaciones más estables y honestas.\nSu mensaje es claro:\nEl amor sano comienza cuando te eliges y te proteges a ti misma.",
-        "work": "En lo profesional, Miguel indica decisiones firmes, valentía, dirección clara y protección frente a situaciones conflictivas.\nPuede anunciar cambios importantes, la defensa de tu posición o el inicio de un camino más auténtico.\nPsicológicamente, te ayuda a actuar sin miedo, a decir la verdad con respeto y a sostener tu poder incluso en entornos difíciles.\nTodo lo que hagas desde tu integridad florecerá.",
-        "spiritualAdvice": "El Arcángel Miguel te pide que confíes en tu fuerza interior.\nSuelta el miedo, la culpa, la duda y cualquier carga que no te pertenece.\nEstás protegida, guiada y sostenida en cada paso de tu evolución.",
-        "angelAdvice": "Visualiza un círculo de luz azul envolviéndote y di:\n“Miguel, corta con tu espada de luz todo miedo y toda energía que no es mía. Protégeme mientras camino hacia mi verdad.”",
-        "affirmation": "“Estoy protegida, fuerte y guiada por la luz divina. Mi energía es sagrada y nada puede perturbar mi paz.”",
-        "ritual": "Enciende una vela azul.\nColoca tus manos sobre tu corazón y visualiza al Arcángel Miguel situándose detrás de ti, extendiendo sus alas azules alrededor de tu campo energético.\nDi:\n“Arcángel Miguel, limpia mi energía, fortalece mi espíritu y protégeme de toda sombra. Que mi camino se ilumine con tu verdad.”\nRespira profundo y siente la fuerza recorrer tu cuerpo."
+        "general": "Fuerza, límites sanos y protección divina.",
+        "love": "Claridad y honestidad emocional.",
+        "work": "Decisiones firmes y defensa de tu verdad.",
+        "spiritualAdvice": "Confía en tu fortaleza interior.",
+        "angelAdvice": "Protégeme y guíame con tu luz azul.",
+        "affirmation": "Estoy protegida y fuerte.",
+        "ritual": "Visualiza un círculo de luz azul."
       },
       "reversed": {
-        "meaning": "Miguel invertido señala miedo, inseguridad o sensación de desprotección. Puede indicar dificultad para poner límites, defender la propia verdad o tomar decisiones valientes. La fuerza sigue ahí, pero no está siendo invocada."
+        "meaning": "Miedo o dificultad para poner límites."
       }
     },
+
     {
       "id": "angeles_010",
       "name": "Arcángel Rafael – Sanación",
       "slug": "arcangel-rafael-sanacion",
       "image": "angeles/arcangel-rafael.png",
       "upright": {
-        "general": "La presencia del Arcángel Rafael desciende como un bálsamo verde esmeralda que envuelve tu cuerpo, tu mente y tu alma en una vibración sanadora capaz de restaurar incluso aquello que creías perdido.\nSu energía es suave pero poderosa, como una corriente cálida que se mueve lentamente dentro de ti para liberar memorias, aliviar tensiones y reordenar aspectos internos que estaban fragmentados.\nCuando Rafael aparece, te anuncia un ciclo de renovación interna donde viejas heridas comienzan a cerrarse y emociones atrapadas encuentran finalmente su camino hacia la liberación.\nSu luz trabaja en niveles conscientes e inconscientes, limpiando el cuerpo emocional, armonizando el sistema nervioso y devolviéndote la paz que tu corazón había estado anhelando.\nPsicológicamente, esta carta simboliza curación profunda, aceptación, regeneración emocional y la capacidad de reencontrarte contigo misma desde un lugar más compasivo y equilibrado.\nRafael te recuerda que sanar no es regresar al pasado, sino crear un espacio nuevo dentro de ti donde la paz pueda habitar.\nLa energía de este arcángel actúa también como una guía, mostrándote patrones que es hora de soltar, pensamientos que ya no te nutren y hábitos que desgastan tu vitalidad.\nTe acompaña a atravesar procesos difíciles con suavidad, llevándote hacia un estado de ligereza, claridad y bienestar integral.\nEsta carta es señal de alivio, de cierre, de descanso profundo del alma.\nTe anuncia que un periodo de armonización está en marcha y que todo lo que dolía comienza a encontrar su lugar en la luz.",
-        "love": "En el amor, Rafael trae reconciliación emocional, ternura y apertura del corazón.\nSi estás en pareja, ayuda a sanar heridas del pasado, mejorar la comunicación y fortalecer la conexión desde una vibración más consciente.\nSi estás soltera, te invita a liberar patrones afectivos que limitan tu capacidad de recibir amor sano.\nSu mensaje es:\nAntes de amar a otro, tu corazón merece ser sanado por tus propias manos y tu propia luz.",
-        "work": "En lo profesional, Rafael anuncia claridad emocional para tomar decisiones sin carga, sin estrés y sin confusión.\nPuede señalar un periodo donde recuperas la motivación, renuevas ideas o encuentras un ritmo de trabajo más saludable.\nEste arcángel te invita a cuidar tu energía, respetar tus tiempos y elegir caminos laborales que nutran tu bienestar interno.\nPsicológicamente, restaura tu foco y tu equilibrio, permitiéndote avanzar desde un estado más alineado.",
-        "spiritualAdvice": "El Arcángel Rafael te pide que liberes lo que te pesa y permitas que su luz entre en las zonas donde más te cuesta mirar.\nNo estás sola en tu proceso: tu alma sabe cómo sanar, y Rafael está aquí para sostenerte mientras recuerdas esta verdad.\nDéjate acompañar por la energía verde que abraza, suaviza y restaura.",
-        "angelAdvice": "Coloca tus manos sobre tu corazón y repite con suavidad:\n“Rafael, sana mi energía, mis emociones y mis memorias. Restáurame desde la luz.”\nPermite que la sanación actúe incluso sin comprender cómo.",
-        "affirmation": "“Mi cuerpo, mi mente y mi corazón se llenan de luz sanadora. Todo en mí se restaura en armonía perfecta.”",
-        "ritual": "Busca un lugar tranquilo.\nColoca una mano sobre tu pecho y otra sobre tu abdomen para conectar con tu centro emocional.\nRespira profundamente tres veces e imagina una luz verde brillante descendiendo sobre ti y envolviendo todo tu cuerpo en un abrazo cálido.\nDi con intención:\n“Arcángel Rafael, restaura mi energía, limpia mis heridas y renueva mi bienestar. Que tu luz sanadora me envuelva por completo.”\nPermanece en silencio unos momentos sintiendo la paz expandirse."
+        "general": "Sanación profunda y restauración emocional.",
+        "love": "Curación del corazón.",
+        "work": "Equilibrio y bienestar.",
+        "spiritualAdvice": "Permite que la sanación actúe.",
+        "angelAdvice": "Sana mi energía y mis memorias.",
+        "affirmation": "Todo en mí se restaura.",
+        "ritual": "Visualiza luz verde envolviéndote."
       },
       "reversed": {
-        "meaning": "Rafael invertido señala resistencia a la sanación o negación de heridas emocionales. Puede indicar agotamiento, descuido del bienestar o procesos de curación que requieren más paciencia y amor propio."
+        "meaning": "Resistencia a sanar o agotamiento."
       }
     },
+
     {
       "id": "angeles_011",
       "name": "Arcángel Uriel – Claridad",
       "slug": "arcangel-uriel-claridad",
       "image": "angeles/arcangel-uriel.png",
       "upright": {
-        "general": "La energía del Arcángel Uriel se manifiesta como una luz dorada intensa que irradia sobre tu mente y tu alma, disipando confusiones, dudas y pensamientos que te mantenían atrapada en la incertidumbre.\nUriel es el portador de la lucidez divina, el ángel que ilumina los rincones oscuros de la conciencia para que puedas ver —sin filtros, sin miedo, sin autoengaños— la verdad más profunda sobre tu vida y tu camino.\nCuando Uriel aparece, marca un periodo donde la información se ordena dentro de ti como piezas de un rompecabezas que finalmente encuentran su lugar.\nEsa sensación de “no sé qué hacer” comienza a desmoronarse para dar paso a una visión clara, firme y luminosa.\nLa luz de Uriel no solo ilumina lo externo: ilumina principalmente tu interior, revelando lo que realmente deseas, lo que realmente sientes y lo que tu alma lleva tiempo intentando comunicarte.\nPsicológicamente, esta carta representa discernimiento, comprensión, claridad mental, decisiones acertadas y pensamiento elevado.\nUriel te ayuda a filtrar lo esencial de lo superficial, lo verdadero de lo que es solo ruido, lo que te impulsa de lo que te estanca.\nSu energía dorada activa tu sabiduría interna, esa que siempre estuvo allí, pero que quizá se vio opacada por emociones intensas, expectativas ajenas o situaciones confusas.\nUriel te guía hacia una perspectiva más amplia, neutral y luminosa, permitiendo que veas el escenario completo y no solo fragmentos.\nEsta carta llega cuando estás lista para comprender algo importante.\nNada queda oculto bajo su luz.\nCon Uriel, la verdad se vuelve evidente, liberadora y profundamente transformadora.",
-        "love": "En el amor, Uriel trae claridad emocional, conversaciones honestas y decisiones conscientes.\nSi estás en pareja, ayuda a comprender las dinámicas del vínculo, a mejorar la comunicación y a ver la relación desde una perspectiva más madura.\nSi estás soltera, te muestra con precisión qué tipo de amor estás lista para recibir y qué patrones debes dejar atrás.\nSu mensaje es:\nLa claridad emocional es la base del amor auténtico.",
-        "work": "En el trabajo, Uriel anuncia apertura mental, nuevas ideas, dirección clara y soluciones que antes no podías ver.\nEs una carta muy favorable para decisiones importantes, estrategias, estudios, proyectos creativos y cualquier situación que necesite lucidez.\nSi te has sentido estancada, esta energía despeja el camino.\nPsicológicamente, te permite pensar con más orden, tomar decisiones con seguridad y ver oportunidades que antes estaban ocultas.\nTodo lo que nace bajo la luz de Uriel tiene potencial para prosperar, porque está guiado por la verdad interna.",
-        "spiritualAdvice": "El Arcángel Uriel te pide que confíes en tu claridad interior.\nHas estado recibiendo señales, pero quizás estabas dudando de ellas.\nTómate un momento para escuchar en silencio: la respuesta ya está dentro de ti.\nSu luz dorada te recuerda que la verdad no produce miedo, sino paz.",
-        "angelAdvice": "Cierra los ojos por un instante y di:\n“Uriel, ilumina mi mente y muéstrame lo que es real. Permíteme ver la verdad con claridad y paz.”\nObserva la primera sensación o idea que aparezca.",
-        "affirmation": "“La verdad se revela ante mí. Tomo decisiones alineadas con mi sabiduría interior y mi propósito más elevado.”",
-        "ritual": "Enciende una vela amarilla o dorada.\nColoca frente a ti una pregunta o tema sobre el que necesites claridad, ya sea escrito en papel o visualizado en tu mente.\nRespira profundamente y di:\n“Arcángel Uriel, ilumina mi camino y muéstrame la verdad que mi alma necesita ver. Que tu luz disipe toda confusión.”\nPermanece en silencio unos minutos y observa qué imagen, emoción o pensamiento surge.\nEse será tu mensaje iluminado."
+        "general": "Lucidez, verdad y discernimiento.",
+        "love": "Comprensión emocional.",
+        "work": "Soluciones claras y decisiones acertadas.",
+        "spiritualAdvice": "La verdad trae paz.",
+        "angelAdvice": "Ilumina mi mente con tu luz.",
+        "affirmation": "Veo con claridad mi camino.",
+        "ritual": "Pregunta y escucha en silencio."
       },
       "reversed": {
-        "meaning": "Uriel invertido indica bloqueo mental, exceso de preocupación o dificultad para ver soluciones claras. La mente puede estar dominando al corazón, apagando la guía interior."
+        "meaning": "Bloqueo mental o confusión."
       }
     },
+
     {
       "id": "angeles_012",
       "name": "Arcángel Zadkiel – Transmutación",
       "slug": "arcangel-zadkiel-transmutacion",
       "image": "angeles/arcangel-zadkiel.png",
       "upright": {
-        "general": "La energía del Arcángel Zadkiel desciende como un rayo violeta suave, purificador y profundamente liberador. Su luz envuelve tu interior como una chispa cálida que disuelve cargas pasadas, dolores retenidos y memorias emocionales que ya cumplieron su propósito.\nZadkiel es el arcángel de la misericordia divina, el perdón y la transmutación energética. Es quien te ayuda a soltar lo que ya no vibra contigo, a liberar culpas antiguas y a transformar el peso emocional en sabiduría y ligereza.\nCuando Zadkiel aparece en tu lectura, anuncia un tiempo de purificación interna, de comprensión profunda y de cambio emocional. No es un cambio superficial, sino uno que nace desde el alma: un reordenamiento interno donde situaciones del pasado encuentran cierre, heridas encuentran alivio y tu energía se vuelve más clara, limpia y elevada.\nPsicológicamente, esta carta representa liberación, perdón, integración emocional, claridad espiritual y un renacimiento interno. Es la energía que transforma las sombras en luz, la confusión en entendimiento y la resistencia en aceptación.\nZadkiel te recuerda que no estás obligada a cargar con lo que te duele. Puedes elegir soltar, resignificar y avanzar más liviana.\nSu presencia te envuelve como un abrazo que libera, suaviza y transforma desde adentro hacia afuera.",
-        "love": "En el amor, la energía de Zadkiel indica sanación de patrones, liberación de heridas afectivas y transmutación de historias pasadas que todavía condicionan tu corazón.\nSi estás en pareja, esta energía ayuda a cerrar ciclos de discusiones, resentimientos o confusiones. Permite que la relación respire más amor, comprensión y compasión.\nSi estás soltera, Zadkiel limpia memorias del pasado —especialmente vínculos que dejaron marcas— para que puedas abrirte nuevamente desde un lugar más sano y equilibrado.\nSu mensaje es:\n“Cuando sanas dentro, el amor que atraes comienza a sanarse también.”",
-        "work": "En lo profesional, Zadkiel trae claridad para soltar lo que ya no te sirve, transformar hábitos y renovar tu energía laboral.\nEsta carta indica un momento ideal para:\n✨ cambiar enfoques\n✨ terminar ciclos que se sienten estancados\n✨ liberar estrés acumulado\n✨ abrir espacio para nuevas oportunidades\nZadkiel transforma la confusión mental en claridad, y te inspira a dejar ir aquello que drena tu energía.\nEs el momento perfecto para reorientar tu propósito, redefinir prioridades y permitir que lo nuevo entre sin resistencia.\nA nivel psicológico, fomenta la compasión contigo misma, evitando la autoexigencia y los juicios internos.",
-        "spiritualAdvice": "El Arcángel Zadkiel te invita a soltar, perdonar y transformar.\nNada de lo que ya pasó puede cambiarse, pero sí puede cambiar la manera en que lo llevas dentro.\nLibera cargas antiguas.\nPermite que el rayo violeta disuelva viejos miedos, pensamientos que te limitan y emociones que ya cumplieron su misión.\nLa verdadera transformación sucede cuando te das permiso de renovarte.",
-        "angelAdvice": "Toma una respiración profunda y di:\n“Zadkiel, libera mi energía y transmuta todo lo que ya no necesito. Lléname de comprensión, compasión y luz violeta purificadora.”\nSiente cómo un calor suave recorre tu pecho, limpiando tu campo emocional.",
-        "affirmation": "“Yo libero, yo transformo, yo renazco.\nMi energía se ilumina con la fuerza del rayo violeta.”",
-        "ritual": "Elige algo que represente aquello que deseas soltar:\nuna palabra escrita, un pensamiento, una emoción o un recuerdo.\nEnciende una vela violeta o blanca.\nColoca tus manos sobre tu corazón y di:\n“Arcángel Zadkiel, transmuta esta energía.\nConviértela en luz, sabiduría y renovación.”\nLuego quema el papel con cuidado o guárdalo para desecharlo más tarde, simbolizando el cierre de ese ciclo.\nRespira profundo y siente cómo el alivio se expande dentro de ti.\nEstás renaciendo."
+        "general": "Liberación, perdón y transformación profunda.",
+        "love": "Sanación de patrones afectivos.",
+        "work": "Cierre de ciclos y renovación.",
+        "spiritualAdvice": "Suelta y transmuta.",
+        "angelAdvice": "Transmuta lo que ya no necesito.",
+        "affirmation": "Libero y renazco.",
+        "ritual": "Visualiza el rayo violeta limpiando tu energía."
       },
       "reversed": {
-        "meaning": "Zadkiel invertido señala rencor, culpa o dificultad para soltar el pasado. Puede indicar resistencia al perdón o procesos de transmutación bloqueados por apego al dolor."
+        "meaning": "Resistencia al perdón o apego al pasado."
       }
     }
   ]
