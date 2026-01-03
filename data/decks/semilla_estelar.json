@@ -1,158 +1,33 @@
 {
   "name": "Semilla Estelar",
-  "description": "Oráculo de origen cósmico, memoria del alma y despertar estelar.",
-  "back": "semilla_estelar_back.png",
+  "description": "Mensajes cósmicos para almas estelares en la Tierra.",
+  "back": "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
   "cards": [
     {
-      "id": "alianza_con_la_tierra",
+      "id": "se_001",
       "name": "Alianza con la Tierra",
+      "image": "Semilla_estelar_Alianza_con_la_Tierra.png",
       "upright": {
-        "general": "Alianza con la Tierra es la carta que te recuerda que, aunque tu alma tenga un origen estelar, elegiste encarnar en este planeta por una razón sagrada. No estás aquí por error: la Tierra te llamó, te acogió en su campo energético y te invitó a formar parte de su proceso evolutivo.\n\nCuando esta carta aparece, significa que estás entrando en un ciclo de reconexión profunda con la energía terrestre. Tu alma estelar desciende para anclarse, para sentir, para enraizar, para experimentar la materia.\n\nPsicológicamente señala grounding, estabilidad emocional, conexión con la naturaleza y equilibrio entre lo espiritual y lo terrenal.",
-        "love": "Invita a estar presente y disponible. En pareja estabiliza y nutre el vínculo; soltera, recuerda que el amor auténtico se manifiesta desde el enraizamiento.",
-        "work": "Materialización, consolidación de proyectos y bases sólidas. Tu propósito necesita raíces para florecer.",
-        "spiritual": "La espiritualidad también es habitar el cuerpo y el presente.",
-        "stellar": "Me alío con la Tierra. Anclo mi luz en el mundo físico.",
-        "affirmation": "La Tierra me sostiene y me guía.",
-        "ritual": "Descalza, visualiza raíces de luz desde tus pies al centro de la Tierra."
-      },
-      "reversed": {
-        "meaning": "Desarraigo o dificultad para materializar la espiritualidad."
+        "general": "Conexión profunda con la rejilla cristalina del planeta.",
+        "spiritualAdvice": "Ancla tu energía en el presente."
       }
     },
-
     {
-      "id": "codigos_de_luz",
-      "name": "Códigos de Luz",
-      "upright": {
-        "general": "Representan transmisiones energéticas que activan memorias, dones y expansiones internas. No se comprenden con la mente: se integran.",
-        "love": "Expansión del corazón y claridad en vínculos.",
-        "work": "Descarga de inspiración y activación de talentos.",
-        "spiritual": "Permite la activación sin control.",
-        "stellar": "Estoy lista para recibir los Códigos de Luz.",
-        "affirmation": "Integro los Códigos de Luz que mi alma necesita.",
-        "ritual": "Visualiza una lluvia de luz cayendo suavemente sobre ti."
-      },
-      "reversed": {
-        "meaning": "Saturación espiritual o dificultad para integrar frecuencias nuevas."
-      }
-    },
-
-    {
-      "id": "consejo_de_guias",
+      "id": "se_002",
       "name": "Consejo de Guías",
+      "image": "Semilla_estelar_Consejo_de_Guías.png",
       "upright": {
-        "general": "Indica guía, protección y acompañamiento espiritual activo.",
-        "love": "Relaciones alineadas con tu alma.",
-        "work": "Dirección intuitiva clara para decisiones.",
-        "spiritual": "Escucha señales, sueños y corazonadas.",
-        "stellar": "Consejo de Guías, muéstrenme el camino.",
-        "affirmation": "Estoy guiada y protegida.",
-        "ritual": "Visualiza un círculo de seres luminosos a tu alrededor."
-      },
-      "reversed": {
-        "meaning": "Bloqueo del canal intuitivo o desconfianza en la guía."
+        "general": "Recibes apoyo de tus maestros espirituales.",
+        "spiritualAdvice": "Presta atención a las señales."
       }
     },
-
     {
-      "id": "contrato_almico",
-      "name": "Contrato Álmico",
+      "id": "se_003",
+      "name": "Códigos de Luz",
+      "image": "Semilla_estelar_Códigos_de_Luz.png",
       "upright": {
-        "general": "Acuerdos del alma activos que traen aprendizajes, encuentros y cierres.",
-        "love": "Conexiones kármicas y vínculos del alma.",
-        "work": "Tu camino laboral forma parte del plan del alma.",
-        "spiritual": "Honra las lecciones y confía.",
-        "stellar": "Acepto y honro mis contratos álmicos.",
-        "affirmation": "Todo en mi camino tiene propósito.",
-        "ritual": "Visualiza un pergamino de luz activándose."
-      },
-      "reversed": {
-        "meaning": "Contratos no comprendidos o ciclos kármicos pendientes."
-      }
-    },
-
-    {
-      "id": "destino_cuantico",
-      "name": "Destino Cuántico",
-      "upright": {
-        "general": "Múltiples líneas de tiempo se abren. Tu vibración elige el camino.",
-        "love": "Alineación vibracional en relaciones.",
-        "work": "Saltos cuánticos y oportunidades.",
-        "spiritual": "Elige tu versión más elevada.",
-        "stellar": "Me alineo con mi destino cuántico.",
-        "affirmation": "Creo mi futuro con conciencia.",
-        "ritual": "Visualiza elegir la línea de tiempo más elevada."
-      },
-      "reversed": {
-        "meaning": "Miedo a decidir o aferrarse a lo antiguo."
-      }
-    },
-
-    {
-      "id": "luz_en_la_sombra",
-      "name": "Luz en la Sombra",
-      "upright": {
-        "general": "Integración de heridas y patrones. La sombra guarda un don.",
-        "love": "Sanación de patrones afectivos.",
-        "work": "Liberar miedos que frenan el propósito.",
-        "spiritual": "La luz integra, no juzga.",
-        "stellar": "Acepto mi luz y mi sombra.",
-        "affirmation": "Mi sombra se transforma en sabiduría.",
-        "ritual": "Visualiza luz abrazando tu sombra."
-      },
-      "reversed": {
-        "meaning": "Negación de aspectos internos."
-      }
-    },
-
-    {
-      "id": "mision_de_alma",
-      "name": "Misión de Alma",
-      "upright": {
-        "general": "Recuerdo del propósito por el cual encarnaste.",
-        "love": "Relaciones alineadas con tu evolución.",
-        "work": "Camino vocacional auténtico.",
-        "spiritual": "La misión se recuerda, no se busca.",
-        "stellar": "Muéstrame mi misión.",
-        "affirmation": "Honro la misión de mi alma.",
-        "ritual": "Escribe lo que enciende tu corazón."
-      },
-      "reversed": {
-        "meaning": "Confusión vocacional o desconexión temporal."
-      }
-    },
-
-    {
-      "id": "renacimiento_estelar",
-      "name": "Renacimiento Estelar",
-      "upright": {
-        "general": "Transformación profunda y nueva identidad vibracional.",
-        "love": "Relaciones alineadas con tu nueva versión.",
-        "work": "Nuevo ciclo profesional.",
-        "spiritual": "Confía en la expansión.",
-        "stellar": "Renazco en luz.",
-        "affirmation": "Estoy renaciendo.",
-        "ritual": "Deja atrás lo viejo y recibe lo nuevo."
-      },
-      "reversed": {
-        "meaning": "Resistencia al cambio."
-      }
-    },
-
-    {
-      "id": "tribu_del_alma",
-      "name": "Tribu del Alma",
-      "upright": {
-        "general": "Almas que resuenan contigo a través de vidas.",
-        "love": "Conexiones profundas y predestinadas.",
-        "work": "Comunidad alineada con tu misión.",
-        "spiritual": "No caminas sola.",
-        "stellar": "Llamo a mi Tribu del Alma.",
-        "affirmation": "Estoy rodeada de almas afines.",
-        "ritual": "Visualiza un círculo de luz con tu tribu."
-      },
-      "reversed": {
-        "meaning": "Sensación de no pertenecer o aislamiento."
+        "general": "Activación de memorias dormidas en tu ADN.",
+        "spiritualAdvice": "Permite que la información fluya."
       }
     }
   ]
