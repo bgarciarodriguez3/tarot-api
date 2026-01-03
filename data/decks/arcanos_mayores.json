@@ -1,34 +1,29 @@
 {
   "name": "Arcanos Mayores",
-  "description": "El viaje del loco a través de los arcanos mayores.",
+  "description": "El viaje evolutivo del alma a través de los arcanos.",
   "back": "arcanos_mayores_Dorso_tarot_normal.png",
   "cards": [
-    {
-      "id": "am_000",
-      "name": "El Loco",
-      "image": "arcanos_mayores_El_Loco.png",
-      "upright": {
-        "general": "Nuevos comienzos, saltos de fe y espontaneidad.",
-        "spiritualAdvice": "Confía en el universo y da el paso."
-      }
-    },
-    {
-      "id": "am_001",
-      "name": "El Mago",
-      "image": "arcanos_mayores_El_Mago.png",
-      "upright": {
-        "general": "Poder de manifestación y herramientas disponibles.",
-        "spiritualAdvice": "Usa tus talentos para crear tu realidad."
-      }
-    },
-    {
-      "id": "am_010",
-      "name": "La Rueda de la Fortuna",
-      "image": "arcanos_mayores_La_Rueda_De_La_Fortuna.png",
-      "upright": {
-        "general": "Cambios de ciclo, destino y evolución.",
-        "spiritualAdvice": "Acepta el cambio con gracia."
-      }
-    }
+    { "id": "am_00", "name": "El Loco", "image": "arcanos_mayores_El_Loco.png", "upright": { "general": "Nuevos comienzos, fe y espontaneidad.", "love": "Aventura romántica.", "work": "Nuevos proyectos.", "spiritualAdvice": "Da el salto de fe." }, "reversed": { "meaning": "Imprudencia o miedo a lo desconocido." } },
+    { "id": "am_01", "name": "El Mago", "image": "arcanos_mayores_El_Mago.png", "upright": { "general": "Poder de manifestación y herramientas listas.", "love": "Iniciativa afectiva.", "work": "Capacidad creativa.", "spiritualAdvice": "Crea tu realidad." }, "reversed": { "meaning": "Talento mal usado o falta de confianza." } },
+    { "id": "am_02", "name": "La Sacerdotisa", "image": "arcanos_mayores_La_Sacerdotisa.png", "upright": { "general": "Intuición y sabiduría oculta.", "love": "Conexión profunda.", "work": "Espera el momento justo.", "spiritualAdvice": "Escucha tu silencio." }, "reversed": { "meaning": "Desconexión interior o secretos que dañan." } },
+    { "id": "am_03", "name": "La Emperatriz", "image": "arcanos_mayores_La_Emperatriz.png", "upright": { "general": "Fertilidad, abundancia y creatividad.", "love": "Amor nutritivo.", "work": "Crecimiento de proyectos.", "spiritualAdvice": "Conecta con la naturaleza." }, "reversed": { "meaning": "Bloqueo creativo o dependencia emocional." } },
+    { "id": "am_04", "name": "El Emperador", "image": "arcanos_mayores_El_Emperador.png", "upright": { "general": "Estructura, autoridad y estabilidad.", "love": "Seguridad.", "work": "Liderazgo sólido.", "spiritualAdvice": "Pon orden en tu vida." }, "reversed": { "meaning": "Rigidez excesiva o falta de control." } },
+    { "id": "am_05", "name": "El Sumo Sacerdote", "image": "arcanos_mayores_El_Sumo_Sacerdote.png", "upright": { "general": "Tradición y guía espiritual.", "love": "Compromiso.", "work": "Aprendizaje.", "spiritualAdvice": "Busca la sabiduría." }, "reversed": { "meaning": "Rebelión o dogmatismo." } },
+    { "id": "am_06", "name": "Los Enamorados", "image": "arcanos_mayores_Los_Enamorados.png", "upright": { "general": "Elecciones del corazón y unión.", "love": "Conexión alma a alma.", "work": "Sociedades exitosas.", "spiritualAdvice": "Elige desde el amor." }, "reversed": { "meaning": "Dudas o desequilibrio en la pareja." } },
+    { "id": "am_07", "name": "El Carro", "image": "arcanos_mayores_El_Carro.png", "upright": { "general": "Determinación, victoria y avance.", "love": "Avance en la relación.", "work": "Éxito por esfuerzo.", "spiritualAdvice": "Mantén el control." }, "reversed": { "meaning": "Falta de dirección o impulsividad." } },
+    { "id": "am_08", "name": "La Fuerza", "image": "arcanos_mayores_La_Fuerza.png", "upright": { "general": "Coraje interno y paciencia.", "love": "Dominio de impulsos.", "work": "Resistencia.", "spiritualAdvice": "Tu suavidad es tu fuerza." }, "reversed": { "meaning": "Inseguridad o debilidad emocional." } },
+    { "id": "am_09", "name": "El Ermitaño", "image": "arcanos_mayores_El_Ermitaño.png", "upright": { "general": "Introspección y sabiduría interior.", "love": "Tiempo de soledad necesaria.", "work": "Reflexión.", "spiritualAdvice": "Busca tu propia luz." }, "reversed": { "meaning": "Aislamiento excesivo o miedo a la verdad." } },
+    { "id": "am_10", "name": "La Rueda de la Fortuna", "image": "arcanos_mayores_La_Rueda_De_La_Fortuna.png", "upright": { "general": "Cambios de ciclo y destino.", "love": "Giros positivos.", "work": "Oportunidades.", "spiritualAdvice": "Acepta el cambio." }, "reversed": { "meaning": "Resistencia al fluir de la vida." } },
+    { "id": "am_11", "name": "La Justicia", "image": "arcanos_mayores_La_Justicia.png", "upright": { "general": "Equilibrio, verdad y justicia.", "love": "Honestidad mutua.", "work": "Tratos justos.", "spiritualAdvice": "Actúa con integridad." }, "reversed": { "meaning": "Injusticias o desequilibrio legal/emocional." } },
+    { "id": "am_12", "name": "El Colgado", "image": "arcanos_mayores_El_Colgado.png", "upright": { "general": "Nueva perspectiva y pausa.", "love": "Sacrificio voluntario.", "work": "Pausa necesaria.", "spiritualAdvice": "Suelta el control." }, "reversed": { "meaning": "Estancamiento o sacrificios inútiles." } },
+    { "id": "am_13", "name": "La Muerte", "image": "arcanos_mayores_La_Muerte.png", "upright": { "general": "Finales que traen renacimiento.", "love": "Cierre de etapa.", "work": "Reinvención.", "spiritualAdvice": "Deja ir lo viejo." }, "reversed": { "meaning": "Miedo a la transformación necesaria." } },
+    { "id": "am_14", "name": "La Templanza", "image": "arcanos_mayores_La_Templanza.png", "upright": { "general": "Moderación, paz y sanación.", "love": "Armonía.", "work": "Paciencia recompensada.", "spiritualAdvice": "Busca el equilibrio." }, "reversed": { "meaning": "Excesos o falta de integración." } },
+    { "id": "am_15", "name": "El Diablo", "image": "arcanos_mayores_El_Diablo..png", "upright": { "general": "Ataduras y deseos materiales.", "love": "Pasión intensa o codependencia.", "work": "Ambición.", "spiritualAdvice": "Libera tus sombras." }, "reversed": { "meaning": "Liberación de cadenas y conciencia." } },
+    { "id": "am_16", "name": "La Torre", "image": "arcanos_mayores_La_Torre.png", "upright": { "general": "Caída de estructuras falsas.", "love": "Ruptura reveladora.", "work": "Cambio súbito.", "spiritualAdvice": "Lo que cae no era sólido." }, "reversed": { "meaning": "Crisis evitada temporalmente o miedo al cambio." } },
+    { "id": "am_17", "name": "La Estrella", "image": "arcanos_mayores_La_Estrella.png", "upright": { "general": "Esperanza y renovación.", "love": "Fe en el amor.", "work": "Inspiración.", "spiritualAdvice": "Confía en tu estrella." }, "reversed": { "meaning": "Pesimismo o desconexión espiritual." } },
+    { "id": "am_18", "name": "La Luna", "image": "arcanos_mayores_La_Luna.png", "upright": { "general": "Intuición y emociones profundas.", "love": "Confusión o sueños.", "work": "Cosas ocultas.", "spiritualAdvice": "Sigue tu instinto." }, "reversed": { "meaning": "Miedos que se aclaran o engaños revelados." } },
+    { "id": "am_19", "name": "El Sol", "image": "arcanos_mayores_El_Sol.png", "upright": { "general": "Éxito, alegría y vitalidad.", "love": "Felicidad plena.", "work": "Claridad y logros.", "spiritualAdvice": "Brilla con fuerza." }, "reversed": { "meaning": "Éxito retrasado o falta de optimismo." } },
+    { "id": "am_20", "name": "El Juicio", "image": "arcanos_mayores_El_Juicio.png", "upright": { "general": "Renacimiento y llamado del alma.", "love": "Nueva oportunidad.", "work": "Evaluación final.", "spiritualAdvice": "Escucha tu llamado." }, "reversed": { "meaning": "Dudas o negación a evolucionar." } },
+    { "id": "am_21", "name": "El Mundo", "image": "arcanos_mayores_El_Mundo.png", "upright": { "general": "Culminación y plenitud.", "love": "Realización.", "work": "Éxito mundial.", "spiritualAdvice": "Celebra tu viaje." }, "reversed": { "meaning": "Falta de cierre o metas incompletas." } }
   ]
 }
