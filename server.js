@@ -8,14 +8,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- ESTA ES LA LÍNEA NUEVA PARA LAS IMÁGENES ---
-// Permite acceder a data/decks/images a través de la URL /images
-app.use("/images", express.static(path.join(__dirname, "data", "decks", "images")));
-// ------------------------------------------------
-
 const PORT = process.env.PORT || 3000;
-// Asegúrate de que tus .json están en /data/decks
-const DECKS_DIR = process.env.DECKS_DIR || path.join(__dirname, "data", "decks");
+
+// Definición de rutas de carpetas según tu estructura de GitHub
+const DECKS_DIR = path.join(__dirname, "data", "decks");
+const IMAGES_DIR = path.join(__dirname, "data", "decks", "images");
+
+// CONFIGURACIÓN DE IMÁGENES: Esto permite que las fotos sean visibles en la web
+if (fs.existsSync(IMAGES_DIR)) {
+    app.use("/images", express.static(IMAGES_DIR));
+    console.log(`✅ Carpeta de imágenes vinculada: ${IMAGES_DIR}`);
+} else {
+    console.error(`❌ ERROR: No se encuentra la carpeta de imágenes en: ${IMAGES_DIR}`);
+}
 
 /* -------------------- helpers -------------------- */
 function safeReadJSON(filePath) {
@@ -72,11 +77,7 @@ function normalizeDeck(deckRaw, fallbackId) {
     };
 
     const reversed = {
-      meaning:
-        (typeof rv === "string" ? rv : rv.meaning) ||
-        rv.significado ||
-        rv.reversed ||
-        ""
+      meaning: (typeof rv === "string" ? rv : rv.meaning) || rv.significado || ""
     };
 
     return { id, name, slug, image, upright, reversed };
@@ -94,15 +95,12 @@ let DECKS = {};
 
 function loadDecks() {
   DECKS = {};
-
   if (!fs.existsSync(DECKS_DIR)) {
     console.error(`❌ DECKS_DIR no existe: ${DECKS_DIR}`);
     return;
   }
 
-  const files = fs
-    .readdirSync(DECKS_DIR)
-    .filter((f) => f.toLowerCase().endsWith(".json"));
+  const files = fs.readdirSync(DECKS_DIR).filter((f) => f.toLowerCase().endsWith(".json"));
 
   for (const file of files) {
     const filePath = path.join(DECKS_DIR, file);
@@ -125,14 +123,10 @@ app.get("/", (req, res) => {
   res.json({
     ok: true,
     message: "Tarot API online",
-    decksDir: DECKS_DIR,
     endpoints: {
+      images: "/images/nombre_archivo.jpg",
       decks: "/api/decks",
-      deck: "/api/decks/:deckId",
-      cards: "/api/decks/:deckId/cards",
-      card: "/api/decks/:deckId/cards/:cardId",
-      random: "/api/random?deckId=angeles",
-      reload: "POST /api/reload"
+      cards: "/api/decks/:deckId/cards"
     }
   });
 });
@@ -141,56 +135,15 @@ app.get("/api/decks", (req, res) => {
   const list = Object.values(DECKS).map((d) => ({
     deckId: d.deckId,
     deckName: d.deckName,
-    language: d.language,
-    version: d.version,
-    back: d.back,
     cardsCount: d.cards.length
   }));
   res.json(list);
-});
-
-app.get("/api/decks/:deckId", (req, res) => {
-  const deck = DECKS[req.params.deckId];
-  if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
-  res.json(deck);
 });
 
 app.get("/api/decks/:deckId/cards", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
   res.json(deck.cards);
-});
-
-app.get("/api/decks/:deckId/cards/:cardId", (req, res) => {
-  const deck = DECKS[req.params.deckId];
-  if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
-
-  const key = req.params.cardId;
-  const card = deck.cards.find((c) => c.id === key || c.slug === key);
-
-  if (!card) return res.status(404).json({ error: "Carta no encontrada" });
-  res.json(card);
-});
-
-app.get("/api/random", (req, res) => {
-  const { deckId } = req.query;
-
-  if (deckId) {
-    const deck = DECKS[deckId];
-    if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
-    return res.json({
-      deckId: deck.deckId,
-      deckName: deck.deckName,
-      card: pickRandom(deck.cards)
-    });
-  }
-
-  const all = Object.values(DECKS).flatMap((d) =>
-    d.cards.map((c) => ({ deckId: d.deckId, deckName: d.deckName, card: c }))
-  );
-
-  if (!all.length) return res.status(500).json({ error: "No hay cartas cargadas" });
-  res.json(pickRandom(all));
 });
 
 app.post("/api/reload", (req, res) => {
@@ -200,6 +153,5 @@ app.post("/api/reload", (req, res) => {
 
 /* -------------------- start -------------------- */
 app.listen(PORT, () => {
-  console.log(`🚀 API escuchando en http://localhost:${PORT}`);
-  console.log(`📁 Leyendo decks de: ${DECKS_DIR}`);
+  console.log(`🚀 Servidor listo en puerto ${PORT}`);
 });
