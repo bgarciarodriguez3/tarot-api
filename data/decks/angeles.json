@@ -1,13 +1,13 @@
 {
   "name": "Ángeles",
   "description": "Mensajes, guía y protección de los ángeles y arcángeles.",
-  "back": "angeles_back.png",
+  "back": "Angel_Dorso_tarot_de_los_angeles.png",
   "cards": [
     {
       "id": "angeles_001",
       "name": "Ángel de la Abundancia – Prosperidad",
       "slug": "angel-de-la-abundancia-prosperidad",
-      "image": "angeles/angel-de-la-abundancia.png",
+      "image": "Angel_Angel_de_la_Abundancia.png",
       "upright": {
         "general": "La energía del Ángel de la Abundancia despierta la certeza de que eres merecedora de todo lo bueno. Su luz dorada y verde disuelve bloqueos y activa prosperidad integral: material, emocional, espiritual y creativa.",
         "love": "Expansión afectiva y apertura para recibir un amor sano y nutritivo.",
@@ -21,12 +21,11 @@
         "meaning": "Bloqueos de merecimiento o miedo a la escasez."
       }
     },
-
     {
       "id": "angeles_002",
       "name": "Ángel de la Guarda – Cuidado",
       "slug": "angel-de-la-guarda-cuidado",
-      "image": "angeles/angel-de-la-guarda.png",
+      "image": "Angel_Angel_de_la_Guarda.png",
       "upright": {
         "general": "Presencia protectora constante que te recuerda que nunca estás sola. Su luz blanca brinda contención y calma.",
         "love": "Protección emocional y vínculos más seguros.",
@@ -40,12 +39,11 @@
         "meaning": "Sensación de soledad o desconexión espiritual."
       }
     },
-
     {
       "id": "angeles_003",
       "name": "Ángel de los Sueños – Intuición",
       "slug": "angel-de-los-suenos-intuicion",
-      "image": "angeles/angel-de-los-suenos.png",
+      "image": "Angel_Angel_de_los_Sueños.png",
       "upright": {
         "general": "Puente entre consciente e inconsciente. Activa intuición, sueños reveladores y mensajes del alma.",
         "love": "Claridad emocional que llega por sensaciones y presentimientos.",
@@ -59,12 +57,11 @@
         "meaning": "Desconexión de la intuición o mensajes ignorados."
       }
     },
-
     {
       "id": "angeles_004",
       "name": "Ángel del Nuevo Comienzo – Renacimiento",
       "slug": "angel-del-nuevo-comienzo-renacimiento",
-      "image": "angeles/angel-del-nuevo-comienzo.png",
+      "image": "Angel_Angel_del_Nuevo_Comienzo.png",
       "upright": {
         "general": "Cierre de ciclos y apertura a una nueva etapa más auténtica.",
         "love": "Renovación emocional y nuevos comienzos.",
@@ -78,12 +75,11 @@
         "meaning": "Miedo a empezar de nuevo o apego al pasado."
       }
     },
-
     {
       "id": "angeles_005",
       "name": "Ángel del Tiempo Divino – Sincronía",
       "slug": "angel-del-tiempo-divino-sincronia",
-      "image": "angeles/angel-del-tiempo-divino.png",
+      "image": "Angel_Angel_del_Tiempo_Divino.png",
       "upright": {
         "general": "Todo sucede en el momento perfecto. Confía en los ritmos del universo.",
         "love": "Encuentros y avances sincronizados.",
@@ -97,12 +93,11 @@
         "meaning": "Impaciencia o ansiedad por resultados."
       }
     },
-
     {
       "id": "angeles_006",
       "name": "Arcángel Chamuel – Amor",
       "slug": "arcangel-chamuel-amor",
-      "image": "angeles/arcangel-chamuel.png",
+      "image": "Angel_Arcangel_Chamuel.png",
       "upright": {
         "general": "Amor puro, compasión y sanación del corazón.",
         "love": "Dulzura, reconciliación y apertura afectiva.",
@@ -116,12 +111,11 @@
         "meaning": "Heridas emocionales o falta de amor propio."
       }
     },
-
     {
       "id": "angeles_007",
       "name": "Arcángel Gabriel – Mensajes",
       "slug": "arcangel-gabriel-mensajes",
-      "image": "angeles/arcangel-gabriel.png",
+      "image": "Angel_Arcangel_Gabriel.png",
       "upright": {
         "general": "Claridad, revelaciones y comunicación divina.",
         "love": "Conversaciones honestas y apertura emocional.",
@@ -135,12 +129,11 @@
         "meaning": "Confusión o bloqueo en la comunicación."
       }
     },
-
     {
       "id": "angeles_008",
       "name": "Arcángel Jofiel – Armonía",
       "slug": "arcangel-jofiel-armonia",
-      "image": "angeles/arcangel-jofiel.png",
+      "image": "Angel_Arcangel_Jofiel.png",
       "upright": {
         "general": "Paz, belleza y orden interior.",
         "love": "Relaciones más serenas.",
@@ -154,12 +147,11 @@
         "meaning": "Ansiedad o desorden emocional."
       }
     },
-
     {
       "id": "angeles_009",
       "name": "Arcángel Miguel – Protección",
       "slug": "arcangel-miguel-proteccion",
-      "image": "angeles/arcangel-miguel.png",
+      "image": "Angel_Arcangel_Miguel.png",
       "upright": {
         "general": "Fuerza, límites sanos y protección divina.",
         "love": "Claridad y honestidad emocional.",
@@ -173,12 +165,11 @@
         "meaning": "Miedo o dificultad para poner límites."
       }
     },
-
     {
       "id": "angeles_010",
       "name": "Arcángel Rafael – Sanación",
       "slug": "arcangel-rafael-sanacion",
-      "image": "angeles/arcangel-rafael.png",
+      "image": "Angel_Arcangel_Rafael.png",
       "upright": {
         "general": "Sanación profunda y restauración emocional.",
         "love": "Curación del corazón.",
@@ -192,12 +183,11 @@
         "meaning": "Resistencia a sanar o agotamiento."
       }
     },
-
     {
       "id": "angeles_011",
       "name": "Arcángel Uriel – Claridad",
       "slug": "arcangel-uriel-claridad",
-      "image": "angeles/arcangel-uriel.png",
+      "image": "Angel_Arcangel_Uriel.png",
       "upright": {
         "general": "Lucidez, verdad y discernimiento.",
         "love": "Comprensión emocional.",
@@ -211,12 +201,11 @@
         "meaning": "Bloqueo mental o confusión."
       }
     },
-
     {
       "id": "angeles_012",
       "name": "Arcángel Zadkiel – Transmutación",
       "slug": "arcangel-zadkiel-transmutacion",
-      "image": "angeles/arcangel-zadkiel.png",
+      "image": "Angel_Arcangel_Zadkiel.png",
       "upright": {
         "general": "Liberación, perdón y transformación profunda.",
         "love": "Sanación de patrones afectivos.",
