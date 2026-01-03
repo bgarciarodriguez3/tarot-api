@@ -8,6 +8,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- ESTA ES LA LÍNEA NUEVA PARA LAS IMÁGENES ---
+// Permite acceder a data/decks/images a través de la URL /images
+app.use("/images", express.static(path.join(__dirname, "data", "decks", "images")));
+// ------------------------------------------------
+
 const PORT = process.env.PORT || 3000;
 // Asegúrate de que tus .json están en /data/decks
 const DECKS_DIR = process.env.DECKS_DIR || path.join(__dirname, "data", "decks");
@@ -56,7 +61,6 @@ function normalizeDeck(deckRaw, fallbackId) {
     const up = c.upright || {};
     const rv = c.reversed || {};
 
-    // Normalizamos para que TODAS tengan los mismos campos
     const upright = {
       general: up.general || up.significado_general || "",
       love: up.love || up.amor || "",
@@ -86,7 +90,7 @@ function pickRandom(arr) {
 }
 
 /* -------------------- load decks -------------------- */
-let DECKS = {}; // { deckId: normalizedDeck }
+let DECKS = {}; 
 
 function loadDecks() {
   DECKS = {};
@@ -133,7 +137,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Lista de barajas
 app.get("/api/decks", (req, res) => {
   const list = Object.values(DECKS).map((d) => ({
     deckId: d.deckId,
@@ -146,21 +149,18 @@ app.get("/api/decks", (req, res) => {
   res.json(list);
 });
 
-// Baraja completa
 app.get("/api/decks/:deckId", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
   res.json(deck);
 });
 
-// Cartas de una baraja
 app.get("/api/decks/:deckId/cards", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
   res.json(deck.cards);
 });
 
-// Carta concreta por id o slug
 app.get("/api/decks/:deckId/cards/:cardId", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "Deck no encontrado" });
@@ -172,7 +172,6 @@ app.get("/api/decks/:deckId/cards/:cardId", (req, res) => {
   res.json(card);
 });
 
-// Random (por deck o global)
 app.get("/api/random", (req, res) => {
   const { deckId } = req.query;
 
@@ -194,7 +193,6 @@ app.get("/api/random", (req, res) => {
   res.json(pickRandom(all));
 });
 
-// Reload decks (útil en dev)
 app.post("/api/reload", (req, res) => {
   loadDecks();
   res.json({ ok: true, decks: Object.keys(DECKS) });
