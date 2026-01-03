@@ -3,32 +3,27 @@
   "description": "Mensajes cósmicos para almas estelares en la Tierra.",
   "back": "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
   "cards": [
-    {
-      "id": "se_001",
-      "name": "Alianza con la Tierra",
-      "image": "Semilla_estelar_Alianza_con_la_Tierra.png",
-      "upright": {
-        "general": "Conexión profunda con la rejilla cristalina del planeta.",
-        "spiritualAdvice": "Ancla tu energía en el presente."
-      }
-    },
-    {
-      "id": "se_002",
-      "name": "Consejo de Guías",
-      "image": "Semilla_estelar_Consejo_de_Guías.png",
-      "upright": {
-        "general": "Recibes apoyo de tus maestros espirituales.",
-        "spiritualAdvice": "Presta atención a las señales."
-      }
-    },
-    {
-      "id": "se_003",
-      "name": "Códigos de Luz",
-      "image": "Semilla_estelar_Códigos_de_Luz.png",
-      "upright": {
-        "general": "Activación de memorias dormidas en tu ADN.",
-        "spiritualAdvice": "Permite que la información fluya."
-      }
-    }
+    { "id": "se_01", "name": "Alianza con la Tierra", "image": "Semilla_estelar_Alianza_con_la_Tierra.png", "upright": { "general": "Enraizamiento de tu misión cósmica en el plano físico.", "love": "Compromiso estable.", "work": "Éxito material.", "spiritualAdvice": "Ancla tu luz aquí." }, "reversed": { "meaning": "Desconexión de la realidad o sensación de no pertenecer." } },
+    { "id": "se_02", "name": "Consejo de Guías", "image": "Semilla_estelar_Consejo_de_Guías.png", "upright": { "general": "Apoyo de tus maestros estelares.", "love": "Guía en el amor.", "work": "Asesoría sabia.", "spiritualAdvice": "Pide señales claras." }, "reversed": { "meaning": "Dudas por no escuchar la voz interior." } },
+    { "id": "se_03", "name": "Contrato Álmico", "image": "Semilla_estelar_Contrato_Álmico.png", "upright": { "general": "Acuerdos sagrados para tu evolución.", "love": "Vínculo kármico.", "work": "Destino profesional.", "spiritualAdvice": "Cumple tu misión." }, "reversed": { "meaning": "Evitar el crecimiento necesario." } },
+    { "id": "se_04", "name": "Códigos de Luz", "image": "Semilla_estelar_Códigos_de_Luz.png", "upright": { "general": "Activación de memorias en tu ADN estelar.", "love": "Nueva energía afectiva.", "work": "Ideas futuristas.", "spiritualAdvice": "Recibe la información." }, "reversed": { "meaning": "Bloqueo informativo o resistencia al despertar." } },
+    { "id": "se_05", "name": "Destino Cuántico", "image": "Semilla_estelar_Destino_Cuántico.png", "upright": { "general": "Salto cuántico en tu línea de tiempo.", "love": "Posibilidades infinitas.", "work": "Cambio radical de éxito.", "spiritualAdvice": "Elige tu realidad." }, "reversed": { "meaning": "Miedo al futuro o parálisis." } },
+    { "id": "se_06", "name": "El Llamado de la Noche", "image": "Semilla_estelar_El_Llamado_de_la_Noche.png", "upright": { "general": "Exploración de lo oculto y tus sombras.", "love": "Amor profundo y místico.", "work": "Proyectos secretos.", "spiritualAdvice": "No temas a la oscuridad." }, "reversed": { "meaning": "Confusión o miedo a mirar dentro." } },
+    { "id": "se_07", "name": "Guardianes del Umbral", "image": "Semilla_estelar_Guardianes_del_Umbral.png", "upright": { "general": "Protección en el tránsito hacia lo nuevo.", "love": "Superar miedos juntos.", "work": "Protección profesional.", "spiritualAdvice": "Estás a salvo." }, "reversed": { "meaning": "Inseguridad para cruzar al cambio." } },
+    { "id": "se_08", "name": "Hogar en la Estrella", "image": "Semilla_estelar_Hogar_en_la_Estrella.png", "upright": { "general": "Reconexión con tu origen cósmico.", "love": "Sentir paz en pareja.", "work": "Lugar ideal de trabajo.", "spiritualAdvice": "Recuerda quién eres." }, "reversed": { "meaning": "Nostalgia excesiva o desorientación." } },
+    { "id": "se_09", "name": "Llamado Estelar", "image": "Semilla_estelar_Llamado_Estelar.png", "upright": { "general": "Es el momento de actuar en tu misión.", "love": "Llamado a la unión.", "work": "Vocación clara.", "spiritualAdvice": "Responde al llamado." }, "reversed": { "meaning": "Retraso en el despertar personal." } },
+    { "id": "se_10", "name": "Luz en la Sombra", "image": "Semilla_estelar_Luz_en_la_Sombra.png", "upright": { "general": "Encontrar la sabiduría en los momentos difíciles.", "love": "Sanar el dolor.", "work": "Éxito tras la crisis.", "spiritualAdvice": "Tú eres la luz." }, "reversed": { "meaning": "Depresión o negatividad temporal." } },
+    { "id": "se_11", "name": "Memorias de Otras Vidas", "image": "Semilla_estelar_Memorias_de_Otras_Vidas.png", "upright": { "general": "Talentos que resurgen del pasado.", "love": "Amor de vidas pasadas.", "work": "Habilidades innatas.", "spiritualAdvice": "Recuerda tus dones." }, "reversed": { "meaning": "Traumas antiguos que bloquean el presente." } },
+    { "id": "se_12", "name": "Misión de Alma", "image": "Semilla_estelar_Misión_de_Alma.png", "upright": { "general": "Claridad total sobre tu propósito.", "love": "Relación con propósito.", "work": "Trabajo de luz.", "spiritualAdvice": "Sirve desde el corazón." }, "reversed": { "meaning": "Confusión sobre el camino a seguir." } },
+    { "id": "se_13", "name": "Origen Galáctico", "image": "Semilla_estelar_Origen_Galáctico.png", "upright": { "general": "Entendimiento de tu linaje estelar.", "love": "Vínculo de alta frecuencia.", "work": "Visión global.", "spiritualAdvice": "Expande tu conciencia." }, "reversed": { "meaning": "Sentirse extraño en este mundo." } },
+    { "id": "se_14", "name": "Portal de Encarnación", "image": "Semilla_estelar_Portal_de_Encarnación.png", "upright": { "general": "Nacimiento de nuevas ideas o seres.", "love": "Embarazo o nueva vida.", "work": "Lanzamiento.", "spiritualAdvice": "Bendice tu existencia." }, "reversed": { "meaning": "Dificultad para materializar." } },
+    { "id": "se_15", "name": "Puente entre Mundos", "image": "Semilla_estelar_Puente_entre_Mundos.png", "upright": { "general": "Integración de lo espiritual y lo material.", "love": "Comunicación entre almas.", "work": "Mediación exitosa.", "spiritualAdvice": "Sé el puente." }, "reversed": { "meaning": "Dualidad o falta de equilibrio." } },
+    { "id": "se_16", "name": "Rayo Dorado", "image": "Semilla_estelar_Rayo_Dorado.png", "upright": { "general": "Protección y éxito solar.", "love": "Felicidad y brillo.", "work": "Liderazgo.", "spiritualAdvice": "Irradia tu luz." }, "reversed": { "meaning": "Orgullo o baja energía vital." } },
+    { "id": "se_17", "name": "Reconexión con el Corazón", "image": "Semilla_estelar_Reconexión_con_el_Corazón.png", "upright": { "general": "Vuelta a la esencia del amor.", "love": "Sanación afectiva.", "work": "Pasión por lo que haces.", "spiritualAdvice": "Siente, no pienses." }, "reversed": { "meaning": "Cierre emocional o frialdad." } },
+    { "id": "se_18", "name": "Renacimiento Estelar", "image": "Semilla_estelar_Renacimiento_Estelar.png", "upright": { "general": "Nuevas energías tras un periodo de oscuridad.", "love": "Segunda oportunidad.", "work": "Éxito renovado.", "spiritualAdvice": "Estás floreciendo." }, "reversed": { "meaning": "Proceso de cambio lento." } },
+    { "id": "se_19", "name": "Santuario Interior", "image": "Semilla_estelar_Santuario_Interior.png", "upright": { "general": "Paz y refugio en tu propio ser.", "love": "Respeto mutuo.", "work": "Enfoque tranquilo.", "spiritualAdvice": "Ve hacia adentro." }, "reversed": { "meaning": "Necesidad de silencio ante el ruido externo." } },
+    { "id": "se_20", "name": "Semilla del Coraje", "image": "Semilla_estelar_Semilla_del_Coraje.png", "upright": { "general": "Fuerza para enfrentar grandes retos.", "love": "Valentía para amar.", "work": "Emprendimiento.", "spiritualAdvice": "Confía en tu valor." }, "reversed": { "meaning": "Miedo o cobardía temporal." } },
+    { "id": "se_21", "name": "Sincronías del Universo", "image": "Semilla_estelar_Sincronías_del_Universo.png", "upright": { "general": "Señales mágicas que confirman tu camino.", "love": "Coincidencias felices.", "work": "Contactos inesperados.", "spiritualAdvice": "No hay casualidades." }, "reversed": { "meaning": "Ignorar las señales del entorno." } },
+    { "id": "se_22", "name": "Tribu del Alma", "image": "Semilla_estelar_Tribu_del_Alma.png", "upright": { "general": "Encuentro con personas de tu misma vibración.", "love": "Compañero/a de alma.", "work": "Equipo ideal.", "spiritualAdvice": "Busca a tu gente." }, "reversed": { "meaning": "Sentirse incomprendido o solo." } }
   ]
 }
