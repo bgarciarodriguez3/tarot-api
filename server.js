@@ -4,18 +4,27 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-app.use(cors());
+
+// --- CONFIGURACIÓN DE CORS ACTUALIZADA ---
+app.use(cors({
+  origin: [
+    "https://eltarotdelaruedadelafortuna.com",
+    "https://www.eltarotdelaruedadelafortuna.com",
+    "https://el-tarot-de-la-rueda-de-la-fortuna.myshopify.com"
+  ],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Buscamos la carpeta de imágenes en la ruta exacta de tu GitHub: /data/decks/images
+// Carpeta de imágenes
 const IMAGES_PATH = path.join(__dirname, "data", "decks", "images");
-
-// Servir imágenes con el prefijo /images
 app.use("/images", express.static(IMAGES_PATH));
 
-// Ruta de diagnóstico para que TÚ veas si el servidor encuentra las fotos
+// Ruta de diagnóstico
 app.get("/debug-images", (req, res) => {
   if (fs.existsSync(IMAGES_PATH)) {
     const files = fs.readdirSync(IMAGES_PATH);
@@ -27,7 +36,7 @@ app.get("/debug-images", (req, res) => {
 
 const DECKS_DIR = path.join(__dirname, "data", "decks");
 
-/* --- Lógica de carga de Decks (Mantener igual que antes) --- */
+/* --- Lógica de carga de Decks --- */
 let DECKS = {};
 function loadDecks() {
   DECKS = {};
@@ -43,10 +52,25 @@ function loadDecks() {
 loadDecks();
 
 app.get("/", (req, res) => res.json({ ok: true, message: "API Tarot Lista" }));
+
 app.get("/api/decks/:deckId/cards", (req, res) => {
   const deck = DECKS[req.params.deckId];
   if (!deck) return res.status(404).json({ error: "No encontrado" });
   res.json(deck.cards || deck);
 });
 
-app.listen(PORT, () => console.log("Puerto: " + PORT));
+// NUEVA RUTA: Para compatibilidad con tu script de Shopify (si usa POST /tarot/reading)
+app.post("/tarot/reading", (req, res) => {
+  const { productId } = req.body;
+  const deck = DECKS[productId] || DECKS["10495993446737"]; // Fallback al mazo por defecto
+  
+  if (!deck) return res.status(404).json({ ok: false, error: "Mazo no encontrado" });
+  
+  res.json({
+    ok: true,
+    reading: deck.cards,
+    back: deck.backImage || "back.jpg" // Asegúrate de tener este campo en tu JSON
+  });
+});
+
+app.listen(PORT, () => console.log("Servidor corriendo en puerto: " + PORT));
