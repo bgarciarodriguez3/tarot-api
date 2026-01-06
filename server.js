@@ -82,8 +82,6 @@ app.post("/submit-selection", async (req, res) => {
         });
 
         const lecturaGenerada = completion.choices[0].message.content;
-
-        // Aquí podrías añadir el código para enviar el email automáticamente
         console.log(`Lectura generada con éxito para ${session.email}`);
 
         res.json({ 
