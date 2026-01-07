@@ -13,7 +13,7 @@ const DECKS = [
   }
 ];
 
-// --- 2. BASE DE DATOS DE CARTAS (22 Cartas Únicas con cambio de término) ---
+// --- 2. BASE DE DATOS DE CARTAS (22 Cartas Únicas) ---
 const semillaEstelarCards = [
   {
     id: "alianza_tierra",
@@ -72,7 +72,7 @@ const semillaEstelarCards = [
     name: "Destino Cuántico",
     image: "Semilla_estelar_Destino_Cuántico.jpg",
     upright: {
-      general: "Revela el potencial más elevado de tu alma. Es un destino vibracional que co-creas con tu energía actual. Emocionalmente, esta carta indica una alineación profunda.",
+      general: "Revela el potencial más elevado de tu alma. Emocionalmente, esta carta indica una alineación profunda con tu propósito.",
       spiritualAdvice: "El universo te invita a tomar decisiones más elevadas. Tu alma ya conoce el camino."
     },
     reversed: {
@@ -124,7 +124,7 @@ const semillaEstelarCards = [
     name: "Llamado Estelar",
     image: "Semilla_estelar_Llamado_Estelar.jpg",
     upright: {
-      general: "Vibración que despierta tu memoria más antigua. Comunicación sutil de tus guías para regresar a tu propósito.",
+      general: "Vibración que despierta tu memoria más antigua. Comunicación sutil de tus guías.",
       spiritualAdvice: "No necesitas entenderlo todo. Solo di: 'Estoy lista' y permite que tu guía interior hable."
     },
     reversed: {
@@ -137,12 +137,12 @@ const semillaEstelarCards = [
     name: "Luz en la Sombra",
     image: "Semilla_estelar_Luz_en_la_Sombra.jpg",
     upright: {
-      general: "Momento alquímico para mirar lo oculto con amor y transformarlo en sabiduría. Tu sombra guarda un don.",
+      general: "Momento alquímico para mirar lo oculto con amor. Tu sombra guarda un don.",
       spiritualAdvice: "No huyas de lo que duele: escúchalo. Permite que la luz entre en lo más profundo."
     },
     reversed: {
       general: "Negación de aspectos internos o miedo a mirar la propia sombra.",
-      spiritualAdvice: "La luz no desaparece, pero necesita atravesar lo que se evita para poder integrar tu ser completo."
+      spiritualAdvice: "La luz no desaparece, pero necesita atravesar lo que se evita para integrar tu ser."
     }
   },
   {
@@ -150,12 +150,12 @@ const semillaEstelarCards = [
     name: "Memorias de Otras Vidas",
     image: "Semilla_estelar_Memorias_de_Otras_Vidas.jpg",
     upright: {
-      general: "Apertura de tu campo akáshico para acceder a experiencias y dones de encarnaciones pasadas.",
-      spiritualAdvice: "Confía en tus sensaciones e intuiciones. Las memorias akáshicas se recuerdan con el alma."
+      general: "Apertura de tu campo akáshico para acceder a dones de encarnaciones pasadas.",
+      spiritualAdvice: "Confía en tus sensaciones e intuiciones. Las memorias se recuerdan con el alma."
     },
     reversed: {
-      general: "Patrones repetitivos no comprendidos o heridas antiguas que influyen en el presente.",
-      spiritualAdvice: "Toma conciencia para liberar esas cargas y patrones que ya no sirven a tu camino."
+      general: "Patrones repetitivos no comprendidos o heridas antiguas.",
+      spiritualAdvice: "Toma conciencia para liberar esas cargas y patrones que ya no sirven."
     }
   },
   {
@@ -163,12 +163,12 @@ const semillaEstelarCards = [
     name: "Misión de Alma",
     image: "Semilla_estelar_Misión_de_Alma.jpg",
     upright: {
-      general: "Representa el propósito profundo por el cual encarnaste. No es una tarea, es una brújula interna.",
-      spiritualAdvice: "Tu misión no necesita ser descubierta, sino recordada. Observa aquello que enciende tu corazón."
+      general: "Representa el propósito profundo por el cual encarnaste. No es una tarea, es una brújula.",
+      spiritualAdvice: "Tu misión no necesita ser descubierta, sino recordada. Observa lo que enciende tu corazón."
     },
     reversed: {
-      general: "Confusión vocacional, desconexión del propósito o sensación de vacío existencial.",
-      spiritualAdvice: "La misión sigue activa aunque ahora no se perciba con claridad. Escucha para reconectar."
+      general: "Confusión vocacional o desconexión del propósito.",
+      spiritualAdvice: "La misión sigue activa aunque ahora no se perciba. Escucha para reconectar."
     }
   },
   {
@@ -176,11 +176,11 @@ const semillaEstelarCards = [
     name: "Origen Galáctico",
     image: "Semilla_estelar_Origen_Galáctico.jpg",
     upright: {
-      general: "Despierta la memoria más antigua de tu existencia. Antes de ser humano, fuiste luz y linaje estelar.",
+      general: "Despierta la memoria antigua de tu existencia. Antes de ser humano, fuiste luz.",
       spiritualAdvice: "Abraza tu rareza y sensibilidad como dones. Tu origen vive en tu ADN energético."
     },
     reversed: {
-      general: "Negación de la propia sensibilidad espiritual o rechazo de la diferencia.",
+      general: "Negación de la propia sensibilidad o rechazo de la diferencia.",
       spiritualAdvice: "Atiende a la confusión sobre tu identidad profunda y acepta la vastedad de tu alma."
     }
   },
@@ -189,11 +189,11 @@ const semillaEstelarCards = [
     name: "Portal de Encarnación",
     image: "Semilla_estelar_Portal_de_Encarnación.jpg",
     upright: {
-      general: "Representa el instante en que tu alma cruzó hacia la materia. Tu existencia es un acuerdo cósmico.",
-      spiritualAdvice: "Honra tu camino, incluso las partes difíciles. Todo tiene sentido desde la perspectiva del alma."
+      general: "Representa el instante en que tu alma cruzó hacia la materia.",
+      spiritualAdvice: "Honra tu camino, incluso las partes difíciles. Todo tiene sentido desde el alma."
     },
     reversed: {
-      general: "Dificultad para integrar lo espiritual con lo humano o desconexión de la vida práctica.",
+      general: "Dificultad para integrar lo espiritual con lo humano.",
       spiritualAdvice: "Recuerda por qué viniste y acepta tu camino humano plenamente."
     }
   },
@@ -202,12 +202,12 @@ const semillaEstelarCards = [
     name: "Puente entre Mundos",
     image: "Semilla_estelar_Puente_entre_Mundos.jpg",
     upright: {
-      general: "Capacidad innata para moverte entre planos de conciencia. Eres un canal entre la materia y la luz.",
-      spiritualAdvice: "No temas a lo que percibes. Tu alma está recordando su naturaleza multidimensional."
+      general: "Capacidad innata para moverte entre planos. Eres un canal entre la materia y la luz.",
+      spiritualAdvice: "No temas a lo que percibes. Tu alma recuerda su naturaleza multidimensional."
     },
     reversed: {
       general: "Escapismo o desconexión del cuerpo.",
-      spiritualAdvice: "Enraízate para poder canalizar sin perder tu centro. Equilibra tu mundo interno con la realidad física."
+      spiritualAdvice: "Enraízate para poder canalizar sin perder tu centro."
     }
   },
   {
@@ -215,12 +215,12 @@ const semillaEstelarCards = [
     name: "Rayo Dorado",
     image: "Semilla_estelar_Rayo_Dorado.jpg",
     upright: {
-      general: "Representa la iluminación y la soberanía del alma. Es la chispa divina que te recuerda tu poder interno puro.",
-      spiritualAdvice: "Suelta la culpa por brillar. Tu luz es conciencia y verdad; permite que tu alma ilumine todo."
+      general: "Representa la iluminación y soberanía del alma. Es la chispa divina de tu poder interno.",
+      spiritualAdvice: "Suelta la culpa por brillar. Tu luz es conciencia; permite que ilumine todo."
     },
     reversed: {
       general: "Desvalorización personal o duda sobre el propio brillo.",
-      spiritualAdvice: "Reclama tu lugar. Disuelve las viejas narrativas de inseguridad y reconoce tus talentos."
+      spiritualAdvice: "Reclama tu lugar. Disuelve las viejas narrativas de inseguridad."
     }
   },
   {
@@ -228,12 +228,12 @@ const semillaEstelarCards = [
     name: "Reconexión con el Corazón",
     image: "Semilla_estelar_Reconexión_con_el_Corazón.jpg",
     upright: {
-      general: "Retorno a tu centro energético sagrado. Llamado a la suavidad, amor propio y autenticidad.",
-      spiritualAdvice: "Escucha más lo que sientes y menos lo que temes. Tu corazón es un portal multidimensional."
+      general: "Retorno a tu centro energético sagrado. Llamado a la suavidad y autenticidad.",
+      spiritualAdvice: "Escucha lo que sientes y menos lo que temes. Tu corazón es un portal."
     },
     reversed: {
-      general: "Bloqueo emocional o dificultad para expresar emociones auténticas.",
-      spiritualAdvice: "Abre el corazón con suavidad. Regresa a tu sensibilidad original para disolver bloqueos."
+      general: "Bloqueo emocional o dificultad para expresar emociones.",
+      spiritualAdvice: "Abre el corazón con suavidad. Regresa a tu sensibilidad original."
     }
   },
   {
@@ -241,12 +241,12 @@ const semillaEstelarCards = [
     name: "Renacimiento Estelar",
     image: "Semilla_estelar_Renacimiento_Estelar.jpg",
     upright: {
-      general: "Marca un antes y un después en tu camino. Emerges en una nueva frecuencia alineada con tu origen. Emocionalmente, esta carta señala liberación de cargas antiguas y cambio de identidad interna.",
+      general: "Marca un antes y un después. Emocionalmente, señala la liberación de cargas antiguas y un cambio de identidad interna.",
       spiritualAdvice: "Abraza la nueva versión de ti sin nostalgia. Tu alma renace hacia una vibración más pura."
     },
     reversed: {
       general: "Resistencia al cambio profundo o apego al pasado.",
-      spiritualAdvice: "El ciclo anterior ya concluyó. Suelta lo viejo para poder recibir el renacimiento preparado para ti."
+      spiritualAdvice: "El ciclo anterior ya concluyó. Suelta lo viejo para recibir lo nuevo."
     }
   },
   {
@@ -254,12 +254,12 @@ const semillaEstelarCards = [
     name: "Santuario Interior",
     image: "Semilla_estelar_Santuario_Interior.jpg",
     upright: {
-      general: "Representa el templo sagrado que habita dentro de ti. Emocionalmente, esta carta habla de necesidad de descanso y límites energéticos.",
-      spiritualAdvice: "Regresa a tu centro y respiración. Entra en la quietud luminosa de tu corazón para hallar respuestas."
+      general: "Representa el templo sagrado dentro de ti. Emocionalmente, habla de la necesidad de descanso, silencio y límites energéticos.",
+      spiritualAdvice: "Regresa a tu centro. Detén el ruido mental y entra en la quietud de tu corazón."
     },
     reversed: {
-      general: "Dificultad para encontrar paz interna o desconexión del espacio sagrado personal.",
-      spiritualAdvice: "Establece límites energéticos y busca silencio urgente para recargar tu campo áurico."
+      general: "Dificultad para encontrar paz interna o ruido mental excesivo.",
+      spiritualAdvice: "Busca silencio y autocuidado urgente para recargar tu campo áurico."
     }
   },
   {
@@ -267,12 +267,12 @@ const semillaEstelarCards = [
     name: "Semilla del Coraje",
     image: "Semilla_estelar_Semilla_del_Coraje.jpg",
     upright: {
-      general: "Representa la fuerza y valentía de tu alma. Emocionalmente simboliza fortaleza, resiliencia y superación de miedos antiguos.",
-      spiritualAdvice: "No esperes a 'sentirte lista'; el coraje aparece al actuar. Toma decisiones valientes que honren tu verdad."
+      general: "Chispa divina de fuerza plantada en tu alma. Emocionalmente simboliza resiliencia y superación de miedos antiguos.",
+      spiritualAdvice: "El coraje aparece cuando actúas. Toma decisiones valientes que honren tu verdad."
     },
     reversed: {
-      general: "Desconexión con las señales o exceso de mente racional.",
-      spiritualAdvice: "Suelta el sabotaje. Viniste a manifestar tu luz, no a vivir pequeña ni contenida."
+      general: "Desconexión con la fuerza interna o exceso de duda.",
+      spiritualAdvice: "No viniste a vivir pequeña. Activa tu poder interior y da el paso."
     }
   },
   {
@@ -280,12 +280,12 @@ const semillaEstelarCards = [
     name: "Sincronías del Universo",
     image: "Semilla_estelar_Sincronías_del_Universo.jpg",
     upright: {
-      general: "Forma en que la existencia te habla. Emocionalmente señala alineación con tu propósito y confianza en la vida.",
-      spiritualAdvice: "Camina con los ojos del alma abiertos. Presta atención a números y encuentros."
+      general: "La existencia te habla cuando estás alineada. Emocionalmente señala confianza en la vida e intuición activada.",
+      spiritualAdvice: "Nada es casualidad. Presta atención a las señales; el universo confirma que vas por buen camino."
     },
     reversed: {
-      general: "Desconexión con las señales o exceso de mente racional.",
-      spiritualAdvice: "Las sincronías siguen ocurriendo. Suelta el análisis lógico excesivo."
+      general: "Desconexión con las señales o exceso de lógica racional.",
+      spiritualAdvice: "Las señales siguen ahí. Suelta el análisis excesivo para poder interpretarlas."
     }
   },
   {
@@ -293,12 +293,12 @@ const semillaEstelarCards = [
     name: "Tribu del Alma",
     image: "Semilla_estelar_Tribu_del_Alma.jpg",
     upright: {
-      general: "Representa a las almas que han viajado contigo. Emocionalmente simboliza sentirte comprendida y encontrar tu lugar.",
-      spiritualAdvice: "Abre tu corazón a nuevas conexiones. Tu misión se expande en conexión con quienes resuenan con tu luz."
+      general: "Almas que viajan contigo. Emocionalmente representa sentirte comprendida y atraer relaciones alineadas.",
+      spiritualAdvice: "Abre tu corazón a nuevas conexiones. Tu misión se expande junto a quienes resuenan con tu luz."
     },
     reversed: {
-      general: "Sensación de no pertenecer, aislamiento espiritual o dificultad para encontrar personas afines.",
-      spiritualAdvice: "Puede indicar heridas de rechazo. Recuerda que la tribu existe, pero necesitas permitirte reconocerla."
+      general: "Sensación de no pertenecer o aislamiento espiritual.",
+      spiritualAdvice: "La tribu existe, pero el miedo al rechazo te impide verla. Permítete ser vista."
     }
   }
 ];
