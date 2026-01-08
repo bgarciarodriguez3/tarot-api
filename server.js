@@ -1,11 +1,26 @@
-// --- CONFIGURACIÓN DE DORSOS ---
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// --- 1. CONFIGURACIÓN DE MAZOS PARA EL SELECTOR ---
+const DECKS = [
+  { deckId: "arcanos_mayores", deckName: "Tarot Arcanos Mayores" },
+  { deckId: "angeles", deckName: "Tarot de los Ángeles" },
+  { deckId: "semilla_estelar", deckName: "Tarot Semilla Estelar" }
+];
+
+// --- 2. CONFIGURACIÓN DE DORSOS ---
 const dorsos = {
-  arcanosMayores: "arcanos_mayores_Dorso_tarot_normal.PNG", //
-  angeles: "Angel_Dorso_tarot_de_los_angeles.PNG", //
-  semillaEstelar: "Semilla_estelar_Dorso_Semilla_Estelar_ok.PNG" //
+  arcanosMayores: "arcanos_mayores_Dorso_tarot_normal.PNG",
+  angeles: "Angel_Dorso_tarot_de_los_angeles.PNG",
+  semillaEstelar: "Semilla_estelar_Dorso_Semilla_Estelar_ok.PNG"
 };
 
-// --- MAZO 1: ARCANOS MAYORES (22 CARTAS) ---
+// --- 3. BASE DE DATOS DE CARTAS ---
+
 const arcanosMayoresCards = [
   { id: "0", name: "El Loco", image: "arcanos_mayores_El_loco.PNG", upright: { general: "Salto de fe y nuevos comienzos.", heartAdvice: "Ama sin miedo al pasado." }, reversed: { general: "Imprudencia o miedo al cambio." } },
   { id: "1", name: "El Mago", image: "arcanos_mayores_El_Mago.PNG", upright: { general: "Poder de manifestación y recursos.", heartAdvice: "Usa tu comunicación para crear amor." }, reversed: { general: "Talento desperdiciado o manipulación." } },
@@ -31,7 +46,6 @@ const arcanosMayoresCards = [
   { id: "21", name: "El Mundo", image: "arcanos_mayores_El_mundo.PNG", upright: { general: "Plenitud y cierre de ciclo.", heartAdvice: "Has aprendido la lección." }, reversed: { general: "Ciclo incompleto." } }
 ];
 
-// --- MAZO 2: TAROT DE LOS ÁNGELES (12 CARTAS SELECCIONADAS) ---
 const angelesCards = [
   { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.PNG", upright: { general: "Armonía mental y belleza.", ritual: "Ordena tu escritorio con intención.", affirmation: "La paz habita en mí." }, reversed: { general: "Caos o ansiedad." } },
   { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.PNG", upright: { general: "Cuidado constante.", ritual: "Visualiza luz blanca envolviéndote.", affirmation: "Nunca camino sola." }, reversed: { general: "Soledad percibida." } },
@@ -47,7 +61,6 @@ const angelesCards = [
   { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.PNG", upright: { general: "Protección y fuerza.", ritual: "Visualiza alas azules.", affirmation: "Estoy protegida." }, reversed: { general: "Inseguridad." } }
 ];
 
-// --- MAZO 3: SEMILLA ESTELAR (22 CARTAS COMPLETAS CON RITUALES) ---
 const semillaEstelarCards = [
   { id: "1", name: "Consejo de Guías", image: "Semilla_estelar_Consejo_de_Guias.PNG", upright: { general: "Guía directa.", ritual: "Pide una señal antes de dormir.", affirmation: "Mis guías me hablan." }, reversed: { general: "Interferencia." } },
   { id: "2", name: "Hogar Estelar", image: "Semilla_estelar_Hogar_Estelar.PNG", upright: { general: "Pertenencia cósmica.", ritual: "Mira las estrellas en silencio.", affirmation: "El universo es mi hogar." }, reversed: { general: "Nostalgia." } },
@@ -73,9 +86,33 @@ const semillaEstelarCards = [
   { id: "22", name: "Ascensión", image: "Semilla_estelar_Ascension.PNG", upright: { general: "Elevación final.", ritual: "Imagina que vuelas.", affirmation: "Me elevo en conciencia." }, reversed: { general: "Apego material." } }
 ];
 
-module.exports = {
-  arcanosMayoresCards,
-  angelesCards,
-  semillaEstelarCards,
-  dorsos
-};
+// --- 4. RUTAS DE LA API ---
+
+app.get('/api/decks', (req, res) => {
+  res.json(DECKS);
+});
+
+app.get('/api/cards/:deckId', (req, res) => {
+  const { deckId } = req.params;
+  let cards = [];
+  let backImage = "";
+
+  if (deckId === 'arcanos_mayores') {
+    cards = arcanosMayoresCards;
+    backImage = dorsos.arcanosMayores;
+  } else if (deckId === 'angeles') {
+    cards = angelesCards;
+    backImage = dorsos.angeles;
+  } else if (deckId === 'semilla_estelar') {
+    cards = semillaEstelarCards;
+    backImage = dorsos.semillaEstelar;
+  }
+
+  res.json({ cards, backImage });
+});
+
+// Puerto dinámico para Render
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});
