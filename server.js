@@ -1,17 +1,30 @@
+// server.js
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
 const { OpenAI } = require("openai");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// ---- OpenAI ----
+// ------------------------------------------------------
+// 0) MIDDLEWARES
+// ------------------------------------------------------
+app.use(
+  cors({
+    origin: true, // permite Shopify + pruebas (puedes restringir luego)
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+app.use(express.json({ limit: "1mb" }));
+
+// ------------------------------------------------------
+// 1) OPENAI
+// ------------------------------------------------------
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ------------------------------------------------------
-// 1) CONFIG MAZOS / PRODUCTOS (TUS VARIANT ID)
+// 2) CONFIG MAZOS / PRODUCTOS (TUS VARIANT ID)
 // ------------------------------------------------------
 const VARIANT_CONFIG = {
   // 3 cartas - Arcanos Mayores (22)
@@ -47,14 +60,14 @@ const VARIANT_CONFIG = {
   },
 };
 
-// Opcional: lista de mazos para tu UI
+// Lista de mazos para UI
 const DECKS = [
   { deckId: "arcanos_mayores", deckName: "Tarot Arcanos Mayores" },
   { deckId: "angeles", deckName: "Tarot de los Ángeles" },
   { deckId: "semilla_estelar", deckName: "Tarot Semilla Estelar" },
 ];
 
-// Dorsos
+// Dorsos (imágenes en tu Shopify Files)
 const dorsos = {
   arcanos_mayores: "arcanos_mayores_Dorso_tarot_normal.PNG",
   angeles: "Angel_Dorso_tarot_de_los_angeles.PNG",
@@ -62,27 +75,35 @@ const dorsos = {
 };
 
 // ------------------------------------------------------
-// 2) CARTAS (tu ejemplo: ángeles)
-//    Aquí debes poner también arcanosMayoresCards y semillaEstelarCards
+// 3) CARTAS
+//    IMPORTANTE: rellena arcanosMayoresCards y semillaEstelarCards
+//    Puedes añadir "meaning" si quieres mostrar texto en Shopify.
 // ------------------------------------------------------
 const angelesCards = [
-  { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.PNG" },
-  { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.PNG" },
-  { id: "abundancia", name: "Ángel de la Abundancia", image: "Angel_Angel_de_la_Abundancia.PNG" },
-  { id: "suenos", name: "Ángel de los Sueños", image: "Angel_Angel_de_los_Sueños.PNG" },
-  { id: "nuevo_comienzo", name: "Ángel del Nuevo Comienzo", image: "Angel_Angel_del_Nuevo_Comienzo.PNG" },
-  { id: "tiempo_divino", name: "Ángel del Tiempo Divino", image: "Angel_Angel_del_Tiempo_Divino.PNG" },
-  { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.PNG" },
-  { id: "chamuel", name: "Arcángel Chamuel", image: "Angel_Arcangel_Chamuel.PNG" },
-  { id: "uriel", name: "Arcángel Uriel", image: "Angel_Arcangel_Uriel.PNG" },
-  { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.PNG" },
-  { id: "gabriel", name: "Arcángel Gabriel", image: "Angel_Arcangel_Gabriel.PNG" },
-  { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.PNG" },
+  { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.PNG", meaning: "" },
+  { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.PNG", meaning: "" },
+  { id: "abundancia", name: "Ángel de la Abundancia", image: "Angel_Angel_de_la_Abundancia.PNG", meaning: "" },
+  { id: "suenos", name: "Ángel de los Sueños", image: "Angel_Angel_de_los_Sueños.PNG", meaning: "" },
+  { id: "nuevo_comienzo", name: "Ángel del Nuevo Comienzo", image: "Angel_Angel_del_Nuevo_Comienzo.PNG", meaning: "" },
+  { id: "tiempo_divino", name: "Ángel del Tiempo Divino", image: "Angel_Angel_del_Tiempo_Divino.PNG", meaning: "" },
+  { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.PNG", meaning: "" },
+  { id: "chamuel", name: "Arcángel Chamuel", image: "Angel_Arcangel_Chamuel.PNG", meaning: "" },
+  { id: "uriel", name: "Arcángel Uriel", image: "Angel_Arcangel_Uriel.PNG", meaning: "" },
+  { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.PNG", meaning: "" },
+  { id: "gabriel", name: "Arcángel Gabriel", image: "Angel_Arcangel_Gabriel.PNG", meaning: "" },
+  { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.PNG", meaning: "" },
 ];
 
-// TODO: mete aquí tus arrays reales
-const arcanosMayoresCards = [];     // 22 cartas
-const semillaEstelarCards = [];     // 22 cartas
+// TODO: Rellena con tus 22 cartas reales (mínimo para que no falle)
+const arcanosMayoresCards = [
+  // Ejemplo:
+  // { id:"loco", name:"El Loco", image:"Arcanos_El_Loco.PNG", meaning:"..." },
+];
+
+const semillaEstelarCards = [
+  // Ejemplo:
+  // { id:"origen", name:"Origen Estelar", image:"Semilla_Origen.PNG", meaning:"..." },
+];
 
 function getDeckCards(deckId) {
   if (deckId === "angeles") return { cards: angelesCards, backImage: dorsos.angeles };
@@ -92,10 +113,10 @@ function getDeckCards(deckId) {
 }
 
 // ------------------------------------------------------
-// 3) SESIONES / TOKENS (EN MEMORIA)
+// 4) SESIONES / TOKENS (EN MEMORIA)
 // ------------------------------------------------------
 const sessions = new Map();
-// sessions.set(token, { order_id, email, variant_id, deckId, deckName, pick, createdAt, used })
+// sessions.set(token, { order_id, email, variant_id, deckId, deckName, pick, createdAt, used, productName })
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24; // 24h
 
@@ -110,19 +131,45 @@ function cleanupOldSessions() {
   }
 }
 
-// ------------------------------------------------------
-// 4) RUTAS API
-// ------------------------------------------------------
-app.get("/", (req, res) => res.send("API de Tarot Activa"));
+function pickRandom(arr, n) {
+  const a = Array.isArray(arr) ? [...arr] : [];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, Math.max(0, n));
+}
 
-// útil si quieres listar mazos
+// ------------------------------------------------------
+// 5) RUTAS
+// ------------------------------------------------------
+app.get("/", (req, res) => res.send("API de Tarot Activa ✅"));
+
+app.get("/api/health", (req, res) => {
+  cleanupOldSessions();
+  res.json({
+    ok: true,
+    sessions_in_memory: sessions.size,
+    time: new Date().toISOString(),
+  });
+});
+
+// Lista mazos
 app.get("/api/decks", (req, res) => res.json(DECKS));
 
-// devuelve cartas por mazo (para tu UI)
+// Cartas por mazo (para que tu front pueda pintar dorsos y elegir)
 app.get("/api/cards/:deckId", (req, res) => {
   const { deckId } = req.params;
   const deck = getDeckCards(deckId);
   if (!deck) return res.status(404).json({ error: "deckId no válido" });
+
+  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
+    return res.status(500).json({
+      error: "Este mazo no tiene cartas configuradas en el servidor",
+      deckId,
+    });
+  }
+
   res.json(deck);
 });
 
@@ -155,12 +202,11 @@ app.post("/api/create-link", (req, res) => {
     used: false,
   });
 
-  // IMPORTANTE: cambia esto si quieres que sea tu dominio final con una página de lectura
-  // Ejemplo ideal: https://eltarotdelaruedadelafortuna.com/pages/lectura?token=...
-  const baseClientUrl = process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
+  const baseClientUrl =
+    process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
   const link = `${baseClientUrl}?token=${token}`;
 
-  res.json({ link, token }); // token lo puedes ocultar en Zapier si quieres
+  res.json({ link, token });
 });
 
 // ------------------------------------------------------
@@ -169,7 +215,7 @@ app.post("/api/create-link", (req, res) => {
 app.get("/api/session", (req, res) => {
   cleanupOldSessions();
 
-  const token = String(req.query.token || "");
+  const token = String(req.query.token || "").trim();
   if (!token) return res.status(400).json({ error: "Falta token" });
 
   const s = sessions.get(token);
@@ -179,6 +225,10 @@ app.get("/api/session", (req, res) => {
   const deck = getDeckCards(s.deckId);
   if (!deck) return res.status(500).json({ error: "Deck no disponible en servidor" });
 
+  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
+    return res.status(500).json({ error: "Deck sin cartas configuradas", deckId: s.deckId });
+  }
+
   res.json({
     order_id: s.order_id,
     email: s.email,
@@ -187,7 +237,6 @@ app.get("/api/session", (req, res) => {
     deckName: s.deckName,
     pick: s.pick,
     backImage: deck.backImage,
-    // Si quieres, puedes devolver las cartas aquí también, o llamarlas desde /api/cards/:deckId
   });
 });
 
@@ -204,7 +253,6 @@ app.post("/api/submit", async (req, res) => {
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
-  // Validación robusta para no romper con .map
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: "cards debe ser un array con al menos 1 carta" });
   }
@@ -234,13 +282,12 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
       max_tokens: 700,
     });
 
-    const interpretation = completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
+    const interpretation =
+      completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
 
-    // Marca como usada para que no lo repitan
     s.used = true;
     sessions.set(String(token), s);
 
-    // Devuelve email del cliente para que TU front o Zapier lo use
     res.json({
       email: s.email,
       order_id: s.order_id,
@@ -250,14 +297,64 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
     });
   } catch (error) {
     console.error("Error en OpenAI:", error);
-    res.status(500).json({
-      error: "Hubo un error al generar la interpretación. Intenta de nuevo.",
-    });
+    res.status(500).json({ error: "Hubo un error al generar la interpretación. Intenta de nuevo." });
   }
 });
 
 // ------------------------------------------------------
-// 5) SERVER
+// 6) COMPATIBILIDAD (para tu Shopify anterior)
+//    Si tu front llama a:
+//    GET /reading?token=XXX&deck=angeles
+//    o GET /api/reading?token=XXX&deck=angeles
+//    esto devuelve cards directamente y NO rompe.
+// ------------------------------------------------------
+function handleLegacyReading(req, res) {
+  cleanupOldSessions();
+
+  const token = String(req.query.token || "").trim();
+  const requestedDeck = String(req.query.deck || "").trim(); // opcional
+
+  if (!token) return res.status(400).send("Falta token");
+
+  const s = sessions.get(token);
+  if (!s) return res.status(404).send("Token inválido o expirado");
+  if (s.used) return res.status(409).send("Este enlace ya fue usado");
+
+  // Seguridad: el deck REAL es el del producto comprado
+  const deckId = s.deckId;
+
+  // Si te interesa permitir cambiar deck por query, cambia esto (no recomendado)
+  // const deckId = requestedDeck || s.deckId;
+
+  const deck = getDeckCards(deckId);
+  if (!deck) return res.status(500).send("Deck no disponible");
+
+  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
+    return res.status(500).send("Deck sin cartas configuradas");
+  }
+
+  const picked = pickRandom(deck.cards, s.pick);
+
+  // Formato compatible con tu JS anterior: { cards: [...] }
+  res.json({
+    deckId,
+    deckName: s.deckName,
+    pick: s.pick,
+    backImage: deck.backImage,
+    cards: picked.map((c) => ({
+      id: c.id,
+      name: c.name,
+      image: c.image,
+      meaning: c.meaning || "",
+    })),
+  });
+}
+
+app.get("/reading", handleLegacyReading);
+app.get("/api/reading", handleLegacyReading);
+
+// ------------------------------------------------------
+// 7) SERVER
 // ------------------------------------------------------
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
