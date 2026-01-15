@@ -11,7 +11,7 @@ const app = express();
 // ------------------------------------------------------
 app.use(
   cors({
-    origin: true, // permite Shopify + pruebas (puedes restringir luego)
+    origin: true, // Shopify + pruebas
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -24,12 +24,29 @@ app.use(express.json({ limit: "1mb" }));
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ------------------------------------------------------
-// 2) CONFIG MAZOS / PRODUCTOS (TUS VARIANT ID)
+// Helpers
+// ------------------------------------------------------
+function normalize(str) {
+  return String(str || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+function firstValue(v) {
+  if (Array.isArray(v)) return v.length ? v[0] : "";
+  if (v == null) return "";
+  return String(v);
+}
+
+// ------------------------------------------------------
+// 2) CONFIG PRODUCTOS (VARIANT ID)
 // ------------------------------------------------------
 const VARIANT_CONFIG = {
   // 3 cartas - Arcanos Mayores (22)
   "52443282112849": {
-    productName: "Lectura de Claridad Rápida (3 cartas)",
+    productName: "Tres Puertas del Destino (3 Cartas).",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 3,
@@ -37,7 +54,7 @@ const VARIANT_CONFIG = {
 
   // 5 cartas - Semilla Estelar (22)
   "52457830154577": {
-    productName: "Camino de la Semilla Estelar (5 cartas)",
+    productName: "Camino de la Semilla Estelar (5 Cartas)",
     deckId: "semilla_estelar",
     deckName: "Tarot Semilla Estelar",
     pick: 5,
@@ -45,7 +62,7 @@ const VARIANT_CONFIG = {
 
   // 4 cartas - Ángeles (12)
   "52457929867601": {
-    productName: "Mensaje de los Ángeles (4 cartas)",
+    productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
     deckId: "angeles",
     deckName: "Tarot de los Ángeles",
     pick: 4,
@@ -53,56 +70,111 @@ const VARIANT_CONFIG = {
 
   // 12 cartas - Arcanos Mayores (22)
   "52443409383761": {
-    productName: "Lectura Profunda: Análisis Completo (12 cartas)",
+    productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 12,
   },
 };
 
-// Lista de mazos para UI
+// Lista mazos para UI (opcional)
 const DECKS = [
   { deckId: "arcanos_mayores", deckName: "Tarot Arcanos Mayores" },
   { deckId: "angeles", deckName: "Tarot de los Ángeles" },
   { deckId: "semilla_estelar", deckName: "Tarot Semilla Estelar" },
 ];
 
-// Dorsos (imágenes en tu Shopify Files)
+// Dorsos (NOMBRES EXACTOS en Shopify Files)
 const dorsos = {
-  arcanos_mayores: "arcanos_mayores_Dorso_tarot_normal.PNG",
-  angeles: "Angel_Dorso_tarot_de_los_angeles.PNG",
-  semilla_estelar: "Semilla_estelar_Dorso_Semilla_Estelar_ok.PNG",
+  arcanos_mayores: "arcanos_mayores_Dorso_tarot_normal.png",
+  angeles: "Angel_Dorso_tarot_de_los_angeles.png",
+  semilla_estelar: "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
 };
 
 // ------------------------------------------------------
-// 3) CARTAS
-//    IMPORTANTE: rellena arcanosMayoresCards y semillaEstelarCards
-//    Puedes añadir "meaning" si quieres mostrar texto en Shopify.
+// 3) CARTAS (NOMBRES EXACTOS Shopify Files)
 // ------------------------------------------------------
+
+// Ángeles (12)
 const angelesCards = [
-  { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.PNG", meaning: "" },
-  { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.PNG", meaning: "" },
-  { id: "abundancia", name: "Ángel de la Abundancia", image: "Angel_Angel_de_la_Abundancia.PNG", meaning: "" },
-  { id: "suenos", name: "Ángel de los Sueños", image: "Angel_Angel_de_los_Sueños.PNG", meaning: "" },
-  { id: "nuevo_comienzo", name: "Ángel del Nuevo Comienzo", image: "Angel_Angel_del_Nuevo_Comienzo.PNG", meaning: "" },
-  { id: "tiempo_divino", name: "Ángel del Tiempo Divino", image: "Angel_Angel_del_Tiempo_Divino.PNG", meaning: "" },
-  { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.PNG", meaning: "" },
-  { id: "chamuel", name: "Arcángel Chamuel", image: "Angel_Arcangel_Chamuel.PNG", meaning: "" },
-  { id: "uriel", name: "Arcángel Uriel", image: "Angel_Arcangel_Uriel.PNG", meaning: "" },
-  { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.PNG", meaning: "" },
-  { id: "gabriel", name: "Arcángel Gabriel", image: "Angel_Arcangel_Gabriel.PNG", meaning: "" },
-  { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.PNG", meaning: "" },
+  { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.png", meaning: "" },
+  { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.png", meaning: "" },
+  { id: "abundancia", name: "Ángel de la Abundancia", image: "Angel_Angel_de_la_Abundancia.png", meaning: "" },
+
+  { id: "chamuel", name: "Arcángel Chamuel", image: "Angel_Arcangel_Chamuel.png", meaning: "" },
+  { id: "gabriel", name: "Arcángel Gabriel", image: "Angel_Arcangel_Gabriel.png", meaning: "" },
+  { id: "uriel", name: "Arcángel Uriel", image: "Angel_Arcangel_Uriel.png", meaning: "" },
+
+  { id: "tiempo_divino", name: "Ángel del Tiempo Divino", image: "Angel_Angel_del_Tiempo_Divino.png", meaning: "" },
+  { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.png", meaning: "" },
+  { id: "suenos", name: "Ángel de los Sueños", image: "Angel_Angel_de_los_Suenos.png", meaning: "" },
+
+  { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.png", meaning: "" },
+  { id: "nuevo_comienzo", name: "Ángel del Nuevo Comienzo", image: "Angel_Angel_del_Nuevo_Comienzo.png", meaning: "" },
+  { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.png", meaning: "" },
 ];
 
-// TODO: Rellena con tus 22 cartas reales (mínimo para que no falle)
+// Arcanos Mayores (22) - según tus archivos
 const arcanosMayoresCards = [
-  // Ejemplo:
-  // { id:"loco", name:"El Loco", image:"Arcanos_El_Loco.PNG", meaning:"..." },
+  { id: "sacerdotisa", name: "La Sacerdotisa", image: "arcanos_mayores_La_Sacerdotisa.png", meaning: "" },
+  { id: "ermitano", name: "El Ermitaño", image: "arcanos_mayores_El_Ermitano.png", meaning: "" },
+  { id: "luna", name: "La Luna", image: "arcanos_mayores_La_Luna.png", meaning: "" },
+  { id: "colgado", name: "El Colgado", image: "arcanos_mayores_El_Colgado.png", meaning: "" },
+  { id: "muerte", name: "La Muerte", image: "arcanos_mayores_La_Muerte.png", meaning: "" },
+  { id: "enamorados", name: "Los Enamorados", image: "arcanos_mayores_Los_Enamorados.png", meaning: "" },
+  { id: "emperatriz", name: "La Emperatriz", image: "arcanos_mayores_La_Emperatriz.png", meaning: "" },
+  { id: "sol", name: "El Sol", image: "arcanos_mayores_El_Sol.png", meaning: "" },
+  { id: "templanza", name: "La Templanza", image: "arcanos_mayores_La_Templanza.png", meaning: "" },
+  { id: "carro", name: "El Carro", image: "arcanos_mayores_El_Carro.png", meaning: "" },
+  { id: "emperador", name: "El Emperador", image: "arcanos_mayores_El_Emperador.png", meaning: "" },
+
+  // en tu archivo: El_mundo (mundo en minúscula)
+  { id: "mundo", name: "El Mundo", image: "arcanos_mayores_El_mundo.png", meaning: "" },
+
+  { id: "sumo_sacerdote", name: "El Sumo Sacerdote", image: "arcanos_mayores_El_Sumo_Sacerdote.png", meaning: "" },
+  { id: "juicio", name: "El Juicio", image: "arcanos_mayores_El_Juicio.png", meaning: "" },
+  { id: "rueda_fortuna", name: "La Rueda de la Fortuna", image: "arcanos_mayores_La_Rueda_De_La_Fortuna.png", meaning: "" },
+  { id: "justicia", name: "La Justicia", image: "arcanos_mayores_La_Justicia.png", meaning: "" },
+  { id: "estrella", name: "La Estrella", image: "arcanos_mayores_La_Estrella.png", meaning: "" },
+  { id: "torre", name: "La Torre", image: "arcanos_mayores_La_Torre.png", meaning: "" },
+  { id: "diablo", name: "El Diablo", image: "arcanos_mayores_El_Diablo.png", meaning: "" },
+  { id: "mago", name: "El Mago", image: "arcanos_mayores_El_Mago.png", meaning: "" },
+
+  // en tu archivo: La_fuerza (fuerza en minúscula)
+  { id: "fuerza", name: "La Fuerza", image: "arcanos_mayores_La_fuerza.png", meaning: "" },
+
+  // en tu archivo: El_loco (loco en minúscula)
+  { id: "loco", name: "El Loco", image: "arcanos_mayores_El_loco.png", meaning: "" },
 ];
 
+// Semilla Estelar (22) - según tus archivos
 const semillaEstelarCards = [
-  // Ejemplo:
-  // { id:"origen", name:"Origen Estelar", image:"Semilla_Origen.PNG", meaning:"..." },
+  { id: "llamado_noche", name: "El Llamado de la Noche", image: "Semilla_estelar_El_Llamado_de_la_Noche.png", meaning: "" },
+  { id: "mision_alma", name: "Misión de Alma", image: "Semilla_estelar_Mision_de_Alma.png", meaning: "" },
+  { id: "memorias_otras_vidas", name: "Memorias de Otras Vidas", image: "Semilla_estelar_Memorias_de_Otras_Vidas.png", meaning: "" },
+  { id: "rayo_dorado", name: "Rayo Dorado", image: "Semilla_estelar_Rayo_Dorado.png", meaning: "" },
+  { id: "codigos_luz", name: "Códigos de Luz", image: "Semilla_estelar_Codigos_de_Luz.png", meaning: "" },
+  { id: "reconexion_corazon", name: "Reconexión con el Corazón", image: "Semilla_estelar_Reconexion_con_el_Corazon.png", meaning: "" },
+  { id: "portal_encarnacion", name: "Portal de Encarnación", image: "Semilla_estelar_Portal_de_Encarnacion.png", meaning: "" },
+  { id: "origen_galactico", name: "Origen Galáctico", image: "Semilla_estelar_Origen_Galactico.png", meaning: "" },
+  { id: "puente_entre_mundos", name: "Puente entre Mundos", image: "Semilla_estelar_Puente_entre_Mundos.png", meaning: "" },
+  { id: "consejo_guias", name: "Consejo de Guías", image: "Semilla_estelar_Consejo_de_Guias.png", meaning: "" },
+  { id: "semilla_coraje", name: "Semilla del Coraje", image: "Semilla_estelar_Semilla_del_Coraje.png", meaning: "" },
+  { id: "luz_sombra", name: "Luz en la Sombra", image: "Semilla_estelar_Luz_en_la_Sombra.png", meaning: "" },
+  { id: "hogar_estrella", name: "Hogar en la Estrella", image: "Semilla_estelar_Hogar_en_la_Estrella.png", meaning: "" },
+  { id: "santuario_interior", name: "Santuario Interior", image: "Semilla_estelar_Santuario_Interior.png", meaning: "" },
+  { id: "contrato_almico", name: "Contrato Álmico", image: "Semilla_estelar_Contrato_Almico.png", meaning: "" },
+  { id: "guardianes_umbral", name: "Guardianes del Umbral", image: "Semilla_estelar_Guardianes_del_Umbral.png", meaning: "" },
+  { id: "sincronias_universo", name: "Sincronías del Universo", image: "Semilla_estelar_Sincronias_del_Universo.png", meaning: "" },
+  { id: "renacimiento_estelar", name: "Renacimiento Estelar", image: "Semilla_estelar_Renacimiento_Estelar.png", meaning: "" },
+  { id: "destino_cuantico", name: "Destino Cuántico", image: "Semilla_estelar_Destino_Cuantico.png", meaning: "" },
+  { id: "llamado_estelar", name: "Llamado Estelar", image: "Semilla_estelar_Llamado_Estelar.png", meaning: "" },
+
+  // OJO: tu archivo iba sin guion bajo tras "estelar"
+  { id: "tribu_alma", name: "Tribu del Alma", image: "Semilla_estelarTribu_del_Alma.png", meaning: "" },
+
+  // ✅ La que faltaba ya confirmada
+  { id: "alianza_tierra", name: "Alianza con la Tierra", image: "Semilla_estelar_Alianza_con_la_Tierra.png", meaning: "" },
 ];
 
 function getDeckCards(deckId) {
@@ -141,6 +213,54 @@ function pickRandom(arr, n) {
 }
 
 // ------------------------------------------------------
+// 4.1) DEBUG: último body recibido por /api/create-link
+// ------------------------------------------------------
+let LAST_CREATE_LINK = null;
+
+// Fallback por nombre si no llega variant_id (modo “a prueba de Zapier”)
+function mapProductNameToCfg(productNameRaw) {
+  const p = normalize(productNameRaw);
+
+  if (p.includes("tres puertas")) {
+    return {
+      productName: "Tres Puertas del Destino (3 Cartas).",
+      deckId: "arcanos_mayores",
+      deckName: "Tarot Arcanos Mayores",
+      pick: 3,
+    };
+  }
+
+  if (p.includes("lectura profunda") || p.includes("analisis completo")) {
+    return {
+      productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
+      deckId: "arcanos_mayores",
+      deckName: "Tarot Arcanos Mayores",
+      pick: 12,
+    };
+  }
+
+  if (p.includes("semilla estelar")) {
+    return {
+      productName: "Camino de la Semilla Estelar (5 Cartas)",
+      deckId: "semilla_estelar",
+      deckName: "Tarot Semilla Estelar",
+      pick: 5,
+    };
+  }
+
+  if (p.includes("angeles") || p.includes("ángeles")) {
+    return {
+      productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
+      deckId: "angeles",
+      deckName: "Tarot de los Ángeles",
+      pick: 4,
+    };
+  }
+
+  return null;
+}
+
+// ------------------------------------------------------
 // 5) RUTAS
 // ------------------------------------------------------
 app.get("/", (req, res) => res.send("API de Tarot Activa ✅"));
@@ -154,10 +274,18 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Debug: ver qué está enviando Zapier realmente
+app.get("/api/debug/last-create-link", (req, res) => {
+  res.json({
+    last: LAST_CREATE_LINK,
+    time: new Date().toISOString(),
+  });
+});
+
 // Lista mazos
 app.get("/api/decks", (req, res) => res.json(DECKS));
 
-// Cartas por mazo (para que tu front pueda pintar dorsos y elegir)
+// Cartas por mazo
 app.get("/api/cards/:deckId", (req, res) => {
   const { deckId } = req.params;
   const deck = getDeckCards(deckId);
@@ -179,34 +307,104 @@ app.get("/api/cards/:deckId", (req, res) => {
 app.post("/api/create-link", (req, res) => {
   cleanupOldSessions();
 
-  const { order_id, email, variant_id } = req.body || {};
-  if (!order_id || !email || !variant_id) {
-    return res.status(400).json({ error: "Faltan campos: order_id, email, variant_id" });
+  const body = req.body || {};
+  LAST_CREATE_LINK = { receivedAt: new Date().toISOString(), body };
+
+  const order_id = firstValue(body.order_id || body.orderId || body.order || "").trim();
+  const email = firstValue(body.email || body.customer_email || body.customerEmail || "").trim();
+
+  // variant_id puede venir como array si hay varios line items
+  const variant_id = firstValue(
+    body.variant_id ??
+      body.variantId ??
+      body.variant ??
+      body.variantID ??
+      body["line_items.variant_id"] ??
+      body["lineItemsVariantId"] ??
+      ""
+  ).trim();
+
+  const productName = firstValue(
+    body.productName || body.product || body.title || body.product_title || body.line_item_title || body.lineItemTitle || ""
+  ).trim();
+
+  if (!order_id || !email) {
+    return res.status(400).json({
+      error: "Faltan campos obligatorios: order_id y email",
+      received: { order_id, email, variant_id, productName },
+    });
   }
 
-  const cfg = VARIANT_CONFIG[String(variant_id)];
+  // 1) Por variant_id
+  let cfg = null;
+  if (variant_id) cfg = VARIANT_CONFIG[String(variant_id)] || null;
+
+  // 2) Fallback por nombre
+  if (!cfg && productName) {
+    cfg = mapProductNameToCfg(productName);
+
+    // fallback extra: compara exacto con productName en config
+    if (!cfg) {
+      const pn = normalize(productName);
+      for (const k of Object.keys(VARIANT_CONFIG)) {
+        const c = VARIANT_CONFIG[k];
+        if (normalize(c.productName) === pn) {
+          cfg = c;
+          break;
+        }
+      }
+    }
+  }
+
   if (!cfg) {
-    return res.status(400).json({ error: "variant_id no reconocido / no configurado" });
+    return res.status(400).json({
+      error: "No puedo mapear el producto (variant_id no reconocido y productName no coincide)",
+      received: { order_id, email, variant_id, productName },
+    });
+  }
+
+  // Validación extra: evitar tokens “rotos”
+  const deck = getDeckCards(cfg.deckId);
+  if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
+    return res.status(500).json({
+      error: "Deck sin cartas configuradas en el servidor",
+      deckId: cfg.deckId,
+    });
+  }
+  if (deck.cards.length < cfg.pick) {
+    return res.status(500).json({
+      error: `Deck con pocas cartas para esta tirada (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
+      deckId: cfg.deckId,
+    });
   }
 
   const token = makeToken();
   sessions.set(token, {
     order_id: String(order_id),
     email: String(email),
-    variant_id: String(variant_id),
+    variant_id: variant_id ? String(variant_id) : null,
     deckId: cfg.deckId,
     deckName: cfg.deckName,
     pick: cfg.pick,
-    productName: cfg.productName,
+    productName: cfg.productName || productName || "Producto",
     createdAt: Date.now(),
     used: false,
   });
 
-  const baseClientUrl =
-    process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
+  const baseClientUrl = process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
   const link = `${baseClientUrl}?token=${token}`;
 
-  res.json({ link, token });
+  res.json({
+    link,
+    token,
+    mapped: {
+      productName: cfg.productName || productName || null,
+      deckId: cfg.deckId,
+      deckName: cfg.deckName,
+      pick: cfg.pick,
+      variant_id: variant_id || null,
+    },
+  });
 });
 
 // ------------------------------------------------------
@@ -241,7 +439,7 @@ app.get("/api/session", (req, res) => {
 });
 
 // ------------------------------------------------------
-// (C) CLIENTE: enviar cartas elegidas, interpretar, y marcar sesión usada
+// (C) CLIENTE: enviar cartas, interpretar, y marcar sesión usada
 // ------------------------------------------------------
 app.post("/api/submit", async (req, res) => {
   cleanupOldSessions();
@@ -282,8 +480,7 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
       max_tokens: 700,
     });
 
-    const interpretation =
-      completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
+    const interpretation = completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
 
     s.used = true;
     sessions.set(String(token), s);
@@ -303,39 +500,26 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
 
 // ------------------------------------------------------
 // 6) COMPATIBILIDAD (para tu Shopify anterior)
-//    Si tu front llama a:
-//    GET /reading?token=XXX&deck=angeles
-//    o GET /api/reading?token=XXX&deck=angeles
-//    esto devuelve cards directamente y NO rompe.
 // ------------------------------------------------------
 function handleLegacyReading(req, res) {
   cleanupOldSessions();
 
   const token = String(req.query.token || "").trim();
-  const requestedDeck = String(req.query.deck || "").trim(); // opcional
-
   if (!token) return res.status(400).send("Falta token");
 
   const s = sessions.get(token);
   if (!s) return res.status(404).send("Token inválido o expirado");
   if (s.used) return res.status(409).send("Este enlace ya fue usado");
 
-  // Seguridad: el deck REAL es el del producto comprado
   const deckId = s.deckId;
-
-  // Si te interesa permitir cambiar deck por query, cambia esto (no recomendado)
-  // const deckId = requestedDeck || s.deckId;
-
   const deck = getDeckCards(deckId);
   if (!deck) return res.status(500).send("Deck no disponible");
-
   if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
     return res.status(500).send("Deck sin cartas configuradas");
   }
 
   const picked = pickRandom(deck.cards, s.pick);
 
-  // Formato compatible con tu JS anterior: { cards: [...] }
   res.json({
     deckId,
     deckName: s.deckName,
