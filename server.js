@@ -188,7 +188,7 @@ function getDeckCards(deckId) {
 // 4) SESIONES / TOKENS (EN MEMORIA)
 // ------------------------------------------------------
 const sessions = new Map();
-// sessions.set(token, { order_id, email, variant_id, deckId, deckName, pick, createdAt, used, productName })
+// sessions.set(token, { order_id, email, variant_id, deckId, deckName, pick, createdAt, used, productName, idKey })
 
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24; // 24h
 
@@ -303,6 +303,7 @@ app.get("/api/cards/:deckId", (req, res) => {
 
 // ------------------------------------------------------
 // (A) ZAPIER: crear link tras pago
+//     ✅ CORREGIDO PARA MULTIPRODUCTO + IDEMPOTENCIA
 // ------------------------------------------------------
 app.post("/api/create-link", (req, res) => {
   cleanupOldSessions();
@@ -313,7 +314,6 @@ app.post("/api/create-link", (req, res) => {
   const order_id = firstValue(body.order_id || body.orderId || body.order || "").trim();
   const email = firstValue(body.email || body.customer_email || body.customerEmail || "").trim();
 
-  // variant_id puede venir como array si hay varios line items
   const variant_id = firstValue(
     body.variant_id ??
       body.variantId ??
@@ -325,12 +325,24 @@ app.post("/api/create-link", (req, res) => {
   ).trim();
 
   const productName = firstValue(
-    body.productName || body.product || body.title || body.product_title || body.line_item_title || body.lineItemTitle || ""
+    body.productName ||
+      body.product ||
+      body.title ||
+      body.product_title ||
+      body.line_item_title ||
+      body.lineItemTitle ||
+      ""
   ).trim();
 
-  if (!order_id || !email) {
+  // ✅ Validación completa
+  const missing = [];
+  if (!order_id) missing.push("order_id");
+  if (!email) missing.push("email");
+  if (!variant_id && !productName) missing.push("variant_id o productName");
+  if (missing.length) {
     return res.status(400).json({
-      error: "Faltan campos obligatorios: order_id y email",
+      ok: false,
+      error: `Faltan campos obligatorios: ${missing.join(", ")}`,
       received: { order_id, email, variant_id, productName },
     });
   }
@@ -358,6 +370,7 @@ app.post("/api/create-link", (req, res) => {
 
   if (!cfg) {
     return res.status(400).json({
+      ok: false,
       error: "No puedo mapear el producto (variant_id no reconocido y productName no coincide)",
       received: { order_id, email, variant_id, productName },
     });
@@ -367,34 +380,55 @@ app.post("/api/create-link", (req, res) => {
   const deck = getDeckCards(cfg.deckId);
   if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
     return res.status(500).json({
+      ok: false,
       error: "Deck sin cartas configuradas en el servidor",
       deckId: cfg.deckId,
     });
   }
   if (deck.cards.length < cfg.pick) {
     return res.status(500).json({
+      ok: false,
       error: `Deck con pocas cartas para esta tirada (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
       deckId: cfg.deckId,
     });
   }
 
-  const token = makeToken();
-  sessions.set(token, {
-    order_id: String(order_id),
-    email: String(email),
-    variant_id: variant_id ? String(variant_id) : null,
-    deckId: cfg.deckId,
-    deckName: cfg.deckName,
-    pick: cfg.pick,
-    productName: cfg.productName || productName || "Producto",
-    createdAt: Date.now(),
-    used: false,
-  });
+  // ✅ Idempotencia: un enlace por (order_id + variant_id)
+  // Si Zapier reintenta, devolvemos el mismo token/link.
+  const idKey = `${String(order_id)}:${String(variant_id || normalize(productName))}`;
 
-  const baseClientUrl = process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
+  // Buscar sesión existente por idKey
+  let existingToken = null;
+  for (const [t, s] of sessions.entries()) {
+    if (s?.idKey === idKey && !s?.used) {
+      existingToken = t;
+      break;
+    }
+  }
+
+  const token = existingToken || makeToken();
+
+  if (!existingToken) {
+    sessions.set(token, {
+      idKey,
+      order_id: String(order_id),
+      email: String(email),
+      variant_id: variant_id ? String(variant_id) : null,
+      deckId: cfg.deckId,
+      deckName: cfg.deckName,
+      pick: cfg.pick,
+      productName: cfg.productName || productName || "Producto",
+      createdAt: Date.now(),
+      used: false,
+    });
+  }
+
+  const baseClientUrl =
+    process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
   const link = `${baseClientUrl}?token=${token}`;
 
-  res.json({
+  return res.json({
+    ok: true,
     link,
     token,
     mapped: {
