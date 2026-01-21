@@ -4,6 +4,9 @@ const cors = require("cors");
 const crypto = require("crypto");
 const { OpenAI } = require("openai");
 
+// ✅ Redis
+const { createClient } = require("redis");
+
 const app = express();
 
 // ------------------------------------------------------
@@ -185,22 +188,80 @@ function getDeckCards(deckId) {
 }
 
 // ------------------------------------------------------
-// 4) SESIONES / TOKENS (EN MEMORIA)
+// 4) SESIONES / TOKENS
+//    ✅ Redis si REDIS_URL está definido
+//    ✅ Fallback a memoria si no
 // ------------------------------------------------------
-const sessions = new Map();
-// sessions.set(token, { order_id, email, variant_id, deckId, deckName, pick, createdAt, used, productName, idKey })
-
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24; // 24h
+const sessions = new Map(); // fallback local
+const SESSION_TTL_SEC = 60 * 60 * 24; // 24h
+const SESSION_TTL_MS = 1000 * SESSION_TTL_SEC;
 
 function makeToken() {
   return crypto.randomBytes(24).toString("hex");
 }
 
-function cleanupOldSessions() {
+// Redis client (solo conecta si hay REDIS_URL)
+const redis = process.env.REDIS_URL ? createClient({ url: process.env.REDIS_URL }) : null;
+let REDIS_CONNECTED = false;
+
+if (redis) {
+  redis.on("error", (err) => console.error("Redis error:", err));
+}
+
+// En Redis no hace falta cleanup: el TTL lo hace solo.
+// En memoria sí limpiamos.
+function cleanupOldSessionsMemoryOnly() {
+  if (redis && REDIS_CONNECTED) return;
   const now = Date.now();
   for (const [token, s] of sessions.entries()) {
     if (!s?.createdAt || now - s.createdAt > SESSION_TTL_MS) sessions.delete(token);
   }
+}
+
+async function getSession(token) {
+  if (redis && REDIS_CONNECTED) {
+    const raw = await redis.get(`sess:${token}`);
+    return raw ? JSON.parse(raw) : null;
+  }
+  return sessions.get(token) || null;
+}
+
+async function setSession(token, obj) {
+  if (redis && REDIS_CONNECTED) {
+    await redis.set(`sess:${token}`, JSON.stringify(obj), { EX: SESSION_TTL_SEC });
+    return;
+  }
+  sessions.set(token, obj);
+}
+
+async function delSession(token) {
+  if (redis && REDIS_CONNECTED) {
+    await redis.del(`sess:${token}`);
+    return;
+  }
+  sessions.delete(token);
+}
+
+// idempotencia: idKey -> token
+async function getTokenByIdKey(idKey) {
+  if (redis && REDIS_CONNECTED) {
+    return await redis.get(`idk:${idKey}`);
+  }
+  for (const [t, s] of sessions.entries()) {
+    if (s?.idKey === idKey && !s?.used) return t;
+  }
+  return null;
+}
+
+async function setTokenByIdKey(idKey, token) {
+  if (redis && REDIS_CONNECTED) {
+    await redis.set(`idk:${idKey}`, token, { EX: SESSION_TTL_SEC });
+  }
+}
+
+// Conteo aproximado (solo para /api/health)
+async function countSessionsInMemory() {
+  return sessions.size;
 }
 
 function pickRandom(arr, n) {
@@ -265,11 +326,14 @@ function mapProductNameToCfg(productNameRaw) {
 // ------------------------------------------------------
 app.get("/", (req, res) => res.send("API de Tarot Activa ✅"));
 
-app.get("/api/health", (req, res) => {
-  cleanupOldSessions();
+app.get("/api/health", async (req, res) => {
+  cleanupOldSessionsMemoryOnly();
+
   res.json({
     ok: true,
-    sessions_in_memory: sessions.size,
+    redis: Boolean(redis),
+    redis_connected: REDIS_CONNECTED,
+    sesiones_en_memoria: await countSessionsInMemory(),
     time: new Date().toISOString(),
   });
 });
@@ -304,9 +368,19 @@ app.get("/api/cards/:deckId", (req, res) => {
 // ------------------------------------------------------
 // (A) ZAPIER: crear link tras pago
 //     ✅ CORREGIDO PARA MULTIPRODUCTO + IDEMPOTENCIA
+//     ✅ Redis ready
 // ------------------------------------------------------
-app.post("/api/create-link", (req, res) => {
-  cleanupOldSessions();
+app.post("/api/create-link", async (req, res) => {
+  cleanupOldSessionsMemoryOnly();
+
+  // ✅ Si defines ZAPIER_SECRET en Railway, esto protege el endpoint.
+  // (Si no lo defines aún, no bloquea tus pruebas.)
+  if (process.env.ZAPIER_SECRET) {
+    const auth = req.headers.authorization || "";
+    if (auth !== `Bearer ${process.env.ZAPIER_SECRET}`) {
+      return res.status(401).json({ ok: false, error: "Unauthorized" });
+    }
+  }
 
   const body = req.body || {};
   LAST_CREATE_LINK = { receivedAt: new Date().toISOString(), body };
@@ -394,22 +468,15 @@ app.post("/api/create-link", (req, res) => {
   }
 
   // ✅ Idempotencia: un enlace por (order_id + variant_id)
-  // Si Zapier reintenta, devolvemos el mismo token/link.
   const idKey = `${String(order_id)}:${String(variant_id || normalize(productName))}`;
 
-  // Buscar sesión existente por idKey
-  let existingToken = null;
-  for (const [t, s] of sessions.entries()) {
-    if (s?.idKey === idKey && !s?.used) {
-      existingToken = t;
-      break;
-    }
-  }
+  // Buscar token existente por idKey
+  let existingToken = await getTokenByIdKey(idKey);
 
   const token = existingToken || makeToken();
 
   if (!existingToken) {
-    sessions.set(token, {
+    const sessionObj = {
       idKey,
       order_id: String(order_id),
       email: String(email),
@@ -420,7 +487,10 @@ app.post("/api/create-link", (req, res) => {
       productName: cfg.productName || productName || "Producto",
       createdAt: Date.now(),
       used: false,
-    });
+    };
+
+    await setSession(token, sessionObj);
+    await setTokenByIdKey(idKey, token);
   }
 
   const baseClientUrl =
@@ -444,13 +514,13 @@ app.post("/api/create-link", (req, res) => {
 // ------------------------------------------------------
 // (B) CLIENTE: validar token y obtener configuración
 // ------------------------------------------------------
-app.get("/api/session", (req, res) => {
-  cleanupOldSessions();
+app.get("/api/session", async (req, res) => {
+  cleanupOldSessionsMemoryOnly();
 
   const token = String(req.query.token || "").trim();
   if (!token) return res.status(400).json({ error: "Falta token" });
 
-  const s = sessions.get(token);
+  const s = await getSession(token);
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
@@ -476,12 +546,12 @@ app.get("/api/session", (req, res) => {
 // (C) CLIENTE: enviar cartas, interpretar, y marcar sesión usada
 // ------------------------------------------------------
 app.post("/api/submit", async (req, res) => {
-  cleanupOldSessions();
+  cleanupOldSessionsMemoryOnly();
 
   const { token, cards } = req.body || {};
   if (!token) return res.status(400).json({ error: "Falta token" });
 
-  const s = sessions.get(String(token));
+  const s = await getSession(String(token));
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
@@ -517,7 +587,7 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
     const interpretation = completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
 
     s.used = true;
-    sessions.set(String(token), s);
+    await setSession(String(token), s);
 
     res.json({
       email: s.email,
@@ -535,13 +605,13 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
 // ------------------------------------------------------
 // 6) COMPATIBILIDAD (para tu Shopify anterior)
 // ------------------------------------------------------
-function handleLegacyReading(req, res) {
-  cleanupOldSessions();
+async function handleLegacyReading(req, res) {
+  cleanupOldSessionsMemoryOnly();
 
   const token = String(req.query.token || "").trim();
   if (!token) return res.status(400).send("Falta token");
 
-  const s = sessions.get(token);
+  const s = await getSession(token);
   if (!s) return res.status(404).send("Token inválido o expirado");
   if (s.used) return res.status(409).send("Este enlace ya fue usado");
 
@@ -572,7 +642,27 @@ app.get("/reading", handleLegacyReading);
 app.get("/api/reading", handleLegacyReading);
 
 // ------------------------------------------------------
-// 7) SERVER
+// 7) SERVER (con conexión Redis opcional)
 // ------------------------------------------------------
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
+
+(async () => {
+  try {
+    if (redis) {
+      await redis.connect();
+      REDIS_CONNECTED = true;
+      console.log("Redis conectado ✅");
+    } else {
+      console.log("REDIS_URL no configurado; usando sesiones en memoria ⚠️");
+    }
+
+    app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
+  } catch (err) {
+    console.error("Error al iniciar servidor:", err);
+    // Si Redis falla, arrancamos igual en modo memoria (para no tumbar el servicio)
+    REDIS_CONNECTED = false;
+    console.log("Arrancando en modo memoria por fallo de Redis ⚠️");
+
+    app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
+  }
+})();
