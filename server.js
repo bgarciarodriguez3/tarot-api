@@ -22,9 +22,13 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 // ------------------------------------------------------
-// 1) OPENAI
+// 1) OPENAI (no rompemos el server si falta la key)
 // ------------------------------------------------------
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getOpenAIClient() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return null;
+  return new OpenAI({ apiKey: key });
+}
 
 // ------------------------------------------------------
 // Helpers
@@ -34,6 +38,7 @@ function normalize(str) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -45,10 +50,14 @@ function firstValue(v) {
 
 // ------------------------------------------------------
 // 2) CONFIG PRODUCTOS (VARIANT ID)
+//    type:
+//      - "tarot"   => tirada + /api/session + /api/submit (IA)
+//      - "manual"  => premium que respondes tú (solo link + token)
 // ------------------------------------------------------
 const VARIANT_CONFIG = {
   // 3 cartas - Arcanos Mayores (22)
   "52443282112849": {
+    type: "tarot",
     productName: "Tres Puertas del Destino (3 Cartas).",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
@@ -57,6 +66,7 @@ const VARIANT_CONFIG = {
 
   // 5 cartas - Semilla Estelar (22)
   "52457830154577": {
+    type: "tarot",
     productName: "Camino de la Semilla Estelar (5 Cartas)",
     deckId: "semilla_estelar",
     deckName: "Tarot Semilla Estelar",
@@ -65,6 +75,7 @@ const VARIANT_CONFIG = {
 
   // 4 cartas - Ángeles (12)
   "52457929867601": {
+    type: "tarot",
     productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
     deckId: "angeles",
     deckName: "Tarot de los Ángeles",
@@ -73,10 +84,23 @@ const VARIANT_CONFIG = {
 
   // 12 cartas - Arcanos Mayores (22)
   "52443409383761": {
+    type: "tarot",
     productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 12,
+  },
+
+  // ✅ PREMIUM MANUAL: Mentoría Claridad Total
+  "52458382459217": {
+    type: "manual",
+    productName: "Mentoría de Claridad Total: Análisis de 10 Preguntas + Plan de Acción",
+  },
+
+  // ✅ PREMIUM MANUAL: Tarot del Amor Premium
+  "52570216857937": {
+    type: "manual",
+    productName: "Tarot del Amor Premium: Encuentra a tu Alma Gemela",
   },
 };
 
@@ -117,7 +141,7 @@ const angelesCards = [
   { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.png", meaning: "" },
 ];
 
-// Arcanos Mayores (22) - según tus archivos
+// Arcanos Mayores (22)
 const arcanosMayoresCards = [
   { id: "sacerdotisa", name: "La Sacerdotisa", image: "arcanos_mayores_La_Sacerdotisa.png", meaning: "" },
   { id: "ermitano", name: "El Ermitaño", image: "arcanos_mayores_El_Ermitano.png", meaning: "" },
@@ -130,10 +154,7 @@ const arcanosMayoresCards = [
   { id: "templanza", name: "La Templanza", image: "arcanos_mayores_La_Templanza.png", meaning: "" },
   { id: "carro", name: "El Carro", image: "arcanos_mayores_El_Carro.png", meaning: "" },
   { id: "emperador", name: "El Emperador", image: "arcanos_mayores_El_Emperador.png", meaning: "" },
-
-  // en tu archivo: El_mundo (mundo en minúscula)
   { id: "mundo", name: "El Mundo", image: "arcanos_mayores_El_mundo.png", meaning: "" },
-
   { id: "sumo_sacerdote", name: "El Sumo Sacerdote", image: "arcanos_mayores_El_Sumo_Sacerdote.png", meaning: "" },
   { id: "juicio", name: "El Juicio", image: "arcanos_mayores_El_Juicio.png", meaning: "" },
   { id: "rueda_fortuna", name: "La Rueda de la Fortuna", image: "arcanos_mayores_La_Rueda_De_La_Fortuna.png", meaning: "" },
@@ -142,15 +163,11 @@ const arcanosMayoresCards = [
   { id: "torre", name: "La Torre", image: "arcanos_mayores_La_Torre.png", meaning: "" },
   { id: "diablo", name: "El Diablo", image: "arcanos_mayores_El_Diablo.png", meaning: "" },
   { id: "mago", name: "El Mago", image: "arcanos_mayores_El_Mago.png", meaning: "" },
-
-  // en tu archivo: La_fuerza (fuerza en minúscula)
   { id: "fuerza", name: "La Fuerza", image: "arcanos_mayores_La_fuerza.png", meaning: "" },
-
-  // en tu archivo: El_loco (loco en minúscula)
   { id: "loco", name: "El Loco", image: "arcanos_mayores_El_loco.png", meaning: "" },
 ];
 
-// Semilla Estelar (22) - según tus archivos
+// Semilla Estelar (22)
 const semillaEstelarCards = [
   { id: "llamado_noche", name: "El Llamado de la Noche", image: "Semilla_estelar_El_Llamado_de_la_Noche.png", meaning: "" },
   { id: "mision_alma", name: "Misión de Alma", image: "Semilla_estelar_Mision_de_Alma.png", meaning: "" },
@@ -172,11 +189,7 @@ const semillaEstelarCards = [
   { id: "renacimiento_estelar", name: "Renacimiento Estelar", image: "Semilla_estelar_Renacimiento_Estelar.png", meaning: "" },
   { id: "destino_cuantico", name: "Destino Cuántico", image: "Semilla_estelar_Destino_Cuantico.png", meaning: "" },
   { id: "llamado_estelar", name: "Llamado Estelar", image: "Semilla_estelar_Llamado_Estelar.png", meaning: "" },
-
-  // OJO: tu archivo iba sin guion bajo tras "estelar"
   { id: "tribu_alma", name: "Tribu del Alma", image: "Semilla_estelarTribu_del_Alma.png", meaning: "" },
-
-  // ✅ La que faltaba ya confirmada
   { id: "alianza_tierra", name: "Alianza con la Tierra", image: "Semilla_estelar_Alianza_con_la_Tierra.png", meaning: "" },
 ];
 
@@ -189,8 +202,6 @@ function getDeckCards(deckId) {
 
 // ------------------------------------------------------
 // 4) SESIONES / TOKENS
-//    ✅ Redis si REDIS_URL está definido
-//    ✅ Fallback a memoria si no
 // ------------------------------------------------------
 const sessions = new Map(); // fallback local
 const SESSION_TTL_SEC = 60 * 60 * 24; // 24h
@@ -208,8 +219,6 @@ if (redis) {
   redis.on("error", (err) => console.error("Redis error:", err));
 }
 
-// En Redis no hace falta cleanup: el TTL lo hace solo.
-// En memoria sí limpiamos.
 function cleanupOldSessionsMemoryOnly() {
   if (redis && REDIS_CONNECTED) return;
   const now = Date.now();
@@ -259,7 +268,6 @@ async function setTokenByIdKey(idKey, token) {
   }
 }
 
-// Conteo aproximado (solo para /api/health)
 async function countSessionsInMemory() {
   return sessions.size;
 }
@@ -278,12 +286,30 @@ function pickRandom(arr, n) {
 // ------------------------------------------------------
 let LAST_CREATE_LINK = null;
 
-// Fallback por nombre si no llega variant_id (modo “a prueba de Zapier”)
+// Fallback por nombre (robusto)
 function mapProductNameToCfg(productNameRaw) {
   const p = normalize(productNameRaw);
 
+  // ✅ PREMIUM manual - Mentoría Claridad Total
+  if (p.includes("mentoria") && (p.includes("claridad") || p.includes("plan de accion") || p.includes("10 preguntas"))) {
+    return {
+      type: "manual",
+      productName: "Mentoría de Claridad Total: Análisis de 10 Preguntas + Plan de Acción",
+    };
+  }
+
+  // ✅ PREMIUM manual - Tarot del Amor Premium / Alma Gemela
+  if (p.includes("tarot del amor") || p.includes("alma gemela") || (p.includes("amor") && p.includes("premium"))) {
+    return {
+      type: "manual",
+      productName: "Tarot del Amor Premium: Encuentra a tu Alma Gemela",
+    };
+  }
+
+  // Tarot normal
   if (p.includes("tres puertas")) {
     return {
+      type: "tarot",
       productName: "Tres Puertas del Destino (3 Cartas).",
       deckId: "arcanos_mayores",
       deckName: "Tarot Arcanos Mayores",
@@ -293,6 +319,7 @@ function mapProductNameToCfg(productNameRaw) {
 
   if (p.includes("lectura profunda") || p.includes("analisis completo")) {
     return {
+      type: "tarot",
       productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
       deckId: "arcanos_mayores",
       deckName: "Tarot Arcanos Mayores",
@@ -302,6 +329,7 @@ function mapProductNameToCfg(productNameRaw) {
 
   if (p.includes("semilla estelar")) {
     return {
+      type: "tarot",
       productName: "Camino de la Semilla Estelar (5 Cartas)",
       deckId: "semilla_estelar",
       deckName: "Tarot Semilla Estelar",
@@ -311,6 +339,7 @@ function mapProductNameToCfg(productNameRaw) {
 
   if (p.includes("angeles") || p.includes("ángeles")) {
     return {
+      type: "tarot",
       productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
       deckId: "angeles",
       deckName: "Tarot de los Ángeles",
@@ -338,7 +367,6 @@ app.get("/api/health", async (req, res) => {
   });
 });
 
-// Debug: ver qué está enviando Zapier realmente
 app.get("/api/debug/last-create-link", (req, res) => {
   res.json({
     last: LAST_CREATE_LINK,
@@ -346,10 +374,8 @@ app.get("/api/debug/last-create-link", (req, res) => {
   });
 });
 
-// Lista mazos
 app.get("/api/decks", (req, res) => res.json(DECKS));
 
-// Cartas por mazo
 app.get("/api/cards/:deckId", (req, res) => {
   const { deckId } = req.params;
   const deck = getDeckCards(deckId);
@@ -367,14 +393,10 @@ app.get("/api/cards/:deckId", (req, res) => {
 
 // ------------------------------------------------------
 // (A) ZAPIER: crear link tras pago
-//     ✅ CORREGIDO PARA MULTIPRODUCTO + IDEMPOTENCIA
-//     ✅ Redis ready
 // ------------------------------------------------------
 app.post("/api/create-link", async (req, res) => {
   cleanupOldSessionsMemoryOnly();
 
-  // ✅ Si defines ZAPIER_SECRET en Railway, esto protege el endpoint.
-  // (Si no lo defines aún, no bloquea tus pruebas.)
   if (process.env.ZAPIER_SECRET) {
     const auth = req.headers.authorization || "";
     if (auth !== `Bearer ${process.env.ZAPIER_SECRET}`) {
@@ -408,7 +430,6 @@ app.post("/api/create-link", async (req, res) => {
       ""
   ).trim();
 
-  // ✅ Validación completa
   const missing = [];
   if (!order_id) missing.push("order_id");
   if (!email) missing.push("email");
@@ -450,29 +471,29 @@ app.post("/api/create-link", async (req, res) => {
     });
   }
 
-  // Validación extra: evitar tokens “rotos”
-  const deck = getDeckCards(cfg.deckId);
-  if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
-    return res.status(500).json({
-      ok: false,
-      error: "Deck sin cartas configuradas en el servidor",
-      deckId: cfg.deckId,
-    });
-  }
-  if (deck.cards.length < cfg.pick) {
-    return res.status(500).json({
-      ok: false,
-      error: `Deck con pocas cartas para esta tirada (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
-      deckId: cfg.deckId,
-    });
+  // ✅ Si es tarot, validamos deck/cartas
+  if (cfg.type === "tarot") {
+    const deck = getDeckCards(cfg.deckId);
+    if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
+      return res.status(500).json({
+        ok: false,
+        error: "Deck sin cartas configuradas en el servidor",
+        deckId: cfg.deckId,
+      });
+    }
+    if (deck.cards.length < cfg.pick) {
+      return res.status(500).json({
+        ok: false,
+        error: `Deck con pocas cartas para esta tirada (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
+        deckId: cfg.deckId,
+      });
+    }
   }
 
-  // ✅ Idempotencia: un enlace por (order_id + variant_id)
+  // ✅ Idempotencia: un enlace por (order_id + variant_id/nombre)
   const idKey = `${String(order_id)}:${String(variant_id || normalize(productName))}`;
 
-  // Buscar token existente por idKey
   let existingToken = await getTokenByIdKey(idKey);
-
   const token = existingToken || makeToken();
 
   if (!existingToken) {
@@ -481,9 +502,12 @@ app.post("/api/create-link", async (req, res) => {
       order_id: String(order_id),
       email: String(email),
       variant_id: variant_id ? String(variant_id) : null,
-      deckId: cfg.deckId,
-      deckName: cfg.deckName,
-      pick: cfg.pick,
+      type: cfg.type || "tarot",
+      // tarot
+      deckId: cfg.type === "tarot" ? cfg.deckId : null,
+      deckName: cfg.type === "tarot" ? cfg.deckName : null,
+      pick: cfg.type === "tarot" ? cfg.pick : 0,
+      // común
       productName: cfg.productName || productName || "Producto",
       createdAt: Date.now(),
       used: false,
@@ -493,19 +517,27 @@ app.post("/api/create-link", async (req, res) => {
     await setTokenByIdKey(idKey, token);
   }
 
-  const baseClientUrl =
+  // ✅ Links separados para tarot vs premium manual
+  const tarotUrl =
     process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
-  const link = `${baseClientUrl}?token=${token}`;
+
+  const premiumUrl =
+    process.env.CLIENT_PREMIUM_URL || "https://eltarotdelaruedadelafortuna.com/pages/premium";
+
+  const baseClientUrl = cfg.type === "manual" ? premiumUrl : tarotUrl;
+
+  const link = `${baseClientUrl}?token=${token}&type=${encodeURIComponent(cfg.type || "tarot")}`;
 
   return res.json({
     ok: true,
     link,
     token,
     mapped: {
+      type: cfg.type || "tarot",
       productName: cfg.productName || productName || null,
-      deckId: cfg.deckId,
-      deckName: cfg.deckName,
-      pick: cfg.pick,
+      deckId: cfg.type === "tarot" ? cfg.deckId : null,
+      deckName: cfg.type === "tarot" ? cfg.deckName : null,
+      pick: cfg.type === "tarot" ? cfg.pick : 0,
       variant_id: variant_id || null,
     },
   });
@@ -524,6 +556,19 @@ app.get("/api/session", async (req, res) => {
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
+  // ✅ Manual premium
+  if (s.type === "manual") {
+    return res.json({
+      type: "manual",
+      order_id: s.order_id,
+      email: s.email,
+      productName: s.productName,
+      pick: 0,
+      message: "Producto premium manual (lo responde Miriam).",
+    });
+  }
+
+  // Tarot normal
   const deck = getDeckCards(s.deckId);
   if (!deck) return res.status(500).json({ error: "Deck no disponible en servidor" });
 
@@ -532,6 +577,7 @@ app.get("/api/session", async (req, res) => {
   }
 
   res.json({
+    type: "tarot",
     order_id: s.order_id,
     email: s.email,
     productName: s.productName,
@@ -555,11 +601,25 @@ app.post("/api/submit", async (req, res) => {
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
+  // ✅ Premium manual: no submit
+  if (s.type === "manual") {
+    return res.status(400).json({
+      error: "Este producto es premium manual (no usa tirada).",
+    });
+  }
+
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: "cards debe ser un array con al menos 1 carta" });
   }
   if (cards.length !== s.pick) {
     return res.status(400).json({ error: `Debes seleccionar exactamente ${s.pick} cartas` });
+  }
+
+  const openai = getOpenAIClient();
+  if (!openai) {
+    return res.status(500).json({
+      error: "OPENAI_API_KEY no está configurada en Railway (Variables).",
+    });
   }
 
   try {
@@ -584,7 +644,8 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
       max_tokens: 700,
     });
 
-    const interpretation = completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
+    const interpretation =
+      completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
 
     s.used = true;
     await setSession(String(token), s);
@@ -615,6 +676,10 @@ async function handleLegacyReading(req, res) {
   if (!s) return res.status(404).send("Token inválido o expirado");
   if (s.used) return res.status(409).send("Este enlace ya fue usado");
 
+  if (s.type === "manual") {
+    return res.status(400).send("Este producto es premium manual (no usa tirada).");
+  }
+
   const deckId = s.deckId;
   const deck = getDeckCards(deckId);
   if (!deck) return res.status(500).send("Deck no disponible");
@@ -644,7 +709,7 @@ app.get("/api/reading", handleLegacyReading);
 // ------------------------------------------------------
 // 7) SERVER (con conexión Redis opcional)
 // ------------------------------------------------------
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT || 3000);
 
 (async () => {
   try {
@@ -659,7 +724,6 @@ const PORT = process.env.PORT || 8080;
     app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
   } catch (err) {
     console.error("Error al iniciar servidor:", err);
-    // Si Redis falla, arrancamos igual en modo memoria (para no tumbar el servicio)
     REDIS_CONNECTED = false;
     console.log("Arrancando en modo memoria por fallo de Redis ⚠️");
 
