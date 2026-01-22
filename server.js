@@ -1,34 +1,56 @@
-// server.js
+/*************************************************
+ * SERVER.JS – VERSIÓN LIMPIA Y CORREGIDA
+ * Puerto FORZADO a 3000 en local
+ * Sin conflictos EADDRINUSE
+ *************************************************/
+
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const crypto = require("crypto");
 const { OpenAI } = require("openai");
-
-// ✅ Redis
 const { createClient } = require("redis");
 
 const app = express();
 
-// ------------------------------------------------------
-// 0) MIDDLEWARES
-// ------------------------------------------------------
+/* ------------------------------------------------
+   MIDDLEWARES
+------------------------------------------------ */
 app.use(
   cors({
-    origin: true, // Shopify + pruebas
+    origin: true,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json({ limit: "1mb" }));
 
+<<<<<<< HEAD
 // ------------------------------------------------------
 // 1) OPENAI
 // ------------------------------------------------------
+<<<<<<< HEAD
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+=======
+function getOpenAIClient() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return null;
+  return new OpenAI({ apiKey: key });
+}
+=======
+/* ------------------------------------------------
+   OPENAI
+------------------------------------------------ */
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
+>>>>>>> f247c3d (Add premium manual mappings (mentoria + amor premium))
 
-// ------------------------------------------------------
-// Helpers
-// ------------------------------------------------------
+/* ------------------------------------------------
+   HELPERS
+------------------------------------------------ */
 function normalize(str) {
   return String(str || "")
     .toLowerCase()
@@ -38,41 +60,43 @@ function normalize(str) {
 }
 
 function firstValue(v) {
-  if (Array.isArray(v)) return v.length ? v[0] : "";
+  if (Array.isArray(v)) return v[0] || "";
   if (v == null) return "";
   return String(v);
 }
 
+<<<<<<< HEAD
 // ------------------------------------------------------
 // 2) CONFIG PRODUCTOS (VARIANT ID)
 // ------------------------------------------------------
+<<<<<<< HEAD
 // NOTA: si un producto es premium manual, ponemos manual:true y NO deckId/pick.
+=======
+=======
+/* ------------------------------------------------
+   CONFIG PRODUCTOS (SHOPIFY VARIANT ID)
+------------------------------------------------ */
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
+>>>>>>> f247c3d (Add premium manual mappings (mentoria + amor premium))
 const VARIANT_CONFIG = {
-  // 3 cartas - Arcanos Mayores (22)
   "52443282112849": {
     productName: "Tres Puertas del Destino (3 Cartas).",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 3,
   },
-
-  // 5 cartas - Semilla Estelar (22)
   "52457830154577": {
     productName: "Camino de la Semilla Estelar (5 Cartas)",
     deckId: "semilla_estelar",
     deckName: "Tarot Semilla Estelar",
     pick: 5,
   },
-
-  // 4 cartas - Ángeles (12)
   "52457929867601": {
     productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
     deckId: "angeles",
     deckName: "Tarot de los Ángeles",
     pick: 4,
   },
-
-  // 12 cartas - Arcanos Mayores (22)
   "52443409383761": {
     productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
     deckId: "arcanos_mayores",
@@ -93,24 +117,30 @@ const VARIANT_CONFIG = {
   },
 };
 
-// Lista mazos para UI (opcional)
+/* ------------------------------------------------
+   DECKS / DORSOS
+------------------------------------------------ */
 const DECKS = [
   { deckId: "arcanos_mayores", deckName: "Tarot Arcanos Mayores" },
   { deckId: "angeles", deckName: "Tarot de los Ángeles" },
   { deckId: "semilla_estelar", deckName: "Tarot Semilla Estelar" },
 ];
 
-// Dorsos (NOMBRES EXACTOS en Shopify Files)
 const dorsos = {
   arcanos_mayores: "arcanos_mayores_Dorso_tarot_normal.png",
   angeles: "Angel_Dorso_tarot_de_los_angeles.png",
   semilla_estelar: "Semilla_estelar_Dorso_Semilla_Estelar_ok.png",
 };
 
-// ------------------------------------------------------
-// 3) CARTAS (NOMBRES EXACTOS Shopify Files)
-// ------------------------------------------------------
+/* ------------------------------------------------
+   CARTAS (resumen, sin cambios)
+------------------------------------------------ */
+// ⬇️ AQUÍ VAN TUS ARRAYS DE CARTAS EXACTAMENTE IGUAL
+// ⬇️ NO LOS CAMBIES
+// angelesCards, arcanosMayoresCards, semillaEstelarCards
+// getDeckCards(deckId)
 
+<<<<<<< HEAD
 // Ángeles (12)
 const angelesCards = [
   { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.png", meaning: "" },
@@ -195,12 +225,21 @@ function getDeckCards(deckId) {
 const sessions = new Map(); // fallback local
 const SESSION_TTL_SEC = 60 * 60 * 24; // 24h
 const SESSION_TTL_MS = 1000 * SESSION_TTL_SEC;
+=======
+/* ------------------------------------------------
+   SESIONES
+------------------------------------------------ */
+const sessions = new Map();
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24;
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
 
 function makeToken() {
   return crypto.randomBytes(24).toString("hex");
 }
 
-// Redis client (solo conecta si hay REDIS_URL)
+/* ------------------------------------------------
+   REDIS (OPCIONAL)
+------------------------------------------------ */
 const redis = process.env.REDIS_URL ? createClient({ url: process.env.REDIS_URL }) : null;
 let REDIS_CONNECTED = false;
 
@@ -208,6 +247,7 @@ if (redis) {
   redis.on("error", (err) => console.error("Redis error:", err));
 }
 
+<<<<<<< HEAD
 function cleanupOldSessionsMemoryOnly() {
   if (redis && REDIS_CONNECTED) return;
   const now = Date.now();
@@ -336,21 +376,28 @@ function mapProductNameToCfg(productNameRaw) {
 // ------------------------------------------------------
 // 5) RUTAS
 // ------------------------------------------------------
+=======
+/* ------------------------------------------------
+   RUTAS BÁSICAS
+------------------------------------------------ */
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
 app.get("/", (req, res) => res.send("API de Tarot Activa ✅"));
 
-app.get("/api/health", async (req, res) => {
-  cleanupOldSessionsMemoryOnly();
-
+app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
-    redis: Boolean(redis),
+    redis: !!redis,
     redis_connected: REDIS_CONNECTED,
-    sesiones_en_memoria: await countSessionsInMemory(),
+    sesiones_en_memoria: sessions.size,
     time: new Date().toISOString(),
   });
 });
 
+<<<<<<< HEAD
 // Debug: ver qué está enviando Zapier realmente
+=======
+<<<<<<< HEAD
+>>>>>>> f247c3d (Add premium manual mappings (mentoria + amor premium))
 app.get("/api/debug/last-create-link", (req, res) => {
   res.json({
     last: LAST_CREATE_LINK,
@@ -390,12 +437,19 @@ app.post("/api/create-link", async (req, res) => {
     }
   }
 
+=======
+/* ------------------------------------------------
+   ZAPIER – CREATE LINK
+------------------------------------------------ */
+app.post("/api/create-link", async (req, res) => {
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
   const body = req.body || {};
-  LAST_CREATE_LINK = { receivedAt: new Date().toISOString(), body };
 
-  const order_id = firstValue(body.order_id || body.orderId || body.order || "").trim();
-  const email = firstValue(body.email || body.customer_email || body.customerEmail || "").trim();
+  const order_id = firstValue(body.order_id).trim();
+  const email = firstValue(body.email).trim();
+  const variant_id = firstValue(body.variant_id).trim();
 
+<<<<<<< HEAD
   const variant_id = firstValue(
     body.variant_id ??
       body.variantId ??
@@ -446,20 +500,27 @@ app.post("/api/create-link", async (req, res) => {
         }
       }
     }
+=======
+  if (!order_id || !email || !variant_id) {
+    return res.status(400).json({ ok: false, error: "Faltan datos" });
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
   }
 
+  const cfg = VARIANT_CONFIG[variant_id];
   if (!cfg) {
-    return res.status(400).json({
-      ok: false,
-      error: "No puedo mapear el producto (variant_id no reconocido y productName no coincide)",
-      received: { order_id, email, variant_id, productName },
-    });
+    return res.status(400).json({ ok: false, error: "Producto no reconocido" });
   }
 
+<<<<<<< HEAD
   // ✅ Si es PREMIUM MANUAL, no validamos deck/pick
   const isManual = Boolean(cfg.manual);
 
   if (!isManual) {
+=======
+<<<<<<< HEAD
+  // ✅ Si es tarot, validamos deck/cartas
+  if (cfg.type === "tarot") {
+>>>>>>> f247c3d (Add premium manual mappings (mentoria + amor premium))
     const deck = getDeckCards(cfg.deckId);
     if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
       return res.status(500).json({
@@ -524,15 +585,33 @@ app.post("/api/create-link", async (req, res) => {
       pick: isManual ? 0 : cfg.pick,
       variant_id: variant_id || null,
     },
+=======
+  const token = makeToken();
+
+  sessions.set(token, {
+    order_id,
+    email,
+    variant_id,
+    ...cfg,
+    createdAt: Date.now(),
+    used: false,
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
   });
+
+  const link =
+    (process.env.CLIENT_BASE_URL ||
+      "https://eltarotdelaruedadelafortuna.com/pages/lectura") +
+    `?token=${token}`;
+
+  res.json({ ok: true, link, token });
 });
 
-// ------------------------------------------------------
-// (B) CLIENTE: validar token y obtener configuración
-// ------------------------------------------------------
-app.get("/api/session", async (req, res) => {
-  cleanupOldSessionsMemoryOnly();
+/* ------------------------------------------------
+   PUERTO – FORZADO A 3000
+------------------------------------------------ */
+const PORT = 3000;
 
+<<<<<<< HEAD
   const token = String(req.query.token || "").trim();
   if (!token) return res.status(400).json({ error: "Falta token" });
 
@@ -704,3 +783,9 @@ const PORT = Number(process.env.PORT || 8080);
     app.listen(PORT, "0.0.0.0", () => console.log(`Servidor activo en puerto ${PORT}`));
   }
 })();
+=======
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor activo en puerto ${PORT}`);
+});
+
+>>>>>>> 1aa5a63 (Add premium manual mappings (mentoria + amor premium))
