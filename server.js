@@ -654,7 +654,7 @@ app.get("/api/reading", handleLegacyReading);
 // ------------------------------------------------------
 // 7) SERVER (Redis opcional + PORT Railway)
 // ------------------------------------------------------
-const PORT = Number(process.env.PORT || 8080);
+const PORT = Number(process.env.PORT || 3000);
 
 (async () => {
   try {
