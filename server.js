@@ -14,7 +14,7 @@ const app = express();
 // ------------------------------------------------------
 app.use(
   cors({
-    origin: true, // Shopify + pruebas
+    origin: true,
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -22,7 +22,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 // ------------------------------------------------------
-// 1) OPENAI (no rompemos el server si falta la key)
+// 1) OPENAI (no romper si falta la key)
 // ------------------------------------------------------
 function getOpenAIClient() {
   const key = process.env.OPENAI_API_KEY;
@@ -50,9 +50,9 @@ function firstValue(v) {
 
 // ------------------------------------------------------
 // 2) CONFIG PRODUCTOS (VARIANT ID)
-//    type:
-//      - "tarot"   => tirada + /api/session + /api/submit (IA)
-//      - "manual"  => premium que respondes tú (solo link + token)
+// type:
+//  - "tarot"  => tirada + IA
+//  - "manual" => premium que respondes tú (sin tirada)
 // ------------------------------------------------------
 const VARIANT_CONFIG = {
   // 3 cartas - Arcanos Mayores (22)
@@ -97,21 +97,21 @@ const VARIANT_CONFIG = {
     productName: "Mentoría de Claridad Total: Análisis de 10 Preguntas + Plan de Acción",
   },
 
-  // ✅ PREMIUM MANUAL: Tarot del Amor Premium
+  // ✅ PREMIUM MANUAL: Tarot del Amor Premium (ALMA GEMELA)
   "52570216857937": {
     type: "manual",
     productName: "Tarot del Amor Premium: Encuentra a tu Alma Gemela",
   },
 };
 
-// Lista mazos para UI (opcional)
+// Lista mazos
 const DECKS = [
   { deckId: "arcanos_mayores", deckName: "Tarot Arcanos Mayores" },
   { deckId: "angeles", deckName: "Tarot de los Ángeles" },
   { deckId: "semilla_estelar", deckName: "Tarot Semilla Estelar" },
 ];
 
-// Dorsos (NOMBRES EXACTOS en Shopify Files)
+// Dorsos (Shopify Files)
 const dorsos = {
   arcanos_mayores: "arcanos_mayores_Dorso_tarot_normal.png",
   angeles: "Angel_Dorso_tarot_de_los_angeles.png",
@@ -119,7 +119,7 @@ const dorsos = {
 };
 
 // ------------------------------------------------------
-// 3) CARTAS (NOMBRES EXACTOS Shopify Files)
+// 3) CARTAS
 // ------------------------------------------------------
 
 // Ángeles (12)
@@ -127,15 +127,12 @@ const angelesCards = [
   { id: "rafael", name: "Arcángel Rafael", image: "Angel_Arcangel_Rafael.png", meaning: "" },
   { id: "guarda", name: "Ángel de la Guarda", image: "Angel_Angel_de_la_Guarda.png", meaning: "" },
   { id: "abundancia", name: "Ángel de la Abundancia", image: "Angel_Angel_de_la_Abundancia.png", meaning: "" },
-
   { id: "chamuel", name: "Arcángel Chamuel", image: "Angel_Arcangel_Chamuel.png", meaning: "" },
   { id: "gabriel", name: "Arcángel Gabriel", image: "Angel_Arcangel_Gabriel.png", meaning: "" },
   { id: "uriel", name: "Arcángel Uriel", image: "Angel_Arcangel_Uriel.png", meaning: "" },
-
   { id: "tiempo_divino", name: "Ángel del Tiempo Divino", image: "Angel_Angel_del_Tiempo_Divino.png", meaning: "" },
   { id: "jofiel", name: "Arcángel Jofiel", image: "Angel_Arcangel_Jofiel.png", meaning: "" },
   { id: "suenos", name: "Ángel de los Sueños", image: "Angel_Angel_de_los_Suenos.png", meaning: "" },
-
   { id: "miguel", name: "Arcángel Miguel", image: "Angel_Angel_Arcangel_Miguel.png", meaning: "" },
   { id: "nuevo_comienzo", name: "Ángel del Nuevo Comienzo", image: "Angel_Angel_del_Nuevo_Comienzo.png", meaning: "" },
   { id: "zadkiel", name: "Arcángel Zadkiel", image: "Angel_Arcangel_Zadkiel.png", meaning: "" },
@@ -203,15 +200,14 @@ function getDeckCards(deckId) {
 // ------------------------------------------------------
 // 4) SESIONES / TOKENS
 // ------------------------------------------------------
-const sessions = new Map(); // fallback local
-const SESSION_TTL_SEC = 60 * 60 * 24; // 24h
+const sessions = new Map();
+const SESSION_TTL_SEC = 60 * 60 * 24;
 const SESSION_TTL_MS = 1000 * SESSION_TTL_SEC;
 
 function makeToken() {
   return crypto.randomBytes(24).toString("hex");
 }
 
-// Redis client (solo conecta si hay REDIS_URL)
 const redis = process.env.REDIS_URL ? createClient({ url: process.env.REDIS_URL }) : null;
 let REDIS_CONNECTED = false;
 
@@ -243,14 +239,6 @@ async function setSession(token, obj) {
   sessions.set(token, obj);
 }
 
-async function delSession(token) {
-  if (redis && REDIS_CONNECTED) {
-    await redis.del(`sess:${token}`);
-    return;
-  }
-  sessions.delete(token);
-}
-
 // idempotencia: idKey -> token
 async function getTokenByIdKey(idKey) {
   if (redis && REDIS_CONNECTED) {
@@ -268,10 +256,6 @@ async function setTokenByIdKey(idKey, token) {
   }
 }
 
-async function countSessionsInMemory() {
-  return sessions.size;
-}
-
 function pickRandom(arr, n) {
   const a = Array.isArray(arr) ? [...arr] : [];
   for (let i = a.length - 1; i > 0; i--) {
@@ -286,19 +270,19 @@ function pickRandom(arr, n) {
 // ------------------------------------------------------
 let LAST_CREATE_LINK = null;
 
-// Fallback por nombre (robusto)
+// Fallback por nombre (por si Zapier manda nombre raro)
 function mapProductNameToCfg(productNameRaw) {
   const p = normalize(productNameRaw);
 
-  // ✅ PREMIUM manual - Mentoría Claridad Total
-  if (p.includes("mentoria") && (p.includes("claridad") || p.includes("plan de accion") || p.includes("10 preguntas"))) {
+  // PREMIUM manual - Mentoría
+  if (p.includes("mentoria") && (p.includes("claridad") || p.includes("10 preguntas") || p.includes("plan de accion"))) {
     return {
       type: "manual",
       productName: "Mentoría de Claridad Total: Análisis de 10 Preguntas + Plan de Acción",
     };
   }
 
-  // ✅ PREMIUM manual - Tarot del Amor Premium / Alma Gemela
+  // PREMIUM manual - Amor Premium
   if (p.includes("tarot del amor") || p.includes("alma gemela") || (p.includes("amor") && p.includes("premium"))) {
     return {
       type: "manual",
@@ -306,7 +290,7 @@ function mapProductNameToCfg(productNameRaw) {
     };
   }
 
-  // Tarot normal
+  // tarot normal
   if (p.includes("tres puertas")) {
     return {
       type: "tarot",
@@ -357,12 +341,11 @@ app.get("/", (req, res) => res.send("API de Tarot Activa ✅"));
 
 app.get("/api/health", async (req, res) => {
   cleanupOldSessionsMemoryOnly();
-
   res.json({
     ok: true,
     redis: Boolean(redis),
     redis_connected: REDIS_CONNECTED,
-    sesiones_en_memoria: await countSessionsInMemory(),
+    sesiones_en_memoria: sessions.size,
     time: new Date().toISOString(),
   });
 });
@@ -376,27 +359,13 @@ app.get("/api/debug/last-create-link", (req, res) => {
 
 app.get("/api/decks", (req, res) => res.json(DECKS));
 
-app.get("/api/cards/:deckId", (req, res) => {
-  const { deckId } = req.params;
-  const deck = getDeckCards(deckId);
-  if (!deck) return res.status(404).json({ error: "deckId no válido" });
-
-  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
-    return res.status(500).json({
-      error: "Este mazo no tiene cartas configuradas en el servidor",
-      deckId,
-    });
-  }
-
-  res.json(deck);
-});
-
 // ------------------------------------------------------
 // (A) ZAPIER: crear link tras pago
 // ------------------------------------------------------
 app.post("/api/create-link", async (req, res) => {
   cleanupOldSessionsMemoryOnly();
 
+  // opcional: proteger con secreto
   if (process.env.ZAPIER_SECRET) {
     const auth = req.headers.authorization || "";
     if (auth !== `Bearer ${process.env.ZAPIER_SECRET}`) {
@@ -434,6 +403,7 @@ app.post("/api/create-link", async (req, res) => {
   if (!order_id) missing.push("order_id");
   if (!email) missing.push("email");
   if (!variant_id && !productName) missing.push("variant_id o productName");
+
   if (missing.length) {
     return res.status(400).json({
       ok: false,
@@ -449,8 +419,6 @@ app.post("/api/create-link", async (req, res) => {
   // 2) Fallback por nombre
   if (!cfg && productName) {
     cfg = mapProductNameToCfg(productName);
-
-    // fallback extra: compara exacto con productName en config
     if (!cfg) {
       const pn = normalize(productName);
       for (const k of Object.keys(VARIANT_CONFIG)) {
@@ -471,29 +439,24 @@ app.post("/api/create-link", async (req, res) => {
     });
   }
 
-  // ✅ Si es tarot, validamos deck/cartas
+  // Si es tarot, valida deck
   if (cfg.type === "tarot") {
     const deck = getDeckCards(cfg.deckId);
     if (!deck || !Array.isArray(deck.cards) || deck.cards.length === 0) {
-      return res.status(500).json({
-        ok: false,
-        error: "Deck sin cartas configuradas en el servidor",
-        deckId: cfg.deckId,
-      });
+      return res.status(500).json({ ok: false, error: "Deck sin cartas configuradas", deckId: cfg.deckId });
     }
     if (deck.cards.length < cfg.pick) {
       return res.status(500).json({
         ok: false,
-        error: `Deck con pocas cartas para esta tirada (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
+        error: `Deck con pocas cartas (tiene ${deck.cards.length}, necesita ${cfg.pick})`,
         deckId: cfg.deckId,
       });
     }
   }
 
-  // ✅ Idempotencia: un enlace por (order_id + variant_id/nombre)
+  // idempotencia
   const idKey = `${String(order_id)}:${String(variant_id || normalize(productName))}`;
-
-  let existingToken = await getTokenByIdKey(idKey);
+  const existingToken = await getTokenByIdKey(idKey);
   const token = existingToken || makeToken();
 
   if (!existingToken) {
@@ -517,15 +480,11 @@ app.post("/api/create-link", async (req, res) => {
     await setTokenByIdKey(idKey, token);
   }
 
-  // ✅ Links separados para tarot vs premium manual
-  const tarotUrl =
-    process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
+  // URLs (puedes cambiarlas con variables en Railway)
+  const tarotUrl = process.env.CLIENT_BASE_URL || "https://eltarotdelaruedadelafortuna.com/pages/lectura";
+  const premiumUrl = process.env.CLIENT_PREMIUM_URL || "https://eltarotdelaruedadelafortuna.com/pages/premium";
 
-  const premiumUrl =
-    process.env.CLIENT_PREMIUM_URL || "https://eltarotdelaruedadelafortuna.com/pages/premium";
-
-  const baseClientUrl = cfg.type === "manual" ? premiumUrl : tarotUrl;
-
+  const baseClientUrl = (cfg.type === "manual") ? premiumUrl : tarotUrl;
   const link = `${baseClientUrl}?token=${token}&type=${encodeURIComponent(cfg.type || "tarot")}`;
 
   return res.json({
@@ -556,7 +515,7 @@ app.get("/api/session", async (req, res) => {
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
-  // ✅ Manual premium
+  // PREMIUM manual
   if (s.type === "manual") {
     return res.json({
       type: "manual",
@@ -568,10 +527,9 @@ app.get("/api/session", async (req, res) => {
     });
   }
 
-  // Tarot normal
+  // TAROT
   const deck = getDeckCards(s.deckId);
   if (!deck) return res.status(500).json({ error: "Deck no disponible en servidor" });
-
   if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
     return res.status(500).json({ error: "Deck sin cartas configuradas", deckId: s.deckId });
   }
@@ -601,11 +559,9 @@ app.post("/api/submit", async (req, res) => {
   if (!s) return res.status(404).json({ error: "Token inválido o expirado" });
   if (s.used) return res.status(409).json({ error: "Este enlace ya fue usado" });
 
-  // ✅ Premium manual: no submit
+  // PREMIUM manual => no usa tirada
   if (s.type === "manual") {
-    return res.status(400).json({
-      error: "Este producto es premium manual (no usa tirada).",
-    });
+    return res.status(400).json({ error: "Este producto es premium manual (no usa tirada)." });
   }
 
   if (!Array.isArray(cards) || cards.length === 0) {
@@ -617,9 +573,7 @@ app.post("/api/submit", async (req, res) => {
 
   const openai = getOpenAIClient();
   if (!openai) {
-    return res.status(500).json({
-      error: "OPENAI_API_KEY no está configurada en Railway (Variables).",
-    });
+    return res.status(500).json({ error: "OPENAI_API_KEY no está configurada en Railway (Variables)." });
   }
 
   try {
@@ -635,7 +589,7 @@ app.post("/api/submit", async (req, res) => {
 Producto: "${s.productName}".
 He realizado una tirada con el mazo "${s.deckName}".
 Las cartas elegidas son: ${list}.
-Por favor, proporciona una interpretación holística, amorosa y profunda para quien consulta.
+Por favor, proporciona una interpretación holística, amorosa y profunda.
 Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
 
     const completion = await openai.chat.completions.create({
@@ -644,8 +598,7 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
       max_tokens: 700,
     });
 
-    const interpretation =
-      completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
+    const interpretation = completion.choices?.[0]?.message?.content || "No se pudo generar la interpretación.";
 
     s.used = true;
     await setSession(String(token), s);
@@ -664,7 +617,7 @@ Estructura: (1) Mensaje general, (2) Lectura carta a carta, (3) Consejo final.`;
 });
 
 // ------------------------------------------------------
-// 6) COMPATIBILIDAD (para tu Shopify anterior)
+// 6) COMPATIBILIDAD (Shopify anterior)
 // ------------------------------------------------------
 async function handleLegacyReading(req, res) {
   cleanupOldSessionsMemoryOnly();
@@ -680,26 +633,18 @@ async function handleLegacyReading(req, res) {
     return res.status(400).send("Este producto es premium manual (no usa tirada).");
   }
 
-  const deckId = s.deckId;
-  const deck = getDeckCards(deckId);
+  const deck = getDeckCards(s.deckId);
   if (!deck) return res.status(500).send("Deck no disponible");
-  if (!Array.isArray(deck.cards) || deck.cards.length === 0) {
-    return res.status(500).send("Deck sin cartas configuradas");
-  }
+  if (!Array.isArray(deck.cards) || deck.cards.length === 0) return res.status(500).send("Deck sin cartas");
 
   const picked = pickRandom(deck.cards, s.pick);
 
   res.json({
-    deckId,
+    deckId: s.deckId,
     deckName: s.deckName,
     pick: s.pick,
     backImage: deck.backImage,
-    cards: picked.map((c) => ({
-      id: c.id,
-      name: c.name,
-      image: c.image,
-      meaning: c.meaning || "",
-    })),
+    cards: picked.map((c) => ({ id: c.id, name: c.name, image: c.image, meaning: c.meaning || "" })),
   });
 }
 
@@ -707,9 +652,9 @@ app.get("/reading", handleLegacyReading);
 app.get("/api/reading", handleLegacyReading);
 
 // ------------------------------------------------------
-// 7) SERVER (con conexión Redis opcional)
+// 7) SERVER (Redis opcional + PORT Railway)
 // ------------------------------------------------------
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 8080);
 
 (async () => {
   try {
