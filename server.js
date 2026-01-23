@@ -730,4 +730,7 @@ const PORT = Number(process.env.PORT || 8080);
 // Seguridad extra: loguear crashes
 process.on("uncaughtException", (e) => console.error("uncaughtException:", e));
 process.on("unhandledRejection", (e) => console.error("unhandledRejection:", e));
+<<<<<<< HEAD
 
+=======
+>>>>>>> 42e4c1e02d87a97b8849478a55f189b2c4f3db7e
