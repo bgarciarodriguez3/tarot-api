@@ -43,30 +43,41 @@ const openai = new OpenAI({
 // 2) CONFIG PRODUCTOS
 // ------------------------------------------------------
 const VARIANT_CONFIG = {
+  // ⚠️ CORREGIDO: este variant te está llegando como PREMIUM en Shopify/Zapier,
+  // así que debe ir a /pages/premium
   "52443282112849": {
     productName: "Tres Puertas del Destino (3 Cartas).",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 3,
+    manual: true, // ✅ AÑADIDO
   },
+
   "52457830154577": {
     productName: "Camino de la Semilla Estelar (5 Cartas)",
     deckId: "semilla_estelar",
     deckName: "Tarot Semilla Estelar",
     pick: 5,
   },
+
+  // ⚠️ CORREGIDO: en el nombre pone Premium, pero sin manual:true iba a /pages/lectura
   "52457929867601": {
-    productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
+    productName:
+      "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
     deckId: "angeles",
     deckName: "Tarot de los Ángeles",
     pick: 4,
+    manual: true, // ✅ AÑADIDO
   },
+
   "52443409383761": {
     productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
     deckId: "arcanos_mayores",
     deckName: "Tarot Arcanos Mayores",
     pick: 12,
   },
+
+  // Premium manuales (ya estaban bien)
   "52458382459217": {
     productName: "Mentoría de Claridad Total",
     manual: true,
@@ -188,10 +199,7 @@ app.post("/api/submit", async (req, res) => {
 
   try {
     const list = cards
-      .map(
-        (c) =>
-          `${c.name}${c.reversed ? " (Invertida)" : " (Derecha)"}`
-      )
+      .map((c) => `${c.name}${c.reversed ? " (Invertida)" : " (Derecha)"}`)
       .join(", ");
 
     const completion = await openai.chat.completions.create({
