@@ -1,19 +1,19 @@
 {
-  "name": "Ángeles",
-  "description": "Mensajes, guía y protección de los ángeles y arcángeles.",
-  "back": "Angel_Dorso_tarot_de_los_angeles.png",
+  "slug": "angeles",
+  "name": "Cartas de los Ángeles",
+  "description": "Baraja con mensajes de los ángeles - versión completa (12 cartas)",
   "cards": [
-    { "id": "ang_01", "name": "Ángel de la Abundancia", "image": "Angel_Angel_de_la_Abundancia.png", "upright": { "general": "Prosperidad integral y apertura al flujo del universo.", "love": "Apertura para recibir un amor nutritivo.", "work": "Oportunidades económicas y éxito.", "spiritualAdvice": "Merezco abundancia ilimitada." }, "reversed": { "meaning": "Bloqueos de merecimiento o miedo a la escasez. Revisa tus creencias sobre el valor personal." } },
-    { "id": "ang_02", "name": "Ángel de la Guarda", "image": "Angel_Angel_de_la_Guarda.png", "upright": { "general": "Protección constante y compañía divina.", "love": "Vínculos seguros y protegidos.", "work": "Guía en la toma de decisiones.", "spiritualAdvice": "Nunca estás sola, confía en tu guía." }, "reversed": { "meaning": "Sensación de soledad o desconexión espiritual. Pide ayuda a tus guías." } },
-    { "id": "ang_03", "name": "Ángel de los Sueños", "image": "Angel_Angel_de_los_Sueños.png", "upright": { "general": "Intuición y mensajes del subconsciente.", "love": "Claridad emocional a través de la intuición.", "work": "Inspiración creativa y soluciones nocturnas.", "spiritualAdvice": "Presta atención a tus sueños." }, "reversed": { "meaning": "Mensajes ignorados o falta de descanso. Tu intuición está nublada." } },
-    { "id": "ang_04", "name": "Ángel del Nuevo Comienzo", "image": "Angel_Angel_del_Nuevo_Comienzo.png", "upright": { "general": "Cierre de ciclos y renacimiento espiritual.", "love": "Renovación afectiva o nueva relación.", "work": "Cambios positivos y reinvención profesional.", "spiritualAdvice": "Suelta el pasado para renacer." }, "reversed": { "meaning": "Miedo a empezar de nuevo o apego a etapas que ya terminaron." } },
-    { "id": "ang_05", "name": "Ángel del Tiempo Divino", "image": "Angel_Angel_del_Tiempo_Divino.png", "upright": { "general": "Todo sucede en el momento perfecto según el ritmo universal.", "love": "Encuentros sincronizados.", "work": "Paciencia recompensada.", "spiritualAdvice": "Confía en el tiempo del espíritu." }, "reversed": { "meaning": "Impaciencia, ansiedad o retrasos necesarios para tu aprendizaje." } },
-    { "id": "ang_06", "name": "Arcángel Chamuel", "image": "Angel_Arcangel_Chamuel.png", "upright": { "general": "Amor incondicional, compasión y paz interior.", "love": "Relaciones armoniosas y reconciliación.", "work": "Cooperación y armonía laboral.", "spiritualAdvice": "Sana tu corazón con amor propio." }, "reversed": { "meaning": "Conflictos emocionales o falta de amor hacia uno mismo." } },
-    { "id": "ang_07", "name": "Arcángel Gabriel", "image": "Angel_Arcangel_Gabriel.png", "upright": { "general": "Comunicación clara y revelaciones divinas.", "love": "Conversaciones honestas que sanan.", "work": "Inspiración y éxito en la expresión.", "spiritualAdvice": "Expresa tu verdad con amor." }, "reversed": { "meaning": "Malentendidos, falta de claridad o comunicación bloqueada." } },
-    { "id": "ang_08", "name": "Arcángel Jofiel", "image": "Angel_Arcangel_Jofiel.png", "upright": { "general": "Sabiduría, iluminación y belleza mental.", "love": "Ver la luz en el otro.", "work": "Ideas brillantes y organización.", "spiritualAdvice": "Embellece tus pensamientos." }, "reversed": { "meaning": "Caos mental, negatividad o falta de enfoque." } },
-    { "id": "ang_09", "name": "Arcángel Miguel", "image": "Angel_Arcangel_Miguel.png", "upright": { "general": "Protección, coraje y corte de lazos negativos.", "love": "Límites sanos en las relaciones.", "work": "Fuerza para alcanzar metas.", "spiritualAdvice": "Estás protegida por la luz azul." }, "reversed": { "meaning": "Miedo, falta de voluntad o vulnerabilidad ante energías externas." } },
-    { "id": "ang_10", "name": "Arcángel Rafael", "image": "Angel_Arcangel_Rafael.png", "upright": { "general": "Sanación física, mental y emocional.", "love": "Curación de heridas del pasado.", "work": "Equilibrio y bienestar laboral.", "spiritualAdvice": "Permite que la sanación actúe en ti." }, "reversed": { "meaning": "Resistencia a sanar o descuido de la salud integral." } },
-    { "id": "ang_11", "name": "Arcángel Uriel", "image": "Angel_Arcangel_Uriel.png", "upright": { "general": "Luz de conocimiento y soluciones prácticas.", "love": "Comprensión mutua.", "work": "Éxito en exámenes o proyectos difíciles.", "spiritualAdvice": "La claridad mental te libera." }, "reversed": { "meaning": "Confusión mental o falta de visión para resolver problemas." } },
-    { "id": "ang_12", "name": "Arcángel Zadkiel", "image": "Angel_Arcangel_Zadkiel.png", "upright": { "general": "Transmutación, perdón y liberación energética.", "love": "Liberar rencores para amar de nuevo.", "work": "Transformación de situaciones difíciles.", "spiritualAdvice": "Libera tu energía a través del perdón." }, "reversed": { "meaning": "Incapacidad de perdonar o estancamiento en el pasado." } }
+    { "id": "a1", "name": "Ángel de la Protección", "meaning": "Protección y cuidado. Confía en que estás seguro/a.", "image": "/assets/angeles/a1.jpg" },
+    { "id": "a2", "name": "Ángel de la Paz", "meaning": "Busca la calma. Respira y suelta el miedo.", "image": "/assets/angeles/a2.jpg" },
+    { "id": "a3", "name": "Ángel de la Abundancia", "meaning": "Abre tu corazón a recibir lo bueno.", "image": "/assets/angeles/a3.jpg" },
+    { "id": "a4", "name": "Ángel del Amor", "meaning": "Céntrate en el amor incondicional y relaciónate desde él.", "image": "/assets/angeles/a4.jpg" },
+    { "id": "a5", "name": "Ángel de la Claridad", "meaning": "Aclara tus pensamientos, pide señales claras.", "image": "/assets/angeles/a5.jpg" },
+    { "id": "a6", "name": "Ángel de la Sanación", "meaning": "Permite la sanación emocional y física.", "image": "/assets/angeles/a6.jpg" },
+    { "id": "a7", "name": "Ángel del Coraje", "meaning": "Actúa con valentía en aquello que temes.", "image": "/assets/angeles/a7.jpg" },
+    { "id": "a8", "name": "Ángel de la Esperanza", "meaning": "Mantén la esperanza; nuevas oportunidades vienen.", "image": "/assets/angeles/a8.jpg" },
+    { "id": "a9", "name": "Ángel de la Alegría", "meaning": "Recuerda disfrutar; la alegría te renueva.", "image": "/assets/angeles/a9.jpg" },
+    { "id": "a10", "name": "Ángel de la Sabiduría", "meaning": "Conecta con tu intuición y el conocimiento interior.", "image": "/assets/angeles/a10.jpg" },
+    { "id": "a11", "name": "Ángel Guía", "meaning": "Estás siendo guiado: observa las sincronicidades.", "image": "/assets/angeles/a11.jpg" },
+    { "id": "a12", "name": "Ángel del Perdón", "meaning": "Libérate perdonando; deja ir lo que ya no sirve.", "image": "/assets/angeles/a12.jpg" }
   ]
 }
