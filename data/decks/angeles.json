@@ -2,18 +2,79 @@
   "slug": "angeles",
   "name": "Cartas de los Ángeles",
   "description": "Baraja con mensajes de los ángeles - versión completa (12 cartas)",
+  "back_image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Dorso_tarot_de_los_angeles.png?v=1766518255",
   "cards": [
-    { "id": "a1", "name": "Ángel de la Protección", "meaning": "Protección y cuidado. Confía en que estás seguro/a.", "image": "/assets/angeles/a1.jpg" },
-    { "id": "a2", "name": "Ángel de la Paz", "meaning": "Busca la calma. Respira y suelta el miedo.", "image": "/assets/angeles/a2.jpg" },
-    { "id": "a3", "name": "Ángel de la Abundancia", "meaning": "Abre tu corazón a recibir lo bueno.", "image": "/assets/angeles/a3.jpg" },
-    { "id": "a4", "name": "Ángel del Amor", "meaning": "Céntrate en el amor incondicional y relaciónate desde él.", "image": "/assets/angeles/a4.jpg" },
-    { "id": "a5", "name": "Ángel de la Claridad", "meaning": "Aclara tus pensamientos, pide señales claras.", "image": "/assets/angeles/a5.jpg" },
-    { "id": "a6", "name": "Ángel de la Sanación", "meaning": "Permite la sanación emocional y física.", "image": "/assets/angeles/a6.jpg" },
-    { "id": "a7", "name": "Ángel del Coraje", "meaning": "Actúa con valentía en aquello que temes.", "image": "/assets/angeles/a7.jpg" },
-    { "id": "a8", "name": "Ángel de la Esperanza", "meaning": "Mantén la esperanza; nuevas oportunidades vienen.", "image": "/assets/angeles/a8.jpg" },
-    { "id": "a9", "name": "Ángel de la Alegría", "meaning": "Recuerda disfrutar; la alegría te renueva.", "image": "/assets/angeles/a9.jpg" },
-    { "id": "a10", "name": "Ángel de la Sabiduría", "meaning": "Conecta con tu intuición y el conocimiento interior.", "image": "/assets/angeles/a10.jpg" },
-    { "id": "a11", "name": "Ángel Guía", "meaning": "Estás siendo guiado: observa las sincronicidades.", "image": "/assets/angeles/a11.jpg" },
-    { "id": "a12", "name": "Ángel del Perdón", "meaning": "Libérate perdonando; deja ir lo que ya no sirve.", "image": "/assets/angeles/a12.jpg" }
+    {
+      "id": "rafael",
+      "name": "Rafael",
+      "meaning": "Sanación física y emocional. Restauración y energía curativa.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Rafael.png?v=1766517900"
+    },
+    {
+      "id": "gabriel",
+      "name": "Gabriel",
+      "meaning": "Comunicación y mensajes claros. Inspiración creativa y anuncios importantes.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Gabriel.png?v=1766518175"
+    },
+    {
+      "id": "uriel",
+      "name": "Uriel",
+      "meaning": "Iluminación y sabiduría. Claridad mental y soluciones prácticas.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Uriel.png?v=1766518157"
+    },
+    {
+      "id": "chamuel",
+      "name": "Chamuel",
+      "meaning": "Amor y compasión. Encuentra el cariño en ti y en los demás.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Chamuel.png?v=1766518190"
+    },
+    {
+      "id": "jofiel",
+      "name": "Jofiel",
+      "meaning": "Belleza y claridad mental. Eleva tus pensamientos hacia lo positivo.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Jofiel.png?v=1766518078"
+    },
+    {
+      "id": "zadkiel",
+      "name": "Zadkiel",
+      "meaning": "Perdón y transformación. Libérate de lo que ya no sirve.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Zadkiel.png?v=1766517937"
+    },
+    {
+      "id": "angel_de_la_guarda",
+      "name": "Ángel de la Guarda",
+      "meaning": "Protección y compañía constante. Presencia que cuida y guía.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Guarda.png?v=1766518235"
+    },
+    {
+      "id": "angel_del_tiempo_divino",
+      "name": "Ángel del Tiempo Divino",
+      "meaning": "Paciencia y confianza en el momento adecuado. Todo llega a su tiempo.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Tiempo_Divino.png?v=1766518123"
+    },
+    {
+      "id": "angel_de_la_abundancia",
+      "name": "Ángel de la Abundancia",
+      "meaning": "Apertura a recibir y prosperidad. Siembra para recoger bendiciones.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Abundancia.png?v=1766518209"
+    },
+    {
+      "id": "angel_de_los_suenos",
+      "name": "Ángel de los Sueños",
+      "meaning": "Mensajes y guía a través de los sueños. Atención a las señales nocturnas.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_los_Suenos.png?v=1766518057"
+    },
+    {
+      "id": "angel_del_nuevo_comienzo",
+      "name": "Ángel del Nuevo Comienzo",
+      "meaning": "Renovación y pasos valientes hacia algo nuevo. Tiempo de reiniciar.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Nuevo_Comienzo.png?v=1766517962"
+    },
+    {
+      "id": "miguel",
+      "name": "Miguel",
+      "meaning": "Fuerza, coraje y protección frente a lo negativo. Actúa desde el valor.",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_Arcangel_Miguel.png?v=1766518039"
+    }
   ]
 }
