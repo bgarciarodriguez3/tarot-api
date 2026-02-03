@@ -5,76 +5,76 @@
   "back_image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Dorso_tarot_de_los_angeles.png?v=1766518255",
   "cards": [
     {
-      "id": "rafael",
+      "id": "Angel_Arcangel_Rafael",
       "name": "Rafael",
       "meaning": "Sanación física y emocional. Restauración y energía curativa.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Rafael.png?v=1766517900"
     },
     {
-      "id": "gabriel",
+      "id": "Angel_Arcangel_Gabriel",
       "name": "Gabriel",
       "meaning": "Comunicación y mensajes claros. Inspiración creativa y anuncios importantes.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Gabriel.png?v=1766518175"
     },
     {
-      "id": "uriel",
+      "id": "Angel_Arcangel_Uriel",
       "name": "Uriel",
       "meaning": "Iluminación y sabiduría. Claridad mental y soluciones prácticas.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Uriel.png?v=1766518157"
     },
     {
-      "id": "chamuel",
+      "id": "Angel_Arcangel_Chamuel",
       "name": "Chamuel",
       "meaning": "Amor y compasión. Encuentra el cariño en ti y en los demás.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Chamuel.png?v=1766518190"
     },
     {
-      "id": "jofiel",
+      "id": "Angel_Arcangel_Jofiel",
       "name": "Jofiel",
       "meaning": "Belleza y claridad mental. Eleva tus pensamientos hacia lo positivo.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Jofiel.png?v=1766518078"
     },
     {
-      "id": "zadkiel",
+      "id": "Angel_Arcangel_Zadkiel",
       "name": "Zadkiel",
       "meaning": "Perdón y transformación. Libérate de lo que ya no sirve.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Zadkiel.png?v=1766517937"
     },
     {
-      "id": "angel_de_la_guarda",
+      "id": "Angel_Angel_de_la_Guarda",
       "name": "Ángel de la Guarda",
       "meaning": "Protección y compañía constante. Presencia que cuida y guía.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Guarda.png?v=1766518235"
     },
     {
-      "id": "angel_del_tiempo_divino",
+      "id": "Angel_Angel_del_Tiempo_Divino",
       "name": "Ángel del Tiempo Divino",
       "meaning": "Paciencia y confianza en el momento adecuado. Todo llega a su tiempo.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Tiempo_Divino.png?v=1766518123"
     },
     {
-      "id": "angel_de_la_abundancia",
+      "id": "Angel_Angel_de_la_Abundancia",
       "name": "Ángel de la Abundancia",
       "meaning": "Apertura a recibir y prosperidad. Siembra para recoger bendiciones.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Abundancia.png?v=1766518209"
     },
     {
-      "id": "angel_de_los_suenos",
+      "id": "Angel_Angel_de_los_Suenos",
       "name": "Ángel de los Sueños",
       "meaning": "Mensajes y guía a través de los sueños. Atención a las señales nocturnas.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_los_Suenos.png?v=1766518057"
     },
     {
-      "id": "angel_del_nuevo_comienzo",
+      "id": "Angel_Angel_del_Nuevo_Comienzo",
       "name": "Ángel del Nuevo Comienzo",
       "meaning": "Renovación y pasos valientes hacia algo nuevo. Tiempo de reiniciar.",
       "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Nuevo_Comienzo.png?v=1766517962"
     },
     {
-      "id": "miguel",
+      "id": "Angel_Arcangel_Miguel",
       "name": "Miguel",
       "meaning": "Fuerza, coraje y protección frente a lo negativo. Actúa desde el valor.",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_Arcangel_Miguel.png?v=1766518039"
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Miguel.png?v=1766518039"
     }
   ]
 }
