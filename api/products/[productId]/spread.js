@@ -38,53 +38,16 @@ module.exports = async (req, res) => {
     const day = yyyymmdd();
     const key = `${productId}:${ip}:${day}`;
 
-    const redis = getRedis();
+    // ✅ IMPORTANTE: getRedis() es async con node-redis v5
+    const redis = await getRedis();
+
     const count = await redis.incr(key);
-    if (count === 1) await redis.expire(key, 60 * 60 * 24 * 2);
+
+    if (count === 1) {
+      await redis.expire(key, 60 * 60 * 24 * 2); // 2 días
+    }
+
     if (count > 8) {
       return res.status(429).json({
         ok: false,
-        error: "daily_limit_reached",
-        limit: { maxPerDay: 8, usedToday: count - 1 },
-      });
-    }
-
-    // ✅ deck desde JSON
-    const deck = getDeckForProduct(productId);
-    if (!deck || !Array.isArray(deck.cards)) {
-      return res.status(404).json({ ok: false, error: `Deck not found for product ${productId}` });
-    }
-
-    if (deck.cards.length !== 12) {
-      return res.status(500).json({
-        ok: false,
-        error: "invalid_deck",
-        details: "Deck must have exactly 12 cards",
-      });
-    }
-
-    // ✅ 12 cartas
-    const shuffled = shuffle(deck.cards);
-    const spread = shuffled.slice(0, 12);
-
-    // ✅ SOLO 1 invertida
-    const reversedIndex = Math.floor(Math.random() * spread.length);
-    const spreadWithReversed = spread.map((c, idx) => ({
-      ...c,
-      reversed: idx === reversedIndex,
-    }));
-
-    return res.status(200).json({
-      ok: true,
-      product_id: productId,
-      spread: "angeles_12",
-      deck: { slug: deck.deck_id || productId, name: deck.name || productId },
-      meta: { usedToday: count, maxPerDay: 8, reversedIndex },
-      timestamp: new Date().toISOString(),
-      cards: spreadWithReversed,
-    });
-  } catch (err) {
-    console.error("Product spread error:", err);
-    return res.status(500).json({ ok: false, error: "Internal server error", details: err.message });
-  }
-};
+        error: "dail
