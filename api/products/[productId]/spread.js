@@ -1,8 +1,10 @@
 // api/products/[productId]/spread.js
+
 const { getDeckForProduct } = require("../../../lib/getDeckForProduct");
-const { getRedis } = require("../../../lib/redis-client");
+const { redisIncr, redisExpire } = require("../../../lib/redis-client");
 const { getWeeklyReading } = require("../../../lib/weekly-reading");
 
+// ===== helpers =====
 function yyyymmdd() {
   const d = new Date();
   const yyyy = d.getUTCFullYear();
@@ -27,21 +29,26 @@ function shuffle(array) {
   return arr;
 }
 
+// ===== handler =====
 module.exports = async (req, res) => {
   try {
+    // 1️⃣ productId
     const productId = req.query && (req.query.productId || req.query.product_id);
     if (!productId) {
       return res.status(400).json({ ok: false, error: "Missing productId" });
     }
 
-    // ✅ límite 8/día por IP
+    // 2️⃣ límite 8 tiradas/día por IP
     const ip = getIP(req);
     const day = yyyymmdd();
-    const key = `${productId}:${ip}:${day}`;
+    const limitKey = `${productId}:${ip}:${day}`;
 
-    const redis = getRedis();
-    const count = await redis.incr(key);
-    if (count === 1) await redis.expire(key, 60 * 60 * 24 * 2);
+    const count = await redisIncr(limitKey);
+    if (count === 1) {
+      // 2 días por seguridad
+      await redisExpire(limitKey, 60 * 60 * 24 * 2);
+    }
+
     if (count > 8) {
       return res.status(429).json({
         ok: false,
@@ -50,10 +57,13 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ✅ deck desde JSON
+    // 3️⃣ obtener mazo
     const deck = getDeckForProduct(productId);
     if (!deck || !Array.isArray(deck.cards)) {
-      return res.status(404).json({ ok: false, error: `Deck not found for product ${productId}` });
+      return res.status(404).json({
+        ok: false,
+        error: `Deck not found for product ${productId}`,
+      });
     }
 
     if (deck.cards.length !== 12) {
@@ -64,52 +74,59 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ✅ 12 cartas
+    // 4️⃣ barajar y sacar 12
     const shuffled = shuffle(deck.cards);
     const spread = shuffled.slice(0, 12);
 
-    // ✅ SOLO 1 invertida
+    // 5️⃣ solo 1 carta invertida
     const reversedIndex = Math.floor(Math.random() * spread.length);
     const cards = spread.map((c, idx) => ({
       ...c,
       reversed: idx === reversedIndex,
     }));
 
-    // ✅ IA semanal (texto largo) – se cachea en Redis
-    // Si algo falla con OpenAI, devolvemos igual las cartas (sin romper la tirada).
-    let reading_long = null;
-    let reading_week = null;
-    let reading_cached = null;
+    // 6️⃣ IA semanal (NO rompe la tirada si falla)
+    let reading = {
+      kind: "weekly_ai",
+      week: null,
+      cached: null,
+      text: null,
+    };
 
     try {
       const weekly = await getWeeklyReading({ productId, cards });
-      reading_long = weekly.text;
-      reading_week = weekly.week;
-      reading_cached = weekly.cached;
-    } catch (e) {
-      // no rompemos la API por la IA
-      reading_long = null;
-      reading_week = null;
-      reading_cached = null;
+      reading.week = weekly.week;
+      reading.cached = weekly.cached;
+      reading.text = weekly.text;
+    } catch (err) {
+      console.error("Weekly reading error:", err);
+      // seguimos sin texto largo
     }
 
+    // 7️⃣ respuesta final
     return res.status(200).json({
       ok: true,
       product_id: productId,
       spread: "angeles_12",
-      deck: { slug: deck.deck_id || productId, name: deck.name || productId },
-      meta: { usedToday: count, maxPerDay: 8, reversedIndex },
+      deck: {
+        slug: deck.deck_id || productId,
+        name: deck.name || productId,
+      },
+      meta: {
+        usedToday: count,
+        maxPerDay: 8,
+        reversedIndex,
+      },
       timestamp: new Date().toISOString(),
       cards,
-      reading: {
-        kind: "weekly_ai",
-        week: reading_week,
-        cached: reading_cached,
-        text: reading_long,
-      },
+      reading,
     });
   } catch (err) {
     console.error("Product spread error:", err);
-    return res.status(500).json({ ok: false, error: "Internal server error", details: err.message });
+    return res.status(500).json({
+      ok: false,
+      error: "Internal server error",
+      details: err.message,
+    });
   }
 };
