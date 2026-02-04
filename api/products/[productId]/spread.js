@@ -1,6 +1,6 @@
 // api/products/[productId]/spread.js
 const mod = require("../../../lib/getDeckForProduct");
-const getDeckForProduct = mod.getDeckForProduct || mod; // ✅ robusto
+const getDeckForProduct = mod.getDeckForProduct || mod;
 
 function shuffle(array) {
   const arr = array.slice();
@@ -21,7 +21,6 @@ module.exports = async (req, res) => {
     const deck = getDeckForProduct(productId);
     const cards = deck && Array.isArray(deck.cards) ? deck.cards : null;
 
-    // Para angeles_12 devolvemos 12, si no, devolvemos 4
     const want12 = productId === "angeles_12";
     const takeN = want12 ? 12 : 4;
 
@@ -42,13 +41,36 @@ module.exports = async (req, res) => {
       reversed: idx === reversedIndex,
     }));
 
+    // ✅ result “compatible” (tu frontend de 4 cartas suele leer esto)
+    const positions4 = [
+      { pos: 1, name: "Mensaje del Ángel" },
+      { pos: 2, name: "Guía / Apoyo" },
+      { pos: 3, name: "Bloqueo / Lección" },
+      { pos: 4, name: "Acción a tomar" },
+    ];
+
+    const result =
+      want12
+        ? spreadWithReversed.map((card, i) => ({
+            position: `Carta ${i + 1}`,
+            positionIndex: i + 1,
+            card,
+          }))
+        : positions4.map((p, i) => ({
+            position: p.name,
+            positionIndex: p.pos,
+            card: spreadWithReversed[i],
+          }));
+
     return res.status(200).json({
       ok: true,
       product_id: productId,
       spread: want12 ? "angeles_12" : "angeles_4",
       deck: { slug: deck.deck_id || productId, name: deck.name || productId },
       timestamp: new Date().toISOString(),
-      cards: spreadWithReversed,
+      reversedIndex,
+      cards: spreadWithReversed, // ✅ 12 cartas (o 4)
+      result,                    // ✅ compatible
     });
   } catch (err) {
     console.error("Product spread error:", err);
