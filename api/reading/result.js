@@ -1,129 +1,122 @@
-// api/reading/result.js
+// /api/reading/result.js
 
 import crypto from "crypto";
 import fetch from "node-fetch";
 
+// ⚠️ Ajusta esto si quieres limitar solo a tu dominio
+const ALLOWED_ORIGIN = process.env.SHOPIFY_ORIGIN || "*";
+
 export default async function handler(req, res) {
+  // -------------------------
+  // CORS (NECESARIO PARA SHOPIFY)
+  // -------------------------
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // Preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Solo POST
   if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res.status(405).json({
+      ok: false,
+      error: "Method not allowed",
+    });
   }
 
   try {
     const {
-      product,          // "angeles"
-      order_id,         // Shopify order id
-      line_item_id,     // Shopify line item id
-      selected_cards    // array de 4 IDs de cartas
+      product,        // "angeles"
+      order_id,       // Shopify order id o TEST_ORDER
+      line_item_id,   // Shopify line item id o TEST_LINE
+      selected_cards, // array de IDs de cartas
     } = req.body;
 
-    if (!product || !order_id || !line_item_id || !Array.isArray(selected_cards)) {
-      return res.status(400).json({ ok: false, error: "Missing required fields" });
-    }
-
-    if (selected_cards.length !== 4) {
-      return res.status(400).json({ ok: false, error: "You must select exactly 4 cards" });
-    }
-
-    // ===============================
-    // 1️⃣ Obtener textos largos (Airtable)
-    // ===============================
-    const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-    const AIRTABLE_TABLE = process.env.AIRTABLE_CARDS_TABLE || "Cards";
-
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
-      return res.status(500).json({ ok: false, error: "Airtable not configured" });
-    }
-
-    const cards = [];
-
-    for (const cardId of selected_cards) {
-      const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE}?filterByFormula={id}='${cardId}'`;
-
-      const r = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-        },
+    // -------------------------
+    // VALIDACIONES BÁSICAS
+    // -------------------------
+    if (
+      !product ||
+      !order_id ||
+      !line_item_id ||
+      !Array.isArray(selected_cards) ||
+      selected_cards.length !== 4
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "Datos incompletos o inválidos",
       });
+    }
 
-      const data = await r.json();
-      if (!data.records || !data.records.length) {
-        return res.status(404).json({ ok: false, error: `Card not found: ${cardId}` });
+    // -------------------------
+    // CARGAR BARAJA (ÁNGELES 12)
+    // -------------------------
+    const deckRes = await fetch(
+      `https://tarot-api-vercel.vercel.app/api/products/angeles_12/spread`
+    );
+
+    if (!deckRes.ok) {
+      throw new Error("No se pudo cargar la baraja");
+    }
+
+    const deckData = await deckRes.json();
+
+    if (!deckData.cards || !Array.isArray(deckData.cards)) {
+      throw new Error("Formato de baraja inválido");
+    }
+
+    // -------------------------
+    // SELECCIONAR CARTAS
+    // -------------------------
+    const cards = selected_cards.map((cardId) => {
+      const baseCard = deckData.cards.find(
+        (c) => c.id === cardId
+      );
+
+      if (!baseCard) {
+        throw new Error(`Carta no encontrada: ${cardId}`);
       }
 
-      cards.push(data.records[0].fields);
-    }
-
-    // ===============================
-    // 2️⃣ Calcular cartas invertidas (20 %, determinista)
-    // ===============================
-    const weekSeed = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-
-    const finalCards = cards.map((card) => {
-      const seed = `${order_id}-${line_item_id}-${card.id}-${weekSeed}`;
-      const hash = crypto.createHash("sha256").update(seed).digest("hex");
-      const reversed = parseInt(hash.slice(0, 2), 16) % 5 === 0; // ~20 %
+      // 20% probabilidad de invertida
+      const reversed = Math.random() < 0.2;
 
       return {
-        id: card.id,
-        name: card.name,
-        image: card.image,
+        id: baseCard.id,
+        name: baseCard.name,
+        meaning: reversed && baseCard.reversed_meaning
+          ? baseCard.reversed_meaning
+          : baseCard.meaning,
         reversed,
-        text: reversed ? card.meaning_reversed : card.meaning,
       };
     });
 
-    // ===============================
-    // 3️⃣ Resumen final con OpenAI
-    // ===============================
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-
-    if (!OPENAI_API_KEY) {
-      return res.status(500).json({ ok: false, error: "OpenAI not configured" });
-    }
-
-    const prompt = `
-Eres un lector espiritual experto.
-Integra estas 4 cartas del Tarot de los Ángeles en un mensaje final claro,
-amoroso y profundo para el consultante.
-
-Cartas:
-${finalCards.map(c => `- ${c.name}${c.reversed ? " (invertida)" : ""}`).join("\n")}
-
-Mensaje final:
-`;
-
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: OPENAI_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.8,
-      }),
-    });
-
-    const openaiData = await openaiRes.json();
+    // -------------------------
+    // MENSAJE FINAL (IA SIMPLE / PLACEHOLDER)
+    // Luego aquí puedes meter OpenAI
+    // -------------------------
     const final_message =
-      openaiData.choices?.[0]?.message?.content || "";
+      "Los ángeles te recuerdan que confíes en el proceso. Cada carta aparece para guiarte con amor, claridad y propósito. Nada es casual.";
 
-    // ===============================
-    // 4️⃣ Respuesta final al cliente
-    // ===============================
+    // -------------------------
+    // RESPUESTA FINAL
+    // -------------------------
     return res.status(200).json({
       ok: true,
-      product,
       order_id,
-      cards: finalCards,
+      line_item_id,
+      product,
+      cards,
       final_message,
     });
-
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ ok: false, error: "Internal server error" });
+    console.error("❌ Error reading/result:", err);
+
+    return res.status(500).json({
+      ok: false,
+      error: err.message || "Error interno",
+    });
   }
 }
