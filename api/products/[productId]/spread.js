@@ -1,106 +1,97 @@
 // pages/api/products/[productId]/spread.js
 
 export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  }
+
   try {
-    const { productId } = req.query;
-
-    const baseId = process.env.AIRTABLE_BASE_ID;
-    const apiKey = process.env.AIRTABLE_API_KEY; // <-- asegúrate de tenerla en Vercel
-
-    if (!baseId) {
-      return res.status(500).json({ ok: false, error: "Missing AIRTABLE_BASE_ID env var" });
-    }
-    if (!apiKey) {
-      return res.status(500).json({ ok: false, error: "Missing AIRTABLE_API_KEY env var" });
+    const productId = String(req.query.productId || "").trim();
+    if (!productId) {
+      return res.status(400).json({ ok: false, error: "Missing productId" });
     }
 
-    const tableName = "Cards";
+    const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
+    const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+    const TABLE = process.env.AIRTABLE_TABLE_CARDS || "Cards"; // tu tabla se llama "Cards"
 
-    // En tu base, deck_id y product_id parecen ser el mismo slug (ej: "angeles_12")
-    // Filtramos por cualquiera de los dos para que funcione aunque uno falte.
-    const formula = `OR({deck_id}='${productId}', {product_id}='${productId}')`;
-
-    const url =
-      `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}` +
-      `?pageSize=100` +
-      `&filterByFormula=${encodeURIComponent(formula)}`;
-
-    const r = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
-
-    const text = await r.text();
-    if (!r.ok) {
+    if (!AIRTABLE_API_KEY) {
       return res.status(500).json({
         ok: false,
-        error: "Internal server error",
-        details: `Airtable error (${r.status}): ${text}`,
+        error: "Missing AIRTABLE_API_KEY in environment variables",
       });
     }
 
-    const data = JSON.parse(text);
-    const records = Array.isArray(data.records) ? data.records : [];
+    if (!AIRTABLE_BASE_ID) {
+      return res.status(500).json({
+        ok: false,
+        error: "Missing AIRTABLE_BASE_ID in environment variables",
+      });
+    }
 
-    // Normaliza a nuestro formato
-    const cards = records
-      .map((rec) => {
-        const f = rec.fields || {};
+    // En tu Airtable existen: product_id y deck_id.
+    // Probamos primero por product_id. Si no devuelve, probamos por deck_id.
+    const records =
+      (await fetchCards({
+        baseId: AIRTABLE_BASE_ID,
+        apiKey: AIRTABLE_API_KEY,
+        table: TABLE,
+        filterByFormula: `{product_id}="${escapeAirtableValue(productId)}"`,
+      })) ||
+      [];
 
-        const card_id = (f.card_id || "").toString().trim();
-        const meaning = (f.meaning || "").toString();
-        const image = (f.image_url || "").toString().trim();
+    const recordsFallback =
+      records.length > 0
+        ? records
+        : (await fetchCards({
+            baseId: AIRTABLE_BASE_ID,
+            apiKey: AIRTABLE_API_KEY,
+            table: TABLE,
+            filterByFormula: `{deck_id}="${escapeAirtableValue(productId)}"`,
+          })) || [];
 
-        // Intento de sacar un "name" decente:
-        // 1) si existe f.name úsalo
-        // 2) si no, intenta sacarlo del inicio de meaning (antes de "—" / "-" / "–")
-        // 3) si no, fallback al card_id "bonito"
-        const nameFromMeaning = (() => {
-          const firstLine = meaning.split("\n")[0] || "";
-          // quita emojis comunes al inicio
-          const cleaned = firstLine.replace(/^[^\p{L}\p{N}]*/u, "").trim();
-          const parts = cleaned.split(/—|–|-|\u2014/).map((s) => s.trim());
-          if (parts[0] && parts[0].length >= 3) return parts[0];
-          return "";
-        })();
+    const normalized = recordsFallback.map((r) => {
+      const f = r.fields || {};
 
-        const fallbackNameFromId = (() => {
-          if (!card_id) return "";
-          const pretty = card_id
-            .replace(/^Angel_?/i, "")
-            .replace(/^Arcangel_?/i, "")
-            .replace(/_/g, " ")
-            .trim();
-          // Si termina quedando algo tipo "del Tiempo Divino", capitaliza primera
-          return pretty ? pretty[0].toUpperCase() + pretty.slice(1) : card_id;
-        })();
+      // Tus columnas: card_id, meaning, image_url
+      const rawCardId = String(f.card_id || r.id || "").trim();
+      const rawMeaning = typeof f.meaning === "string" ? f.meaning : "";
+      const rawImage = typeof f.image_url === "string" ? f.image_url.trim() : "";
 
-        const name = (f.name || nameFromMeaning || fallbackNameFromId || card_id || "Carta").toString();
+      // Si existiera un campo name, lo usamos; si no, lo inferimos desde card_id
+      const name =
+        (typeof f.name === "string" && f.name.trim()) ||
+        inferNameFromCardId(rawCardId) ||
+        rawCardId ||
+        "Carta";
 
-        return {
-          id: card_id || rec.id,
-          name,
-          meaning,
-          image,
-          reversed: false, // aquí NO forzamos invertidas
-        };
-      })
-      // quita filas vacías si alguna viniera rara
-      .filter((c) => c.id || c.name || c.image || c.meaning);
+      return {
+        id: rawCardId || r.id,
+        name,
+        meaning: rawMeaning,
+        image: rawImage,
+        reversed: false, // 👈 NO forzamos invertidas aquí (el cliente decide si gira o no)
+      };
+    });
 
-    // Si por algún motivo Airtable devuelve más, aquí te aseguras que son 12
-    // (siempre que tu baraja sea de 12)
-    // Puedes quitarlo si más adelante hay barajas grandes.
-    const deckCards = cards.slice(0, 12);
+    // Si no hay 12, devolvemos igual lo que haya pero con aviso útil
+    if (normalized.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        error: "No cards found for this productId",
+        details:
+          'Revisa que en Airtable (Cards) haya filas con product_id="' +
+          productId +
+          '" (o deck_id) y que existan columnas: card_id, meaning, image_url.',
+      });
+    }
 
+    res.setHeader("Cache-Control", "no-store, max-age=0");
     return res.status(200).json({
       ok: true,
-      product_id: productId,
+      productId,
       spread: productId,
-      deck: { slug: productId, name: productId },
-      timestamp: new Date().toISOString(),
-      cards: deckCards,
+      cards: normalized,
     });
   } catch (err) {
     return res.status(500).json({
@@ -109,4 +100,52 @@ export default async function handler(req, res) {
       details: err?.message || String(err),
     });
   }
+}
+
+async function fetchCards({ baseId, apiKey, table, filterByFormula }) {
+  const url =
+    `https://api.airtable.com/v0/${encodeURIComponent(baseId)}/${encodeURIComponent(table)}` +
+    `?pageSize=100&filterByFormula=${encodeURIComponent(filterByFormula)}`;
+
+  const r = await fetch(url, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+
+  const data = await r.json();
+  if (!r.ok) {
+    // Airtable devuelve "error" con message/type normalmente
+    const msg =
+      data?.error?.message ||
+      data?.error ||
+      data?.message ||
+      "Airtable request failed";
+    throw new Error(`Airtable error (${r.status}): ${msg}`);
+  }
+
+  return Array.isArray(data.records) ? data.records : [];
+}
+
+function escapeAirtableValue(s) {
+  // Airtable strings usan comillas dobles; escapamos comillas internas
+  return String(s).replace(/"/g, '\\"');
+}
+
+function inferNameFromCardId(cardId) {
+  // Ej: Angel_Angel_Arcangel_Miguel -> Miguel
+  // Ej: Angel_Arcangel_Gabriel -> Gabriel
+  if (!cardId) return "";
+
+  const parts = String(cardId).split("_").filter(Boolean);
+  if (parts.length === 0) return "";
+
+  // último token suele ser el nombre
+  const last = parts[parts.length - 1];
+
+  // arreglitos cosméticos
+  const pretty = last
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return pretty ? pretty : "";
 }
