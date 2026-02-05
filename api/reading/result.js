@@ -1,124 +1,99 @@
-// /api/reading/result.js
 import fetch from "node-fetch";
 
-const ALLOWED_ORIGIN = process.env.SHOPIFY_ORIGIN || "*";
-
-// Ajusta estos nombres a tus env vars reales
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-// Si tú la tienes como AIRTABLE_TABLE_CARDS, cámbiala aquí:
-const AIRTABLE_CARDS_TABLE = process.env.AIRTABLE_CARDS_TABLE || process.env.AIRTABLE_TABLE_CARDS || "Cards";
 
-function airtableUrl(path) {
-  return `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_CARDS_TABLE)}${path}`;
-}
+const TABLE_CARDS = "Cards";
 
-async function airtableFetch(path) {
-  const res = await fetch(airtableUrl(path), {
-    headers: {
-      Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Airtable error: ${res.status} ${txt}`);
-  }
-  return res.json();
-}
-
-// Probabilidad de invertida (0.2 = 20%)
-function isReversed() {
-  return Math.random() < 0.2;
+// CORS helper
+function setCors(res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
 export default async function handler(req, res) {
-  // -------------------------
-  // CORS
-  // -------------------------
-  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  setCors(res);
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+  // Preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
   try {
     const {
-      product,        // "angeles"
+      product,
       order_id,
       line_item_id,
-      selected_cards, // ["Angel_Arcangel_Rafael", ...] (4)
-      test_mode = false, // opcional
-    } = req.body || {};
+      selected_cards
+    } = req.body;
 
-    if (!product || !order_id || !line_item_id || !Array.isArray(selected_cards) || selected_cards.length !== 4) {
-      return res.status(400).json({ ok: false, error: "Datos incompletos o inválidos" });
-    }
-
-    // En producción aquí luego validamos pedido real (Shopify).
-    // En test_mode permitimos pasar.
-    if (!test_mode && (String(order_id).startsWith("TEST") || String(line_item_id).startsWith("TEST"))) {
-      return res.status(401).json({ ok: false, error: "Pedido inválido (modo producción)" });
-    }
-
-    if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID || !AIRTABLE_CARDS_TABLE) {
-      return res.status(500).json({ ok: false, error: "Faltan variables de entorno de Airtable" });
-    }
-
-    // -------------------------
-    // Traer cartas por ID desde Airtable
-    // -------------------------
-    // IMPORTANTE: aquí asumimos que en Airtable existe un campo "id"
-    // con valores EXACTOS como: Angel_Arcangel_Rafael, etc.
-    // Y campos:
-    // - name
-    // - meaning_long
-    // - meaning_long_reversed (opcional)
-    // - meaning_short (opcional)
-    //
-    // Si tus campos se llaman distinto, dime cómo están y lo adapto.
-    const cards = [];
-
-    for (const cardId of selected_cards) {
-      const formula = `({id} = "${String(cardId).replace(/"/g, '\\"')}")`;
-      const data = await airtableFetch(`?maxRecords=1&filterByFormula=${encodeURIComponent(formula)}`);
-
-      if (!data.records || !data.records.length) {
-        throw new Error(`Carta no encontrada en Airtable: ${cardId}`);
-      }
-
-      const f = data.records[0].fields || {};
-      const reversed = isReversed();
-
-      const name = f.name || f.Nombre || cardId;
-
-      const normalLong = f.meaning_long || f.significado_largo || f.meaning || "";
-      const reversedLong =
-        f.meaning_long_reversed ||
-        f.significado_largo_invertida ||
-        f.reversed_meaning ||
-        "";
-
-      const meaning_long = reversed && reversedLong ? reversedLong : normalLong;
-
-      cards.push({
-        id: cardId,
-        name,
-        reversed,
-        meaning_long,
-        meaning_short: f.meaning_short || f.significado_corto || "",
+    // Validaciones mínimas
+    if (!product || !Array.isArray(selected_cards) || selected_cards.length !== 4) {
+      return res.status(400).json({
+        ok: false,
+        error: "Datos incompletos o cartas inválidas"
       });
     }
 
-    // -------------------------
-    // Mensaje final (por ahora fijo)
-    // Luego lo cambiamos por OpenAI + “semana”
-    // -------------------------
-    const final_message =
-      "Tu tirada te habla de guía, protección y claridad. Confía en el ritmo divino: estás exactamente donde necesitas estar.";
+    // Solo Tarot de los Ángeles por ahora
+    const deck_id = "angeles_12";
+
+    // Construimos filtro Airtable
+    const filterFormula = `
+      AND(
+        {deck_id}='${deck_id}',
+        OR(${selected_cards.map(id => `{card_id}='${id}'`).join(",")})
+      )
+    `;
+
+    const url =
+      `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${TABLE_CARDS}` +
+      `?filterByFormula=${encodeURIComponent(filterFormula)}`;
+
+    const airtableRes = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${AIRTABLE_API_KEY}`
+      }
+    });
+
+    const airtableData = await airtableRes.json();
+
+    if (!airtableData.records || !airtableData.records.length) {
+      return res.status(404).json({
+        ok: false,
+        error: "No se encontraron cartas"
+      });
+    }
+
+    // Formateamos cartas
+    const cards = airtableData.records.map(record => {
+      const f = record.fields;
+
+      return {
+        id: f.card_id,
+        name: f.meaning,
+        image: f.image_url,
+        back_image: f.back_image_url,
+        meaning: f.meaning,
+        reversed: Math.random() < 0.25 // 25% invertidas
+      };
+    });
+
+    // Mensaje final (simple pero bonito)
+    const final_message = `
+Los ángeles han respondido a tu llamada.
+
+Esta tirada no es casual: refleja el estado actual de tu energía
+y los mensajes que necesitas integrar ahora mismo.
+
+Lee cada carta con calma.
+Permite que el mensaje resuene dentro de ti.
+    `.trim();
 
     return res.status(200).json({
       ok: true,
@@ -126,10 +101,14 @@ export default async function handler(req, res) {
       order_id,
       line_item_id,
       cards,
-      final_message,
+      final_message
     });
+
   } catch (err) {
-    console.error("❌ reading/result:", err);
-    return res.status(500).json({ ok: false, error: err.message || "Error interno" });
+    console.error("❌ ERROR reading/result:", err);
+    return res.status(500).json({
+      ok: false,
+      error: "Error interno del servidor"
+    });
   }
 }
