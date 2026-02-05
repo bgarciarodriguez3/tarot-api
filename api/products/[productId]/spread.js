@@ -1,22 +1,6 @@
 // api/products/[productId]/spread.js
-
 const { getDeckForProduct } = require("../../../lib/getDeckForProduct");
-const { getRedis } = require("../../../lib/redis-client");
-
-function yyyymmdd() {
-  const d = new Date();
-  const yyyy = d.getUTCFullYear();
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  return `${yyyy}${mm}${dd}`;
-}
-
-function getIP(req) {
-  const xf = req.headers["x-forwarded-for"];
-  if (typeof xf === "string" && xf.length) return xf.split(",")[0].trim();
-  if (Array.isArray(xf) && xf[0]) return xf[0];
-  return req.socket?.remoteAddress || "unknown";
-}
+const { getWeeklyLongMeaningForCard } = require("../../../lib/weekly-reading");
 
 function shuffle(array) {
   const arr = array.slice();
@@ -30,25 +14,10 @@ function shuffle(array) {
 module.exports = async (req, res) => {
   try {
     const productId = req.query && (req.query.productId || req.query.product_id);
-    if (!productId) return res.status(400).json({ ok: false, error: "Missing productId" });
-
-    // ✅ límite 8/día por IP
-    const ip = getIP(req);
-    const day = yyyymmdd();
-    const key = `limit:${productId}:${ip}:${day}`;
-
-    const redis = await getRedis();
-    const count = await redis.incr(key);
-    if (count === 1) await redis.expire(key, 60 * 60 * 24 * 2); // 2 días
-    if (count > 8) {
-      return res.status(429).json({
-        ok: false,
-        error: "daily_limit_reached",
-        limit: { maxPerDay: 8, usedToday: 8 },
-      });
+    if (!productId) {
+      return res.status(400).json({ ok: false, error: "Missing productId" });
     }
 
-    // ✅ deck desde JSON (tu lib/getDeckForProduct.js)
     const deck = getDeckForProduct(productId);
     if (!deck || !Array.isArray(deck.cards)) {
       return res.status(404).json({ ok: false, error: `Deck not found for product ${productId}` });
@@ -66,20 +35,35 @@ module.exports = async (req, res) => {
 
     // ✅ SOLO 1 invertida
     const reversedIndex = Math.floor(Math.random() * spread.length);
-    const cards = spread.map((c, idx) => ({
-      ...c,
-      reversed: idx === reversedIndex,
-    }));
+
+    // ✅ longMeaning semanal (IA) — cacheado por semana
+    const enriched = await Promise.all(
+      spread.map(async (c, idx) => {
+        const reversed = idx === reversedIndex;
+
+        // Genera/recupera longMeaning semanal por carta + estado (normal/invertida)
+        const longMeaning = await getWeeklyLongMeaningForCard({
+          productId,
+          card: c,
+          reversed,
+        });
+
+        return {
+          ...c,
+          reversed,
+          longMeaning, // <-- texto largo semanal
+        };
+      })
+    );
 
     return res.status(200).json({
       ok: true,
       product_id: productId,
       spread: "angeles_12",
       deck: { slug: deck.deck_id || productId, name: deck.name || productId },
-      timestamp: new Date().toISOString(),
       reversedIndex,
-      cards,
-      meta: { usedToday: count, maxPerDay: 8 },
+      timestamp: new Date().toISOString(),
+      cards: enriched,
     });
   } catch (err) {
     console.error("Product spread error:", err);
