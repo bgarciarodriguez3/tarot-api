@@ -1,13 +1,11 @@
 export default async function handler(req, res) {
-  // ✅ CORS (Shopify -> Vercel)
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
 
   try {
     const { product, order_id, line_item_id, selected_cards } = req.body || {};
@@ -20,7 +18,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: "selected_cards must be an array of 4" });
     }
 
-    // ✅ KV (textos largos semanales)
+    // KV
     const KV_REST_API_URL = process.env.KV_REST_API_URL;
     const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
     const KV_KEY = "significados:angeles:semanal_v1";
@@ -29,33 +27,27 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok: false, error: "Missing KV env vars" });
     }
 
-    // 1) Leer KV
     const kvGetResp = await fetch(`${KV_REST_API_URL}/get/${encodeURIComponent(KV_KEY)}`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${KV_REST_API_TOKEN}`
-      }
+      headers: { Authorization: `Bearer ${KV_REST_API_TOKEN}` }
     });
 
-    const kvGetJson = await kvGetResp.json().catch(() => null);
-    const kvRaw = kvGetJson?.result || null;
+    const kvJson = await kvGetResp.json().catch(() => null);
+    const kvRaw = kvJson?.result || null;
 
     let weekly = null;
     if (kvRaw) {
       try {
-        weekly = JSON.parse(kvRaw); // { actualizado_a_las, meanings|significados }
+        weekly = JSON.parse(kvRaw);
       } catch {
         weekly = null;
       }
     }
 
-    // Compatibilidad: por si guardaste como "meanings" o como "significados"
-    const longTexts =
-      weekly?.meanings ||
-      weekly?.significados ||
-      {};
+    // En tu refresh se guardó como "meanings"
+    const longTexts = weekly?.meanings || weekly?.significados || {};
 
-    // ✅ URLs de imágenes (Shopify CDN)
+    // Mapa de imágenes
     const IMAGES = {
       Dorso_ANGELES:
         "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Dorso_tarot_de_los_angeles.png?v=1766518255",
@@ -88,21 +80,59 @@ export default async function handler(req, res) {
 
     const cleanName = (id) => String(id || "").replaceAll("_", " ").trim();
 
-    // 2) Construir respuesta por carta (texto largo individual)
-    const cards = selected_cards.map((id) => {
-      const image_url = IMAGES[id] || IMAGES.Dorso_ANGELES;
-      const meaning =
-        longTexts[id] ||
-        "Aún no hay texto largo guardado para esta carta. (Ejecuta refresh-meanings y vuelve a probar.)";
+    // ✅ Normaliza lo que venga de Shopify a un ID estándar tipo Angel_Angel_Arcangel_Miguel
+    const normalizeId = (raw) => {
+      if (!raw) return "";
+      let s = String(raw).trim();
+
+      // si viene con espacios, lo convertimos a _
+      s = s.replace(/\s+/g, "_");
+
+      // si viene sin prefijo Angel_, se lo ponemos
+      if (!s.startsWith("Angel_")) s = "Angel_" + s;
+
+      // arreglar casos típicos:
+      // "Angel_Arcangel_Miguel" debería ser "Angel_Angel_Arcangel_Miguel" (según tu lista)
+      if (s === "Angel_Arcangel_Miguel") s = "Angel_Angel_Arcangel_Miguel";
+
+      return s;
+    };
+
+    // Buscar meaning por varios caminos
+    const getMeaning = (rawId) => {
+      const id1 = String(rawId || "");
+      const id2 = normalizeId(rawId);
+
+      if (longTexts[id1]) return longTexts[id1];
+      if (longTexts[id2]) return longTexts[id2];
+
+      // Búsqueda “por nombre” (último recurso)
+      const n1 = cleanName(id1).toLowerCase();
+      const n2 = cleanName(id2).toLowerCase();
+      const keys = Object.keys(longTexts);
+
+      const foundKey = keys.find(k => cleanName(k).toLowerCase() === n1)
+        || keys.find(k => cleanName(k).toLowerCase() === n2);
+
+      if (foundKey) return longTexts[foundKey];
+
+      return null;
+    };
+
+    const cards = selected_cards.map((rawId) => {
+      const id = normalizeId(rawId) || String(rawId || "");
+      const meaning = getMeaning(rawId);
 
       return {
         id,
         name: cleanName(id),
-        meaning,
-        image_url
+        meaning: meaning || "No se encontró el texto largo para esta carta (revisa los IDs enviados desde Shopify).",
+        image_url: IMAGES[id] || IMAGES.Dorso_ANGELES
       };
     });
 
+    // Para depurar rápido SIN mirar logs:
+    // devolvemos qué ids llegaron y qué ids se usaron
     return res.status(200).json({
       ok: true,
       product,
@@ -110,6 +140,11 @@ export default async function handler(req, res) {
       order_id,
       line_item_id,
       actualizado_a_las: weekly?.actualizado_a_las || weekly?.updated_at || null,
+      debug: {
+        selected_cards_raw: selected_cards,
+        selected_cards_normalized: selected_cards.map(normalizeId),
+        kv_keys_count: Object.keys(longTexts).length
+      },
       cards,
       final_message: "✨ Lectura lista."
     });
