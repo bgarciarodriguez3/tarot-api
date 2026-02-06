@@ -15,10 +15,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Env vars necesarias
+    // ENV
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
-
     const KV_REST_API_URL = process.env.KV_REST_API_URL;
     const KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN;
 
@@ -41,7 +40,7 @@ export default async function handler(req, res) {
       "Angel_Arcangel_Zadkiel"
     ];
 
-    // JSON schema (con name obligatorio)
+    // JSON Schema
     const schema = {
       type: "object",
       additionalProperties: false,
@@ -50,7 +49,7 @@ export default async function handler(req, res) {
           type: "object",
           additionalProperties: false,
           properties: Object.fromEntries(
-            ANGELS_IDS.map((id) => [id, { type: "string" }])
+            ANGELS_IDS.map(id => [id, { type: "string" }])
           ),
           required: ANGELS_IDS
         }
@@ -61,19 +60,21 @@ export default async function handler(req, res) {
     const prompt = `
 Eres una tarotista de ángeles para una tienda española.
 Genera 12 textos LARGOS (120–220 palabras cada uno) en español, uno por cada carta.
+
 Reglas:
-- No menciones IA/OpenAI/modelos/prompts.
-- 1–2 párrafos por carta, sin listas numeradas.
+- No menciones IA, OpenAI ni prompts.
+- 1–2 párrafos por carta.
 - Consejo práctico + mensaje emocional.
 - No repitas frases entre cartas.
 - Sin comillas, sin markdown.
+
 Devuelve SOLO JSON válido.
 
 IDs:
 ${ANGELS_IDS.join("\n")}
 `.trim();
 
-    // 1) OpenAI: generar meanings
+    // OpenAI
     const oaiResp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -94,49 +95,48 @@ ${ANGELS_IDS.join("\n")}
       })
     });
 
-    const oaiText = await oaiResp.text();
-    if (!oaiResp.ok) {
-      throw new Error(`OpenAI error ${oaiResp.status}: ${oaiText}`);
-    }
+    const oaiJson = await oaiResp.json();
 
-    let oaiJson;
-    try {
-      oaiJson = JSON.parse(oaiText);
-    } catch {
-      throw new Error("OpenAI response is not JSON");
-    }
+    const outputText =
+      oaiJson?.output?.[0]?.content?.[0]?.text;
 
-    const outputText = oaiJson.output_text;
-    if (!outputText) throw new Error("OpenAI missing output_text");
+    if (!outputText) {
+      throw new Error("OpenAI no devolvió texto utilizable");
+    }
 
     let parsed;
     try {
       parsed = JSON.parse(outputText);
     } catch {
-      throw new Error("OpenAI output_text is not valid JSON");
+      throw new Error("El JSON generado por OpenAI no es válido");
     }
 
-    if (!parsed?.meanings) throw new Error("Invalid meanings JSON from OpenAI");
+    if (!parsed.meanings) {
+      throw new Error("El JSON no contiene meanings");
+    }
 
-    // 2) Guardar en KV
+    // Guardar en KV
     const KV_KEY = "meanings:angeles:weekly_v1";
     const payload = {
       updated_at: new Date().toISOString(),
       meanings: parsed.meanings
     };
 
-    const kvSetResp = await fetch(`${KV_REST_API_URL}/set/${encodeURIComponent(KV_KEY)}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${KV_REST_API_TOKEN}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ value: JSON.stringify(payload) })
-    });
+    const kvResp = await fetch(
+      `${KV_REST_API_URL}/set/${encodeURIComponent(KV_KEY)}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${KV_REST_API_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ value: JSON.stringify(payload) })
+      }
+    );
 
-    const kvSetText = await kvSetResp.text();
-    if (!kvSetResp.ok) {
-      throw new Error(`KV set failed ${kvSetResp.status}: ${kvSetText}`);
+    if (!kvResp.ok) {
+      const txt = await kvResp.text();
+      throw new Error("KV error: " + txt);
     }
 
     return res.status(200).json({
@@ -144,9 +144,11 @@ ${ANGELS_IDS.join("\n")}
       saved_key: KV_KEY,
       updated_at: payload.updated_at
     });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ ok: false, error: e.message || "Internal error" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      ok: false,
+      error: err.message || "Internal server error"
+    });
   }
 }
-0
