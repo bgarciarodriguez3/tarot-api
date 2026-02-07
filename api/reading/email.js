@@ -23,7 +23,7 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
   const cardsHtml = (reading || [])
     .map((c, i) => {
       const name = escapeHtml(c.title || c.name || c.id || `Carta ${i + 1}`);
-      const long = escapeHtml(c.long || c.texto_largo || "");
+      const long = escapeHtml(c.long || c.texto_largo || c.text || "");
       return `
         <div style="margin:0 0 18px;padding:16px;border:1px solid #e9e9e9;border-radius:12px;background:#fff;">
           <div style="font-size:14px;color:#888;margin:0 0 6px;">${i + 1}.</div>
@@ -59,7 +59,7 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
 }
 
 export default async function handler(req, res) {
-  // CORS (por si lo llamas desde Shopify)
+  // CORS (para poder llamarlo desde Shopify)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -79,8 +79,10 @@ export default async function handler(req, res) {
     try { body = JSON.parse(body); } catch { body = {}; }
   }
 
+  // ✅ IMPORTANTE: el frontend enviará EXACTAMENTE { to, reading }
   const to = String(body?.to || "").trim();
   const reading = Array.isArray(body?.reading) ? body.reading : [];
+
   const siteUrl =
     String(process.env.SITE_URL || "").trim() ||
     String(req.headers?.origin || "").trim() ||
