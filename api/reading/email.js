@@ -51,21 +51,58 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
       </div>
 
       <div style="font-size:12px;color:#888;padding:18px;">
-        ${siteUrl ? `Web: <a href="${escapeHtml(siteUrl)}" style="color:#666;">${escapeHtml(siteUrl)}</a>` : ""}
+        ${
+          siteUrl
+            ? `Web: <a href="${escapeHtml(siteUrl)}" style="color:#666;">${escapeHtml(siteUrl)}</a>`
+            : ""
+        }
       </div>
     </div>
   </div>
   `;
 }
 
-export default async function handler(req, res) {
-  // CORS (para poder llamarlo desde Shopify)
-  res.setHeader("Access-Control-Allow-Origin", "*");
+function applyCors(req, res) {
+  // Orígenes permitidos (tu web + entornos Shopify)
+  const allowList = [
+    "https://eltarotdelaruedadelafortuna.com",
+    "https://www.eltarotdelaruedadelafortuna.com",
+    "https://admin.shopify.com",
+    "https://*.myshopify.com",
+    "https://*.shopify.com"
+  ];
+
+  const origin = String(req.headers.origin || "").trim();
+
+  // Matching simple para comodines *.myshopify.com / *.shopify.com
+  const isAllowed =
+    origin === "https://eltarotdelaruedadelafortuna.com" ||
+    origin === "https://www.eltarotdelaruedadelafortuna.com" ||
+    (origin.endsWith(".myshopify.com") && origin.startsWith("https://")) ||
+    (origin.endsWith(".shopify.com") && origin.startsWith("https://")) ||
+    origin === "https://admin.shopify.com";
+
+  // Si coincide, devolvemos el Origin exacto (lo correcto para credenciales/caches).
+  // Si no, devolvemos * como fallback para pruebas (evita bloqueos raros).
+  res.setHeader("Access-Control-Allow-Origin", isAllowed ? origin : "*");
+  res.setHeader("Vary", "Origin");
+
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
 
-  if (req.method === "OPTIONS") return res.status(204).end();
-  if (req.method !== "POST") return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
+export default async function handler(req, res) {
+  // ✅ CORS + Preflight
+  applyCors(req, res);
+
+  if (req.method === "OPTIONS") {
+    res.statusCode = 204;
+    return res.end();
+  }
+
+  if (req.method !== "POST") {
+    return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
+  }
 
   if (!process.env.RESEND_API_KEY) {
     return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY in environment variables." });
@@ -76,10 +113,14 @@ export default async function handler(req, res) {
 
   let body = req.body;
   if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch { body = {}; }
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
   }
 
-  // ✅ IMPORTANTE: el frontend enviará EXACTAMENTE { to, reading }
+  // ✅ IMPORTANTE: el frontend envía { to, reading }
   const to = String(body?.to || "").trim();
   const reading = Array.isArray(body?.reading) ? body.reading : [];
 
