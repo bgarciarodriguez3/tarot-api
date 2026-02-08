@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function json(res, status, data) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -62,54 +60,30 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
   `;
 }
 
-function applyCors(req, res) {
-  // Orígenes permitidos (tu web + entornos Shopify)
-  const allowList = [
-    "https://eltarotdelaruedadelafortuna.com",
-    "https://www.eltarotdelaruedadelafortuna.com",
-    "https://admin.shopify.com",
-    "https://*.myshopify.com",
-    "https://*.shopify.com"
-  ];
-
-  const origin = String(req.headers.origin || "").trim();
-
-  // Matching simple para comodines *.myshopify.com / *.shopify.com
-  const isAllowed =
-    origin === "https://eltarotdelaruedadelafortuna.com" ||
-    origin === "https://www.eltarotdelaruedadelafortuna.com" ||
-    (origin.endsWith(".myshopify.com") && origin.startsWith("https://")) ||
-    (origin.endsWith(".shopify.com") && origin.startsWith("https://")) ||
-    origin === "https://admin.shopify.com";
-
-  // Si coincide, devolvemos el Origin exacto (lo correcto para credenciales/caches).
-  // Si no, devolvemos * como fallback para pruebas (evita bloqueos raros).
-  res.setHeader("Access-Control-Allow-Origin", isAllowed ? origin : "*");
-  res.setHeader("Vary", "Origin");
-
+export default async function handler(req, res) {
+  // ✅ CORS SIEMPRE lo primero
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-}
+  res.setHeader("Access-Control-Max-Age", "86400");
 
-export default async function handler(req, res) {
-  // ✅ CORS + Preflight
-  applyCors(req, res);
-
+  // ✅ Preflight
   if (req.method === "OPTIONS") {
     res.statusCode = 204;
     return res.end();
   }
 
+  // ✅ Si lo abres en navegador (GET), que NO crashee
   if (req.method !== "POST") {
     return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
   }
 
-  if (!process.env.RESEND_API_KEY) {
-    return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY in environment variables." });
-  }
-  if (!process.env.EMAIL_FROM) {
-    return json(res, 500, { ok: false, error: "Missing EMAIL_FROM in environment variables." });
-  }
+  // ✅ Validar env vars antes de crear Resend
+  const apiKey = process.env.RESEND_API_KEY;
+  const emailFrom = process.env.EMAIL_FROM;
+
+  if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY in environment variables." });
+  if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM in environment variables." });
 
   let body = req.body;
   if (typeof body === "string") {
@@ -120,7 +94,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // ✅ IMPORTANTE: el frontend envía { to, reading }
   const to = String(body?.to || "").trim();
   const reading = Array.isArray(body?.reading) ? body.reading : [];
 
@@ -137,8 +110,10 @@ export default async function handler(req, res) {
   const html = buildEmailHtml({ reading, toEmail: to, siteUrl });
 
   try {
+    const resend = new Resend(apiKey);
+
     const sent = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
+      from: emailFrom,
       to,
       subject,
       html,
