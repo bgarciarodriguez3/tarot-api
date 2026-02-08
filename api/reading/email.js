@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 function json(res, status, data) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -49,11 +51,7 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
       </div>
 
       <div style="font-size:12px;color:#888;padding:18px;">
-        ${
-          siteUrl
-            ? `Web: <a href="${escapeHtml(siteUrl)}" style="color:#666;">${escapeHtml(siteUrl)}</a>`
-            : ""
-        }
+        ${siteUrl ? `Web: <a href="${escapeHtml(siteUrl)}" style="color:#666;">${escapeHtml(siteUrl)}</a>` : ""}
       </div>
     </div>
   </div>
@@ -61,29 +59,18 @@ function buildEmailHtml({ reading, toEmail, siteUrl }) {
 }
 
 export default async function handler(req, res) {
-  // ✅ CORS SIEMPRE lo primero
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // CORS (para Shopify)
+  const origin = req.headers.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Max-Age", "86400");
 
-  // ✅ Preflight
-  if (req.method === "OPTIONS") {
-    res.statusCode = 204;
-    return res.end();
-  }
+  if (req.method === "OPTIONS") return res.status(204).end();
+  if (req.method !== "POST") return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
 
-  // ✅ Si lo abres en navegador (GET), que NO crashee
-  if (req.method !== "POST") {
-    return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
-  }
-
-  // ✅ Validar env vars antes de crear Resend
-  const apiKey = process.env.RESEND_API_KEY;
-  const emailFrom = process.env.EMAIL_FROM;
-
-  if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY in environment variables." });
-  if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM in environment variables." });
+  if (!process.env.RESEND_API_KEY) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY." });
+  if (!process.env.EMAIL_FROM) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM." });
 
   let body = req.body;
   if (typeof body === "string") {
@@ -109,19 +96,18 @@ export default async function handler(req, res) {
   const subject = "Tu lectura de los Ángeles (4 cartas)";
   const html = buildEmailHtml({ reading, toEmail: to, siteUrl });
 
-  try {
-    const resend = new Resend(apiKey);
+  // ✅ CLAVE: Resend devuelve { data, error }
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject,
+    html,
+  });
 
-    const sent = await resend.emails.send({
-      from: emailFrom,
-      to,
-      subject,
-      html,
-    });
-
-    return json(res, 200, { ok: true, id: sent?.id || null });
-  } catch (e) {
-    console.error("Resend send error:", e);
-    return json(res, 500, { ok: false, error: e?.message || "Failed to send email." });
+  if (error) {
+    console.error("Resend error:", error);
+    return json(res, 500, { ok: false, error: error.message || "Resend send failed." });
   }
+
+  return json(res, 200, { ok: true, id: data?.id || null });
 }
