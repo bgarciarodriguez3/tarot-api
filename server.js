@@ -11,10 +11,25 @@ const { Resend } = require("resend");
 
 const app = express();
 
-// ====== Middlewares (IMPORTANTE: ANTES de rutas) ======
+// ====== Middlewares (ANTES de rutas) ======
+app.set("trust proxy", 1);
 app.use(cors());
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true })); // para x-www-form-urlencoded
+
+// Guardamos el raw body (útil para Shopify/HMAC si algún día lo validas)
+app.use(
+  express.json({
+    limit: "2mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf?.toString("utf8");
+    },
+  })
+);
+
+// Por si viene como form-urlencoded
+app.use(express.urlencoded({ extended: true }));
+
+// Si por alguna razón llega como texto
+app.use(express.text({ type: ["text/*"], limit: "2mb" }));
 
 // ====== Config ======
 const PORT = process.env.PORT || 8080;
@@ -22,7 +37,6 @@ const PORT = process.env.PORT || 8080;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM;
 
-// Resend client (solo si hay key)
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 // ====== Health check ======
@@ -30,41 +44,81 @@ app.get("/", (_req, res) => {
   res.status(200).send("API de Tarot Activa ✅");
 });
 
+// ====== Helper: normaliza body si llegó como texto ======
+function normalizeBody(req) {
+  // Si express.json funcionó, req.body será objeto
+  if (req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
+    return req.body;
+  }
+
+  // Si llegó como texto (express.text), intentamos parsear a JSON
+  if (typeof req.body === "string" && req.body.trim().length > 0) {
+    try {
+      return JSON.parse(req.body);
+    } catch (_e) {
+      // no es JSON válido
+      return { _rawTextBody: req.body };
+    }
+  }
+
+  return {};
+}
+
 // ====== Shopify webhook / test endpoint ======
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
-    // Acepta body o querystring (por si pruebas desde navegador)
-    const src = { ...(req.query || {}), ...(req.body || {}) };
+    const parsedBody = normalizeBody(req);
 
-    // Email: distintas variantes
+    // Mezclamos query + body
+    const src = { ...(req.query || {}), ...(parsedBody || {}) };
+
+    // Email: variantes comunes
     const email =
       src.email ||
       src.customer_email ||
       src.customerEmail ||
-      (src.customer && src.customer.email) ||
+      src?.customer?.email ||
       null;
 
-    // OrderId: distintas variantes
-    const orderId =
-      src.order_id ||
-      src.orderId ||
-      src.orderID ||
-      src.id ||
-      src.order ||
-      (src.order && src.order.id) ||
+    // Order ID: Shopify suele mandar "id" (del pedido)
+    let orderId =
+      src.order_id ??
+      src.orderId ??
+      src.orderID ??
+      src.id ??
+      src?.order?.id ??
+      src?.order?.order_id ??
       null;
+
+    // Normalizamos orderId a string/number simple
+    if (orderId && typeof orderId === "object") {
+      orderId = orderId.id || null;
+    }
 
     if (!email || !orderId) {
+      console.log("[DEBUG] Missing fields", {
+        contentType: req.headers["content-type"],
+        query: req.query,
+        body: req.body,
+        parsedBody,
+        rawBody: req.rawBody,
+      });
+
       return res.status(400).json({
         ok: false,
         error: "missing_email_or_order_id",
-        hint: "Envía JSON con { email, orderId } o { email, order_id }",
-        got: { query: req.query, body: req.body },
+        accepted: "email + (order_id | orderId | id)",
+        got: {
+          contentType: req.headers["content-type"],
+          query: req.query,
+          body: req.body,
+          parsedBody,
+        },
       });
     }
 
     // Si no están configuradas las variables de Resend, solo confirmamos
-    if (!RESEND_API_KEY || !EMAIL_FROM) {
+    if (!RESEND_API_KEY || !EMAIL_FROM || !resend) {
       console.warn(
         "[WARN] RESEND_API_KEY o EMAIL_FROM no están configuradas. No envío email."
       );
@@ -102,7 +156,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       email,
       orderId,
       sent: true,
-      resend: result,
+      resendId: result?.data?.id || null,
     });
   } catch (err) {
     console.error("[ERROR] /api/shopify/order-paid:", err);
