@@ -1,251 +1,337 @@
-/**
- * server.js - tarot-api
- * Railway + Express + Resend (Shopify webhook)
- */
-
-require("dotenv").config();
-
-const express = require("express");
-const cors = require("cors");
-const { Resend } = require("resend");
+import express from "express";
+import crypto from "crypto";
+import cors from "cors";
+import jwt from "jsonwebtoken";
+import { Resend } from "resend";
 
 const app = express();
 
-// ====== Middlewares ======
-app.use(cors());
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Config
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ====== Config ======
-const PORT = process.env.PORT || 8080;
+const EMAIL_FROM = process.env.EMAIL_FROM;
+const READING_BASE_URL = process.env.READING_BASE_URL;
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM; // Ej: El Tarot de la Rueda de la Fortuna <hola@eltarotdelaruedadelafortuna.com>
-const READING_BASE_URL = process.env.READING_BASE_URL; // Ej: https://eltarotdelaruedadelafortuna.com/lectura
+const SHOPIFY_WEBHOOK_SECRET = process.env.SHOPIFY_WEBHOOK_SECRET;
 
-// Cómo detectar premium
-// 1) Por keywords en el título (separadas por coma), ej: "premium,mentoría,amor premium"
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "48h";
+
+// Dominio de tu tienda (para CORS)
+const SHOP_DOMAIN =
+  process.env.SHOP_DOMAIN || "https://eltarotdelaruedadelafortuna.com";
+
+// Detección premium (opcionales)
 const PREMIUM_KEYWORDS = (process.env.PREMIUM_KEYWORDS || "premium")
   .split(",")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
-// 2) Por SKU exacto (separados por coma), ej: "PREM-001,PREM-LOVE"
 const PREMIUM_SKUS = (process.env.PREMIUM_SKUS || "")
   .split(",")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
-// Mensaje premium (editable)
 const PREMIUM_MESSAGE =
   process.env.PREMIUM_MESSAGE ||
-  "🕯️ Gracias por tu confianza. En un máximo de 48 horas laborables recibirás tu lectura premium. Yo (Miriam) seré la responsable de prepararla y enviártela por email.";
+  "En 48h laborables recibirás tu lectura; yo (Miriam) te la enviaré.";
 
-// Resend client
-const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Middleware
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 
-// ====== Health check ======
-app.get("/", (_req, res) => {
-  res.status(200).send("API de Tarot Activa ✅");
-});
+// JSON para APIs normales (NO para webhook)
+app.use(express.json());
 
-// ====== Helpers ======
-function pickEmail(src) {
-  return (
-    src.email ||
-    src.customer_email ||
-    src.customerEmail ||
-    (src.customer && src.customer.email) ||
-    null
-  );
-}
+// CORS para que tu página Shopify pueda llamar a /api/...
+app.use(
+  cors({
+    origin: SHOP_DOMAIN,
+    methods: ["GET", "POST", "OPTIONS"],
+  })
+);
 
-function pickOrderId(src) {
-  return (
-    src.order_id ||
-    src.orderId ||
-    src.orderID ||
-    src.id ||
-    (src.order && src.order.id) ||
-    null
-  );
-}
-
-function normalizeLineItems(src) {
-  // Shopify normalmente manda line_items en el body del webhook del pedido
-  const items = src.line_items || (src.order && src.order.line_items) || [];
-  if (!Array.isArray(items)) return [];
-  return items.map((it) => ({
-    title: (it.title || it.name || "").toString(),
-    quantity: Number(it.quantity || 1),
-    sku: (it.sku || "").toString(),
-    variant_id: it.variant_id || null,
-    product_id: it.product_id || null,
-  }));
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Helpers
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function escapeHtml(str = "") {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function isPremiumItem(item) {
-  const title = (item.title || "").toLowerCase();
-  const sku = (item.sku || "").toLowerCase();
+  const title = (item?.title || "").toLowerCase();
+  const sku = (item?.sku || "").toLowerCase();
 
   const bySku = sku && PREMIUM_SKUS.includes(sku);
-  const byKeyword =
-    title && PREMIUM_KEYWORDS.some((kw) => kw && title.includes(kw));
+  const byKeyword = PREMIUM_KEYWORDS.some((kw) => kw && title.includes(kw));
 
   return Boolean(bySku || byKeyword);
 }
 
-function buildAutomatedLinks({ email, orderId, automatedItems }) {
-  // Un enlace por item (si prefieres 1 solo enlace general, lo cambio)
-  if (!READING_BASE_URL) return [];
-
-  return automatedItems.map((item, idx) => {
-    const qs = new URLSearchParams({
-      email,
-      orderId: String(orderId),
-      item: item.title,
-      sku: item.sku || "",
-      n: String(idx + 1),
-    });
-
-    return {
-      title: item.title,
-      quantity: item.quantity,
-      url: `${READING_BASE_URL}?${qs.toString()}`,
-    };
-  });
+function signReadingToken(payload) {
+  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET");
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-// ====== Shopify endpoint ======
-app.post("/api/shopify/order-paid", async (req, res) => {
+function verifyReadingToken(token) {
+  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET");
+  return jwt.verify(token, JWT_SECRET);
+}
+
+function buildReadingLink({ orderId, email, lineItemId, sku }) {
+  if (!READING_BASE_URL) return null;
+
+  const token = signReadingToken({
+    orderId,
+    email,
+    lineItemId,
+    sku,
+  });
+
+  const url = new URL(READING_BASE_URL);
+  url.searchParams.set("token", token);
+
+  return url.toString();
+}
+
+function buildEmailHtml({ customerName, automatedItems, premiumItems, orderName }) {
+  const hasAutomated = automatedItems.length > 0;
+  const hasPremium = premiumItems.length > 0;
+
+  const greetingName = customerName ? `, ${escapeHtml(customerName)}` : "";
+  const orderLine = orderName ? `<p><b>Pedido:</b> ${escapeHtml(orderName)}</p>` : "";
+
+  const automatedSection = hasAutomated
+    ? `
+      <h2>🔮 Lecturas automatizadas</h2>
+      <p>Haz clic en tu(s) enlace(s) para realizar la lectura:</p>
+      <ul>
+        ${automatedItems
+          .map(
+            (it) => `
+          <li>
+            <b>${escapeHtml(it.title || "Lectura")}</b>
+            ${it.quantity > 1 ? ` (x${it.quantity})` : ""}
+            <br/>
+            <a href="${escapeHtml(it.link)}">Abrir lectura</a>
+          </li>
+        `
+          )
+          .join("")}
+      </ul>
+    `
+    : "";
+
+  const premiumSection = hasPremium
+    ? `
+      <h2>✨ Lecturas premium</h2>
+      <p>${escapeHtml(PREMIUM_MESSAGE)}</p>
+      <ul>
+        ${premiumItems
+          .map(
+            (it) => `
+          <li>
+            <b>${escapeHtml(it.title || "Lectura premium")}</b>
+            ${it.quantity > 1 ? ` (x${it.quantity})` : ""}
+          </li>
+        `
+          )
+          .join("")}
+      </ul>
+    `
+    : "";
+
+  const fallback =
+    !hasAutomated && !hasPremium
+      ? `<p>Hemos recibido tu compra. Si necesitas ayuda, responde a este email.</p>`
+      : "";
+
+  return `
+    <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height: 1.5;">
+      <p>Hola${greetingName} 👋</p>
+      ${orderLine}
+      ${automatedSection}
+      ${premiumSection}
+      ${fallback}
+      <hr/>
+      <p style="color:#555;">Con cariño,<br/>Miriam</p>
+    </div>
+  `;
+}
+
+/**
+ * Verificación HMAC de Shopify para webhooks.
+ * IMPORTANTÍSIMO: el body debe ser RAW exactamente.
+ */
+function verifyShopifyHmac(rawBodyBuffer, hmacHeader) {
+  if (!SHOPIFY_WEBHOOK_SECRET) {
+    return { ok: false, error: "Missing SHOPIFY_WEBHOOK_SECRET" };
+  }
+  if (!hmacHeader) {
+    return { ok: false, error: "Missing X-Shopify-Hmac-Sha256" };
+  }
+
+  const digest = crypto
+    .createHmac("sha256", SHOPIFY_WEBHOOK_SECRET)
+    .update(rawBodyBuffer)
+    .digest("base64");
+
+  const safeEqual =
+    digest.length === hmacHeader.length &&
+    crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
+
+  return safeEqual ? { ok: true } : { ok: false, error: "Invalid HMAC" };
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Routes
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+// Healthcheck
+app.get("/health", (req, res) => res.status(200).send("ok"));
+
+/**
+ * Validación del token desde la página Shopify:
+ * GET /api/reading/validate?token=...
+ */
+app.get("/api/reading/validate", (req, res) => {
   try {
-    const src = { ...(req.query || {}), ...(req.body || {}) };
+    const token = req.query.token;
+    if (!token) return res.status(400).json({ ok: false, error: "Missing token" });
 
-    const email = pickEmail(src);
-    const orderId = pickOrderId(src);
-    const lineItems = normalizeLineItems(src);
-
-    if (!email || !orderId) {
-      return res.status(400).json({
-        ok: false,
-        error: "missing_email_or_order_id",
-        hint: "Envía JSON con { email, orderId } o webhook de Shopify con customer.email e id",
-        got: { query: req.query, body: req.body },
-      });
-    }
-
-    // Si no vienen items, igual funciona, solo mandará email básico
-    const premiumItems = lineItems.filter(isPremiumItem);
-    const automatedItems = lineItems.filter((it) => !isPremiumItem(it));
-
-    const links = buildAutomatedLinks({ email, orderId, automatedItems });
-
-    // Si Resend no está listo, devolvemos ok sin enviar
-    if (!RESEND_API_KEY || !EMAIL_FROM) {
-      console.warn("[WARN] Falta RESEND_API_KEY o EMAIL_FROM. No envío email.");
-      return res.json({
-        ok: true,
-        email,
-        orderId,
-        sent: false,
-        reason: "missing_resend_env",
-        counts: {
-          totalItems: lineItems.length,
-          automated: automatedItems.length,
-          premium: premiumItems.length,
-        },
-      });
-    }
-
-    // ====== Construir email ======
-    const subject = `✅ Gracias por tu compra (Pedido ${orderId})`;
-
-    const automatedSection =
-      automatedItems.length > 0
-        ? `
-          <h3>🔮 Lecturas automatizadas</h3>
-          <p>Para generar tu lectura, entra en el/los enlace(s) de abajo:</p>
-          <ul>
-            ${links.length > 0
-              ? links
-                  .map(
-                    (l) => `
-                    <li>
-                      <b>${l.title}</b> (x${l.quantity})<br/>
-                      <a href="${l.url}">${l.url}</a>
-                    </li>`
-                  )
-                  .join("")
-              : `<li><b>${automatedItems
-                  .map((it) => `${it.title} (x${it.quantity})`)
-                  .join(", ")}</b><br/>
-                  <i>Falta configurar READING_BASE_URL para generar enlaces.</i>
-                </li>`}
-          </ul>
-        `
-        : "";
-
-    const premiumSection =
-      premiumItems.length > 0
-        ? `
-          <h3>✨ Lecturas premium</h3>
-          <p>Has comprado:</p>
-          <ul>
-            ${premiumItems
-              .map(
-                (it) => `<li><b>${it.title}</b> (x${it.quantity})</li>`
-              )
-              .join("")}
-          </ul>
-          <p>${PREMIUM_MESSAGE}</p>
-        `
-        : "";
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-        <h2>Gracias por tu compra 💜</h2>
-        <p>Pedido: <b>${orderId}</b></p>
-        ${automatedSection}
-        ${premiumSection}
-        <hr/>
-        <p style="font-size: 12px; color: #666;">
-          Si necesitas ayuda, responde a este correo.
-        </p>
-      </div>
-    `;
-
-    const result = await resend.emails.send({
-      from: EMAIL_FROM,
-      to: email,
-      subject,
-      html,
-    });
-
-    console.log("[RESEND] Email enviado:", result?.data?.id || result);
-
-    return res.json({
-      ok: true,
-      email,
-      orderId,
-      sent: true,
-      resend: result,
-      counts: {
-        totalItems: lineItems.length,
-        automated: automatedItems.length,
-        premium: premiumItems.length,
-      },
-    });
-  } catch (err) {
-    console.error("[ERROR] /api/shopify/order-paid:", err);
-    return res.status(500).json({
-      ok: false,
-      error: "server_error",
-      details: String(err?.message || err),
-    });
+    const decoded = verifyReadingToken(token);
+    return res.json({ ok: true, decoded });
+  } catch (e) {
+    return res.status(401).json({ ok: false, error: "Invalid/expired token" });
   }
 });
 
-// ====== Start server ======
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
+/**
+ * Webhook Shopify (order paid)
+ * IMPORTANT: usamos express.raw SOLO en esta ruta.
+ */
+app.post(
+  "/webhooks/shopify/order-paid",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
+      const check = verifyShopifyHmac(req.body, hmacHeader);
+
+      if (!check.ok) {
+        return res.status(401).send(check.error);
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(req.body.toString("utf8"));
+      } catch {
+        return res.status(400).send("Invalid JSON");
+      }
+
+      const email =
+        payload?.email ||
+        payload?.customer?.email ||
+        payload?.contact_email ||
+        null;
+
+      if (!email) {
+        console.warn("Order without email. order_id:", payload?.id);
+        return res.status(200).send("No email; acknowledged");
+      }
+
+      if (!EMAIL_FROM) return res.status(500).send("Missing EMAIL_FROM");
+      if (!process.env.RESEND_API_KEY) return res.status(500).send("Missing RESEND_API_KEY");
+      if (!READING_BASE_URL) return res.status(500).send("Missing READING_BASE_URL");
+      if (!JWT_SECRET) return res.status(500).send("Missing JWT_SECRET");
+
+      const customerName =
+        payload?.customer?.first_name ||
+        payload?.billing_address?.first_name ||
+        "";
+
+      const orderId = payload?.id;
+      const orderName = payload?.name; // e.g. "#1234"
+
+      const lineItems = Array.isArray(payload?.line_items) ? payload.line_items : [];
+
+      const premiumItems = [];
+      const automatedItems = [];
+
+      for (const item of lineItems) {
+        const premium = isPremiumItem(item);
+
+        const base = {
+          title: item?.title,
+          sku: item?.sku,
+          quantity: item?.quantity || 1,
+          lineItemId: item?.id,
+        };
+
+        if (premium) {
+          premiumItems.push(base);
+        } else {
+          const link = buildReadingLink({
+            orderId,
+            email,
+            lineItemId: item?.id,
+            sku: item?.sku,
+          });
+
+          automatedItems.push({ ...base, link });
+        }
+      }
+
+      const subjectParts = [];
+      if (automatedItems.length) subjectParts.push("Tu(s) lectura(s) automatizada(s)");
+      if (premiumItems.length) subjectParts.push("Tu lectura premium");
+      const subject =
+        subjectParts.length > 0
+          ? `${subjectParts.join(" + ")} – El Tarot de la Rueda de la Fortuna`
+          : `Tu compra – El Tarot de la Rueda de la Fortuna`;
+
+      const html = buildEmailHtml({
+        customerName,
+        automatedItems,
+        premiumItems,
+        orderName,
+      });
+
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject,
+        html,
+      });
+
+      return res.status(200).send("OK");
+    } catch (err) {
+      console.error("Webhook error:", err);
+      // Acknowledge to avoid Shopify retry storm
+      return res.status(200).send("Failed but acknowledged");
+    }
+  }
+);
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Start
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));
