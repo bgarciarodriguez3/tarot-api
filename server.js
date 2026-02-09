@@ -1,6 +1,6 @@
 /**
  * server.js - tarot-api
- * Railway + Express + Resend (Shopify webhook / test endpoint)
+ * Railway + Express + Resend (Shopify webhook)
  */
 
 require("dotenv").config();
@@ -11,32 +11,37 @@ const { Resend } = require("resend");
 
 const app = express();
 
-// ====== Middlewares (ANTES de rutas) ======
-app.set("trust proxy", 1);
+// ====== Middlewares ======
 app.use(cors());
-
-// Guardamos el raw body (útil para Shopify/HMAC si algún día lo validas)
-app.use(
-  express.json({
-    limit: "2mb",
-    verify: (req, _res, buf) => {
-      req.rawBody = buf?.toString("utf8");
-    },
-  })
-);
-
-// Por si viene como form-urlencoded
+app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
-
-// Si por alguna razón llega como texto
-app.use(express.text({ type: ["text/*"], limit: "2mb" }));
 
 // ====== Config ======
 const PORT = process.env.PORT || 8080;
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM;
+const EMAIL_FROM = process.env.EMAIL_FROM; // Ej: El Tarot de la Rueda de la Fortuna <hola@eltarotdelaruedadelafortuna.com>
+const READING_BASE_URL = process.env.READING_BASE_URL; // Ej: https://eltarotdelaruedadelafortuna.com/lectura
 
+// Cómo detectar premium
+// 1) Por keywords en el título (separadas por coma), ej: "premium,mentoría,amor premium"
+const PREMIUM_KEYWORDS = (process.env.PREMIUM_KEYWORDS || "premium")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+// 2) Por SKU exacto (separados por coma), ej: "PREM-001,PREM-LOVE"
+const PREMIUM_SKUS = (process.env.PREMIUM_SKUS || "")
+  .split(",")
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+// Mensaje premium (editable)
+const PREMIUM_MESSAGE =
+  process.env.PREMIUM_MESSAGE ||
+  "🕯️ Gracias por tu confianza. En un máximo de 48 horas laborables recibirás tu lectura premium. Yo (Miriam) seré la responsable de prepararla y enviártela por email.";
+
+// Resend client
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 // ====== Health check ======
@@ -44,101 +49,168 @@ app.get("/", (_req, res) => {
   res.status(200).send("API de Tarot Activa ✅");
 });
 
-// ====== Helper: normaliza body si llegó como texto ======
-function normalizeBody(req) {
-  // Si express.json funcionó, req.body será objeto
-  if (req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
-    return req.body;
-  }
-
-  // Si llegó como texto (express.text), intentamos parsear a JSON
-  if (typeof req.body === "string" && req.body.trim().length > 0) {
-    try {
-      return JSON.parse(req.body);
-    } catch (_e) {
-      // no es JSON válido
-      return { _rawTextBody: req.body };
-    }
-  }
-
-  return {};
+// ====== Helpers ======
+function pickEmail(src) {
+  return (
+    src.email ||
+    src.customer_email ||
+    src.customerEmail ||
+    (src.customer && src.customer.email) ||
+    null
+  );
 }
 
-// ====== Shopify webhook / test endpoint ======
+function pickOrderId(src) {
+  return (
+    src.order_id ||
+    src.orderId ||
+    src.orderID ||
+    src.id ||
+    (src.order && src.order.id) ||
+    null
+  );
+}
+
+function normalizeLineItems(src) {
+  // Shopify normalmente manda line_items en el body del webhook del pedido
+  const items = src.line_items || (src.order && src.order.line_items) || [];
+  if (!Array.isArray(items)) return [];
+  return items.map((it) => ({
+    title: (it.title || it.name || "").toString(),
+    quantity: Number(it.quantity || 1),
+    sku: (it.sku || "").toString(),
+    variant_id: it.variant_id || null,
+    product_id: it.product_id || null,
+  }));
+}
+
+function isPremiumItem(item) {
+  const title = (item.title || "").toLowerCase();
+  const sku = (item.sku || "").toLowerCase();
+
+  const bySku = sku && PREMIUM_SKUS.includes(sku);
+  const byKeyword =
+    title && PREMIUM_KEYWORDS.some((kw) => kw && title.includes(kw));
+
+  return Boolean(bySku || byKeyword);
+}
+
+function buildAutomatedLinks({ email, orderId, automatedItems }) {
+  // Un enlace por item (si prefieres 1 solo enlace general, lo cambio)
+  if (!READING_BASE_URL) return [];
+
+  return automatedItems.map((item, idx) => {
+    const qs = new URLSearchParams({
+      email,
+      orderId: String(orderId),
+      item: item.title,
+      sku: item.sku || "",
+      n: String(idx + 1),
+    });
+
+    return {
+      title: item.title,
+      quantity: item.quantity,
+      url: `${READING_BASE_URL}?${qs.toString()}`,
+    };
+  });
+}
+
+// ====== Shopify endpoint ======
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
-    const parsedBody = normalizeBody(req);
+    const src = { ...(req.query || {}), ...(req.body || {}) };
 
-    // Mezclamos query + body
-    const src = { ...(req.query || {}), ...(parsedBody || {}) };
-
-    // Email: variantes comunes
-    const email =
-      src.email ||
-      src.customer_email ||
-      src.customerEmail ||
-      src?.customer?.email ||
-      null;
-
-    // Order ID: Shopify suele mandar "id" (del pedido)
-    let orderId =
-      src.order_id ??
-      src.orderId ??
-      src.orderID ??
-      src.id ??
-      src?.order?.id ??
-      src?.order?.order_id ??
-      null;
-
-    // Normalizamos orderId a string/number simple
-    if (orderId && typeof orderId === "object") {
-      orderId = orderId.id || null;
-    }
+    const email = pickEmail(src);
+    const orderId = pickOrderId(src);
+    const lineItems = normalizeLineItems(src);
 
     if (!email || !orderId) {
-      console.log("[DEBUG] Missing fields", {
-        contentType: req.headers["content-type"],
-        query: req.query,
-        body: req.body,
-        parsedBody,
-        rawBody: req.rawBody,
-      });
-
       return res.status(400).json({
         ok: false,
         error: "missing_email_or_order_id",
-        accepted: "email + (order_id | orderId | id)",
-        got: {
-          contentType: req.headers["content-type"],
-          query: req.query,
-          body: req.body,
-          parsedBody,
-        },
+        hint: "Envía JSON con { email, orderId } o webhook de Shopify con customer.email e id",
+        got: { query: req.query, body: req.body },
       });
     }
 
-    // Si no están configuradas las variables de Resend, solo confirmamos
-    if (!RESEND_API_KEY || !EMAIL_FROM || !resend) {
-      console.warn(
-        "[WARN] RESEND_API_KEY o EMAIL_FROM no están configuradas. No envío email."
-      );
+    // Si no vienen items, igual funciona, solo mandará email básico
+    const premiumItems = lineItems.filter(isPremiumItem);
+    const automatedItems = lineItems.filter((it) => !isPremiumItem(it));
+
+    const links = buildAutomatedLinks({ email, orderId, automatedItems });
+
+    // Si Resend no está listo, devolvemos ok sin enviar
+    if (!RESEND_API_KEY || !EMAIL_FROM) {
+      console.warn("[WARN] Falta RESEND_API_KEY o EMAIL_FROM. No envío email.");
       return res.json({
         ok: true,
         email,
         orderId,
         sent: false,
         reason: "missing_resend_env",
+        counts: {
+          totalItems: lineItems.length,
+          automated: automatedItems.length,
+          premium: premiumItems.length,
+        },
       });
     }
 
-    // Enviar email con Resend
-    const subject = `Pedido pagado: ${orderId}`;
+    // ====== Construir email ======
+    const subject = `✅ Gracias por tu compra (Pedido ${orderId})`;
+
+    const automatedSection =
+      automatedItems.length > 0
+        ? `
+          <h3>🔮 Lecturas automatizadas</h3>
+          <p>Para generar tu lectura, entra en el/los enlace(s) de abajo:</p>
+          <ul>
+            ${links.length > 0
+              ? links
+                  .map(
+                    (l) => `
+                    <li>
+                      <b>${l.title}</b> (x${l.quantity})<br/>
+                      <a href="${l.url}">${l.url}</a>
+                    </li>`
+                  )
+                  .join("")
+              : `<li><b>${automatedItems
+                  .map((it) => `${it.title} (x${it.quantity})`)
+                  .join(", ")}</b><br/>
+                  <i>Falta configurar READING_BASE_URL para generar enlaces.</i>
+                </li>`}
+          </ul>
+        `
+        : "";
+
+    const premiumSection =
+      premiumItems.length > 0
+        ? `
+          <h3>✨ Lecturas premium</h3>
+          <p>Has comprado:</p>
+          <ul>
+            ${premiumItems
+              .map(
+                (it) => `<li><b>${it.title}</b> (x${it.quantity})</li>`
+              )
+              .join("")}
+          </ul>
+          <p>${PREMIUM_MESSAGE}</p>
+        `
+        : "";
+
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-        <h2>✅ Pedido pagado</h2>
-        <p>Hemos recibido el pago del pedido <b>#${orderId}</b>.</p>
-        <p>Email del cliente: <b>${email}</b></p>
-        <p>Gracias 💜</p>
+        <h2>Gracias por tu compra 💜</h2>
+        <p>Pedido: <b>${orderId}</b></p>
+        ${automatedSection}
+        ${premiumSection}
+        <hr/>
+        <p style="font-size: 12px; color: #666;">
+          Si necesitas ayuda, responde a este correo.
+        </p>
       </div>
     `;
 
@@ -156,7 +228,12 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       email,
       orderId,
       sent: true,
-      resendId: result?.data?.id || null,
+      resend: result,
+      counts: {
+        totalItems: lineItems.length,
+        automated: automatedItems.length,
+        premium: premiumItems.length,
+      },
     });
   } catch (err) {
     console.error("[ERROR] /api/shopify/order-paid:", err);
