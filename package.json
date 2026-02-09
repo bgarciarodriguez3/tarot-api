@@ -20,6 +20,7 @@
     "express": "^4.18.2",
     "openai": "^4.24.1",
     "redis": "^5.10.0",
-    "resend": "^4.0.0"
+    "resend": "^4.0.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }
