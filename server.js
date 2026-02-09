@@ -1,8 +1,8 @@
-import express from "express";
-import crypto from "crypto";
-import cors from "cors";
-import jwt from "jsonwebtoken";
-import { Resend } from "resend";
+const express = require("express");
+const crypto = require("crypto");
+const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const { Resend } = require("resend");
 
 const app = express();
 
@@ -255,10 +255,12 @@ app.post(
         return res.status(200).send("No email; acknowledged");
       }
 
+      // checks mínimos para no caer en silencio
       if (!EMAIL_FROM) return res.status(500).send("Missing EMAIL_FROM");
       if (!process.env.RESEND_API_KEY) return res.status(500).send("Missing RESEND_API_KEY");
       if (!READING_BASE_URL) return res.status(500).send("Missing READING_BASE_URL");
       if (!JWT_SECRET) return res.status(500).send("Missing JWT_SECRET");
+      if (!SHOPIFY_WEBHOOK_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
 
       const customerName =
         payload?.customer?.first_name ||
