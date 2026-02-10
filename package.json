@@ -15,6 +15,7 @@
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "ioredis": "^5.4.1",
+    "nodemailer": "^6.9.8",
     "openai": "^4.57.0",
     "p-limit": "^6.1.0"
   }
