@@ -1,339 +1,431 @@
-const express = require("express");
-const crypto = require("crypto");
-const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const { Resend } = require("resend");
+/**
+ * server.js — Tarot API (Railway)
+ * - Weekly refresh via CRON (Vercel -> Railway)
+ * - Generates weekly meanings for each card in each deck using OpenAI
+ * - Stores results in Redis keyed by "week start (Monday)"
+ */
+
+import express from "express";
+import cors from "cors";
+import Redis from "ioredis";
+import OpenAI from "openai";
+import pLimit from "p-limit";
 
 const app = express();
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
 
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * Config
- * ─────────────────────────────────────────────────────────────────────────────
- */
-const resend = new Resend(process.env.RESEND_API_KEY);
+// -------------------- ENV --------------------
+const {
+  PORT = 3000,
+  CRON_SECRET,
+  OPENAI_API_KEY,
+  OPENAI_MODEL = "gpt-4o-mini",
+  REDIS_URL
+} = process.env;
 
-const EMAIL_FROM = process.env.EMAIL_FROM;
-const READING_BASE_URL = process.env.READING_BASE_URL;
-
-const SHOPIFY_WEBHOOK_SECRET = process.env.SHOPIFY_WEBHOOK_SECRET;
-
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "48h";
-
-// Dominio de tu tienda (para CORS)
-const SHOP_DOMAIN =
-  process.env.SHOP_DOMAIN || "https://eltarotdelaruedadelafortuna.com";
-
-// Detección premium (opcionales)
-const PREMIUM_KEYWORDS = (process.env.PREMIUM_KEYWORDS || "premium")
-  .split(",")
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
-
-const PREMIUM_SKUS = (process.env.PREMIUM_SKUS || "")
-  .split(",")
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
-
-const PREMIUM_MESSAGE =
-  process.env.PREMIUM_MESSAGE ||
-  "En 48h laborables recibirás tu lectura; yo (Miriam) te la enviaré.";
-
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * Middleware
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
-// JSON para APIs normales (NO para webhook)
-app.use(express.json());
-
-// CORS para que tu página Shopify pueda llamar a /api/...
-app.use(
-  cors({
-    origin: SHOP_DOMAIN,
-    methods: ["GET", "POST", "OPTIONS"],
-  })
-);
-
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * Helpers
- * ─────────────────────────────────────────────────────────────────────────────
- */
-function escapeHtml(str = "") {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+if (!OPENAI_API_KEY) {
+  console.error("Missing OPENAI_API_KEY");
+}
+if (!REDIS_URL) {
+  console.error("Missing REDIS_URL");
 }
 
-function isPremiumItem(item) {
-  const title = (item?.title || "").toLowerCase();
-  const sku = (item?.sku || "").toLowerCase();
+// -------------------- CLIENTS --------------------
+const redis = new Redis(REDIS_URL, {
+  // Railway/Upstash friendly settings
+  maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  lazyConnect: true
+});
 
-  const bySku = sku && PREMIUM_SKUS.includes(sku);
-  const byKeyword = PREMIUM_KEYWORDS.some((kw) => kw && title.includes(kw));
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-  return Boolean(bySku || byKeyword);
+// -------------------- CARD LISTS --------------------
+// ⚠️ Pon aquí TODAS las cartas reales de cada baraja.
+// (He incluido las que me diste en la conversación para Ángeles, Arcanos, Semilla.)
+const DECKS = {
+  angeles: [
+    "Angel_Arcangel_Rafael",
+    "Angel_Angel_de_la_Guarda",
+    "Angel_Angel_de_la_Abundancia",
+    "Angel_Arcangel_Chamuel",
+    "Angel_Arcangel_Gabriel",
+    "Angel_Arcangel_Uriel",
+    "Angel_Angel_del_Tiempo_Divino",
+    "Angel_Arcangel_Jofiel",
+    "Angel_Angel_de_los_Suenos",
+    "Angel_Angel_Arcangel_Miguel",
+    "Angel_Angel_del_Nuevo_Comienzo",
+    "Angel_Arcangel_Zadkiel"
+  ],
+
+  arcanos_mayores: [
+    "arcanos_mayores_La_Sacerdotisa",
+    "arcanos_mayores_El_Ermitano",
+    "arcanos_mayores_La_Luna",
+    "arcanos_mayores_El_Colgado",
+    "arcanos_mayores_La_Muerte",
+    "arcanos_mayores_Los_Enamorados",
+    "arcanos_mayores_La_Emperatriz",
+    "arcanos_mayores_El_Sol",
+    "arcanos_mayores_La_Templanza",
+    "arcanos_mayores_El_Carro",
+    "arcanos_mayores_El_Emperador",
+    "arcanos_mayores_El_mundo",
+    "arcanos_mayores_El_Sumo_Sacerdote",
+    "arcanos_mayores_El_Juicio",
+    "arcanos_mayores_La_Rueda_De_La_Fortuna",
+    "arcanos_mayores_La_Justicia",
+    "arcanos_mayores_La_Estrella",
+    "arcanos_mayores_La_Torre",
+    "arcanos_mayores_El_Diablo",
+    "arcanos_mayores_El_Mago",
+    "arcanos_mayores_La_fuerza",
+    "arcanos_mayores_El_loco"
+  ],
+
+  semilla_estelar: [
+    "Semilla_estelar_El_Llamado_de_la_Noche",
+    "Semilla_estelar_Mision_de_Alma",
+    "Semilla_estelar_Memorias_de_Otras_Vidas",
+    "Semilla_estelar_Rayo_Dorado",
+    "Semilla_estelar_Codigos_de_Luz",
+    "Semilla_estelar_Reconexion_con_el_Corazon",
+    "Semilla_estelar_Portal_de_Encarnacion",
+    "Semilla_estelar_Origen_Galactico",
+    "Semilla_estelar_Puente_entre_Mundos",
+    "Semilla_estelar_Consejo_de_Guias",
+    "Semilla_estelar_Semilla_del_Coraje",
+    "Semilla_estelar_Luz_en_la_Sombra",
+    "Semilla_estelar_Hogar_en_la_Estrella",
+    "Semilla_estelar_Santuario_Interior",
+    "Semilla_estelar_Contrato_Almico",
+    "Semilla_estelar_Guardianes_del_Umbral",
+    "Semilla_estelar_Alianza_con_la_Tierra",
+    "Semilla_estelar_Sincronias_del_Universo",
+    "Semilla_estelar_Renacimiento_Estelar",
+    "Semilla_estelar_Destino_Cuantico",
+    "Semilla_estelar_Llamado_Estelar",
+    "Semilla_estelarTribu_del_Alma"
+  ]
+};
+
+// -------------------- HELPERS --------------------
+function isAuthorizedCron(req) {
+  const headerSecret = req.get("x-cron-secret");
+  const querySecret = req.query?.secret;
+
+  if (!CRON_SECRET) return false;
+  return headerSecret === CRON_SECRET || querySecret === CRON_SECRET;
 }
 
-function signReadingToken(payload) {
-  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET");
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+// Monday-based week key, stable for the whole week
+function getWeekStartISO(date = new Date()) {
+  // Use UTC to avoid timezone surprises
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay(); // 0 Sun .. 6 Sat
+  const diffToMonday = (day === 0 ? -6 : 1 - day); // move to Monday
+  d.setUTCDate(d.getUTCDate() + diffToMonday);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
-function verifyReadingToken(token) {
-  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET");
-  return jwt.verify(token, JWT_SECRET);
+function weeklyKey(weekISO) {
+  return `weekly:${weekISO}`;
 }
 
-function buildReadingLink({ orderId, email, lineItemId, sku }) {
-  if (!READING_BASE_URL) return null;
+function cardKey(weekISO, deck, cardId) {
+  return `${weeklyKey(weekISO)}:${deck}:${cardId}`;
+}
 
-  const token = signReadingToken({
-    orderId,
-    email,
-    lineItemId,
-    sku,
+function deckKey(weekISO, deck) {
+  return `${weeklyKey(weekISO)}:${deck}`;
+}
+
+function assertDeck(deck) {
+  if (!DECKS[deck]) {
+    const e = new Error(`Deck inválido: ${deck}`);
+    e.status = 400;
+    throw e;
+  }
+}
+
+function safeJsonParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    // Sometimes models wrap JSON in ```json ... ```
+    const cleaned = String(text)
+      .trim()
+      .replace(/^```json/i, "")
+      .replace(/^```/i, "")
+      .replace(/```$/i, "")
+      .trim();
+    return JSON.parse(cleaned);
+  }
+}
+
+function normalizeReading(obj, { deck, cardId, weekISO }) {
+  const required = [
+    "titulo",
+    "significado",
+    "amor",
+    "trabajo",
+    "consejo_espiritual",
+    "consejo_angelical",
+    "afirmacion",
+    "ritual",
+    "invertida"
+  ];
+
+  const out = { ...obj };
+
+  // Ensure required keys exist as strings
+  for (const k of required) {
+    if (typeof out[k] !== "string") out[k] = out[k] == null ? "" : String(out[k]);
+  }
+
+  // Attach meta
+  out.meta = {
+    deck,
+    card_id: cardId,
+    week_start: weekISO,
+    model: OPENAI_MODEL,
+    generated_at: new Date().toISOString()
+  };
+
+  return out;
+}
+
+async function generateReadingForCard({ deck, cardId, weekISO }) {
+  // Prompting: force strict JSON, Spanish, and required structure
+  const system = `
+Eres una IA que escribe interpretaciones de cartas de tarot/ángeles en español.
+Debes responder SOLO con JSON válido (sin markdown, sin texto extra).
+El JSON debe tener exactamente estas claves:
+titulo, significado, amor, trabajo, consejo_espiritual, consejo_angelical, afirmacion, ritual, invertida
+Todas deben ser strings.
+Tono: espiritual, claro, cálido, sin alarmismo, sin predicciones absolutas.
+Longitud: cada campo 2-5 frases (afirmacion 1 frase; ritual 2-4 pasos).
+No uses emojis.
+`;
+
+  const user = `
+Genera la interpretación SEMANAL para:
+- Baraja: ${deck}
+- Carta (ID): ${cardId}
+- Semana (comienza lunes): ${weekISO}
+
+Devuelve el JSON EXACTO con las claves indicadas.
+`;
+
+  const res = await openai.chat.completions.create({
+    model: OPENAI_MODEL,
+    temperature: 0.8,
+    messages: [
+      { role: "system", content: system.trim() },
+      { role: "user", content: user.trim() }
+    ]
   });
 
-  const url = new URL(READING_BASE_URL);
-  url.searchParams.set("token", token);
-
-  return url.toString();
+  const text = res.choices?.[0]?.message?.content ?? "";
+  const parsed = safeJsonParse(text);
+  return normalizeReading(parsed, { deck, cardId, weekISO });
 }
 
-function buildEmailHtml({ customerName, automatedItems, premiumItems, orderName }) {
-  const hasAutomated = automatedItems.length > 0;
-  const hasPremium = premiumItems.length > 0;
-
-  const greetingName = customerName ? `, ${escapeHtml(customerName)}` : "";
-  const orderLine = orderName ? `<p><b>Pedido:</b> ${escapeHtml(orderName)}</p>` : "";
-
-  const automatedSection = hasAutomated
-    ? `
-      <h2>🔮 Lecturas automatizadas</h2>
-      <p>Haz clic en tu(s) enlace(s) para realizar la lectura:</p>
-      <ul>
-        ${automatedItems
-          .map(
-            (it) => `
-          <li>
-            <b>${escapeHtml(it.title || "Lectura")}</b>
-            ${it.quantity > 1 ? ` (x${it.quantity})` : ""}
-            <br/>
-            <a href="${escapeHtml(it.link)}">Abrir lectura</a>
-          </li>
-        `
-          )
-          .join("")}
-      </ul>
-    `
-    : "";
-
-  const premiumSection = hasPremium
-    ? `
-      <h2>✨ Lecturas premium</h2>
-      <p>${escapeHtml(PREMIUM_MESSAGE)}</p>
-      <ul>
-        ${premiumItems
-          .map(
-            (it) => `
-          <li>
-            <b>${escapeHtml(it.title || "Lectura premium")}</b>
-            ${it.quantity > 1 ? ` (x${it.quantity})` : ""}
-          </li>
-        `
-          )
-          .join("")}
-      </ul>
-    `
-    : "";
-
-  const fallback =
-    !hasAutomated && !hasPremium
-      ? `<p>Hemos recibido tu compra. Si necesitas ayuda, responde a este email.</p>`
-      : "";
-
-  return `
-    <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; line-height: 1.5;">
-      <p>Hola${greetingName} 👋</p>
-      ${orderLine}
-      ${automatedSection}
-      ${premiumSection}
-      ${fallback}
-      <hr/>
-      <p style="color:#555;">Con cariño,<br/>Miriam</p>
-    </div>
-  `;
-}
-
-/**
- * Verificación HMAC de Shopify para webhooks.
- * IMPORTANTÍSIMO: el body debe ser RAW exactamente.
- */
-function verifyShopifyHmac(rawBodyBuffer, hmacHeader) {
-  if (!SHOPIFY_WEBHOOK_SECRET) {
-    return { ok: false, error: "Missing SHOPIFY_WEBHOOK_SECRET" };
+async function withRetry(fn, { retries = 3, baseMs = 500 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (e) {
+      lastErr = e;
+      const wait = baseMs * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, wait));
+    }
   }
-  if (!hmacHeader) {
-    return { ok: false, error: "Missing X-Shopify-Hmac-Sha256" };
-  }
-
-  const digest = crypto
-    .createHmac("sha256", SHOPIFY_WEBHOOK_SECRET)
-    .update(rawBodyBuffer)
-    .digest("base64");
-
-  const safeEqual =
-    digest.length === hmacHeader.length &&
-    crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
-
-  return safeEqual ? { ok: true } : { ok: false, error: "Invalid HMAC" };
+  throw lastErr;
 }
 
-/**
- * ─────────────────────────────────────────────────────────────────────────────
- * Routes
- * ─────────────────────────────────────────────────────────────────────────────
- */
+async function ensureRedisConnected() {
+  if (redis.status !== "ready") {
+    await redis.connect();
+  }
+}
 
-// Healthcheck
-app.get("/health", (req, res) => res.status(200).send("ok"));
+// -------------------- ROUTES --------------------
 
-/**
- * Validación del token desde la página Shopify:
- * GET /api/reading/validate?token=...
- */
-app.get("/api/reading/validate", (req, res) => {
+// Health
+app.get("/health", async (_req, res) => {
   try {
-    const token = req.query.token;
-    if (!token) return res.status(400).json({ ok: false, error: "Missing token" });
-
-    const decoded = verifyReadingToken(token);
-    return res.json({ ok: true, decoded });
+    await ensureRedisConnected();
+    await redis.ping();
+    res.json({ ok: true });
   } catch (e) {
-    return res.status(401).json({ ok: false, error: "Invalid/expired token" });
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
 });
 
 /**
- * Webhook Shopify (order paid)
- * IMPORTANT: usamos express.raw SOLO en esta ruta.
+ * CRON endpoint
+ * POST /cron/weekly-refresh
+ * Header: x-cron-secret: <CRON_SECRET>
+ * (or /cron/weekly-refresh?secret=...)
  */
-app.post(
-  "/webhooks/shopify/order-paid",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    try {
-      const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
-      const check = verifyShopifyHmac(req.body, hmacHeader);
-
-      if (!check.ok) {
-        return res.status(401).send(check.error);
-      }
-
-      let payload;
-      try {
-        payload = JSON.parse(req.body.toString("utf8"));
-      } catch {
-        return res.status(400).send("Invalid JSON");
-      }
-
-      const email =
-        payload?.email ||
-        payload?.customer?.email ||
-        payload?.contact_email ||
-        null;
-
-      if (!email) {
-        console.warn("Order without email. order_id:", payload?.id);
-        return res.status(200).send("No email; acknowledged");
-      }
-
-      // checks mínimos para no caer en silencio
-      if (!EMAIL_FROM) return res.status(500).send("Missing EMAIL_FROM");
-      if (!process.env.RESEND_API_KEY) return res.status(500).send("Missing RESEND_API_KEY");
-      if (!READING_BASE_URL) return res.status(500).send("Missing READING_BASE_URL");
-      if (!JWT_SECRET) return res.status(500).send("Missing JWT_SECRET");
-      if (!SHOPIFY_WEBHOOK_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
-
-      const customerName =
-        payload?.customer?.first_name ||
-        payload?.billing_address?.first_name ||
-        "";
-
-      const orderId = payload?.id;
-      const orderName = payload?.name; // e.g. "#1234"
-
-      const lineItems = Array.isArray(payload?.line_items) ? payload.line_items : [];
-
-      const premiumItems = [];
-      const automatedItems = [];
-
-      for (const item of lineItems) {
-        const premium = isPremiumItem(item);
-
-        const base = {
-          title: item?.title,
-          sku: item?.sku,
-          quantity: item?.quantity || 1,
-          lineItemId: item?.id,
-        };
-
-        if (premium) {
-          premiumItems.push(base);
-        } else {
-          const link = buildReadingLink({
-            orderId,
-            email,
-            lineItemId: item?.id,
-            sku: item?.sku,
-          });
-
-          automatedItems.push({ ...base, link });
-        }
-      }
-
-      const subjectParts = [];
-      if (automatedItems.length) subjectParts.push("Tu(s) lectura(s) automatizada(s)");
-      if (premiumItems.length) subjectParts.push("Tu lectura premium");
-      const subject =
-        subjectParts.length > 0
-          ? `${subjectParts.join(" + ")} – El Tarot de la Rueda de la Fortuna`
-          : `Tu compra – El Tarot de la Rueda de la Fortuna`;
-
-      const html = buildEmailHtml({
-        customerName,
-        automatedItems,
-        premiumItems,
-        orderName,
-      });
-
-      await resend.emails.send({
-        from: EMAIL_FROM,
-        to: email,
-        subject,
-        html,
-      });
-
-      return res.status(200).send("OK");
-    } catch (err) {
-      console.error("Webhook error:", err);
-      // Acknowledge to avoid Shopify retry storm
-      return res.status(200).send("Failed but acknowledged");
+app.post("/cron/weekly-refresh", async (req, res) => {
+  try {
+    if (!isAuthorizedCron(req)) {
+      return res.status(401).json({ ok: false, error: "Unauthorized cron" });
     }
+
+    await ensureRedisConnected();
+
+    const weekISO = getWeekStartISO(new Date());
+    const rootKey = weeklyKey(weekISO);
+
+    // Optional: skip if already generated
+    const already = await redis.get(`${rootKey}:__done`);
+    if (already === "1") {
+      return res.json({ ok: true, week_start: weekISO, skipped: true });
+    }
+
+    // Concurrency limit (tune to avoid rate limits)
+    const limit = pLimit(4); // 4 parallel calls (safe). You can set 2-6 depending on quotas.
+    const tasks = [];
+
+    for (const deck of Object.keys(DECKS)) {
+      for (const cardId of DECKS[deck]) {
+        tasks.push(
+          limit(async () => {
+            const ck = cardKey(weekISO, deck, cardId);
+
+            const reading = await withRetry(
+              async () => {
+                // if exists, skip (idempotent)
+                const exists = await redis.exists(ck);
+                if (exists) return null;
+
+                return await generateReadingForCard({ deck, cardId, weekISO });
+              },
+              { retries: 3, baseMs: 700 }
+            );
+
+            if (!reading) return { deck, cardId, skipped: true };
+
+            // Store card data
+            await redis.set(ck, JSON.stringify(reading));
+
+            // Also store in a deck hash for quick fetch
+            await redis.hset(deckKey(weekISO, deck), cardId, JSON.stringify(reading));
+
+            return { deck, cardId, skipped: false };
+          })
+        );
+      }
+    }
+
+    const results = await Promise.allSettled(tasks);
+
+    const summary = {
+      total: results.length,
+      ok: results.filter((r) => r.status === "fulfilled").length,
+      failed: results.filter((r) => r.status === "rejected").length
+    };
+
+    // Mark week done + set TTL (e.g., 14 days)
+    await redis.set(`${rootKey}:__done`, "1");
+    await redis.expire(`${rootKey}:__done`, 60 * 60 * 24 * 14);
+
+    // Set TTL for all keys in this week (optional)
+    // Note: scanning is expensive; we rely on stable weekly keys and optionally a background cleanup.
+    // If you want TTL per card, set expire when saving:
+    // await redis.expire(ck, 60*60*24*14); and same for deckKey hash.
+
+    res.json({
+      ok: true,
+      week_start: weekISO,
+      summary
+    });
+  } catch (e) {
+    console.error("weekly-refresh error:", e);
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
-);
+});
 
 /**
- * ─────────────────────────────────────────────────────────────────────────────
- * Start
- * ─────────────────────────────────────────────────────────────────────────────
+ * Get weekly reading for a single card
+ * GET /weekly/:deck/:cardId
  */
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Listening on ${PORT}`));
+app.get("/weekly/:deck/:cardId", async (req, res) => {
+  try {
+    await ensureRedisConnected();
+
+    const { deck, cardId } = req.params;
+    assertDeck(deck);
+
+    const weekISO = getWeekStartISO(new Date());
+    const ck = cardKey(weekISO, deck, cardId);
+
+    const raw = await redis.get(ck);
+    if (!raw) {
+      return res.status(404).json({
+        ok: false,
+        error: "Not found (weekly content not generated yet)"
+      });
+    }
+
+    res.json({ ok: true, week_start: weekISO, data: JSON.parse(raw) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+/**
+ * Get all weekly readings for a deck
+ * GET /weekly/:deck
+ */
+app.get("/weekly/:deck", async (req, res) => {
+  try {
+    await ensureRedisConnected();
+
+    const { deck } = req.params;
+    assertDeck(deck);
+
+    const weekISO = getWeekStartISO(new Date());
+    const dk = deckKey(weekISO, deck);
+
+    const hash = await redis.hgetall(dk);
+    const out = {};
+
+    for (const [cardId, val] of Object.entries(hash)) {
+      try {
+        out[cardId] = JSON.parse(val);
+      } catch {
+        out[cardId] = val;
+      }
+    }
+
+    // If empty, return 404 to signal cron not run yet
+    if (Object.keys(out).length === 0) {
+      return res.status(404).json({
+        ok: false,
+        error: "Not found (weekly content not generated yet)"
+      });
+    }
+
+    res.json({ ok: true, week_start: weekISO, deck, data: out });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+// Error fallback
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled:", err);
+  res.status(err.status || 500).json({ ok: false, error: String(err?.message || err) });
+});
+
+// -------------------- START --------------------
+app.listen(PORT, () => {
+  console.log(`Tarot API listening on :${PORT}`);
+});
