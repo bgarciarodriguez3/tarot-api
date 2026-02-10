@@ -1,367 +1,431 @@
-// server.js
-"use strict";
+/**
+ * server.js — Tarot API (Railway)
+ * - Weekly refresh via CRON (Vercel -> Railway)
+ * - Generates weekly meanings for each card in each deck using OpenAI
+ * - Stores results in Redis keyed by "week start (Monday)"
+ */
 
-require("dotenv").config(); // OK aunque en Railway no siempre haga falta
-
-const express = require("express");
-const cors = require("cors");
-const crypto = require("crypto");
-const { OpenAI } = require("openai");
-const { createClient } = require("redis");
-const { Resend } = require("resend");
+import express from "express";
+import cors from "cors";
+import Redis from "ioredis";
+import OpenAI from "openai";
+import pLimit from "p-limit";
 
 const app = express();
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
 
-// ------------------------------------------------------
-// 0) MIDDLEWARES
-// ------------------------------------------------------
-app.set("trust proxy", 1);
+// -------------------- ENV --------------------
+const {
+  PORT = 3000,
+  CRON_SECRET,
+  OPENAI_API_KEY,
+  OPENAI_MODEL = "gpt-4o-mini",
+  REDIS_URL
+} = process.env;
 
-app.use(
-  cors({
-    origin: true,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+if (!OPENAI_API_KEY) {
+  console.error("Missing OPENAI_API_KEY");
+}
+if (!REDIS_URL) {
+  console.error("Missing REDIS_URL");
+}
 
-app.options("*", cors());
-app.use(express.json({ limit: "1mb" }));
-
-// Logs (Railway)
-app.use((req, res, next) => {
-  const t = new Date().toISOString();
-  console.log(`[${t}] ${req.method} ${req.originalUrl}`);
-  next();
+// -------------------- CLIENTS --------------------
+const redis = new Redis(REDIS_URL, {
+  // Railway/Upstash friendly settings
+  maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  lazyConnect: true
 });
 
-// ------------------------------------------------------
-// 1) OPENAI
-// ------------------------------------------------------
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
-// ------------------------------------------------------
-// 2) CONFIG PRODUCTOS
-// ------------------------------------------------------
-const VARIANT_CONFIG = {
-  "52443282112849": {
-    productName: "Tres Puertas del Destino (3 Cartas).",
-    deckId: "arcanos_mayores",
-    deckName: "Tarot Arcanos Mayores",
-    pick: 3,
-    manual: true,
-  },
+// -------------------- CARD LISTS --------------------
+// ⚠️ Pon aquí TODAS las cartas reales de cada baraja.
+// (He incluido las que me diste en la conversación para Ángeles, Arcanos, Semilla.)
+const DECKS = {
+  angeles: [
+    "Angel_Arcangel_Rafael",
+    "Angel_Angel_de_la_Guarda",
+    "Angel_Angel_de_la_Abundancia",
+    "Angel_Arcangel_Chamuel",
+    "Angel_Arcangel_Gabriel",
+    "Angel_Arcangel_Uriel",
+    "Angel_Angel_del_Tiempo_Divino",
+    "Angel_Arcangel_Jofiel",
+    "Angel_Angel_de_los_Suenos",
+    "Angel_Angel_Arcangel_Miguel",
+    "Angel_Angel_del_Nuevo_Comienzo",
+    "Angel_Arcangel_Zadkiel"
+  ],
 
-  "52457830154577": {
-    productName: "Camino de la Semilla Estelar (5 Cartas)",
-    deckId: "semilla_estelar",
-    deckName: "Tarot Semilla Estelar",
-    pick: 5,
-  },
+  arcanos_mayores: [
+    "arcanos_mayores_La_Sacerdotisa",
+    "arcanos_mayores_El_Ermitano",
+    "arcanos_mayores_La_Luna",
+    "arcanos_mayores_El_Colgado",
+    "arcanos_mayores_La_Muerte",
+    "arcanos_mayores_Los_Enamorados",
+    "arcanos_mayores_La_Emperatriz",
+    "arcanos_mayores_El_Sol",
+    "arcanos_mayores_La_Templanza",
+    "arcanos_mayores_El_Carro",
+    "arcanos_mayores_El_Emperador",
+    "arcanos_mayores_El_mundo",
+    "arcanos_mayores_El_Sumo_Sacerdote",
+    "arcanos_mayores_El_Juicio",
+    "arcanos_mayores_La_Rueda_De_La_Fortuna",
+    "arcanos_mayores_La_Justicia",
+    "arcanos_mayores_La_Estrella",
+    "arcanos_mayores_La_Torre",
+    "arcanos_mayores_El_Diablo",
+    "arcanos_mayores_El_Mago",
+    "arcanos_mayores_La_fuerza",
+    "arcanos_mayores_El_loco"
+  ],
 
-  "52457929867601": {
-    productName: "Mensaje de los Ángeles ✨ Lectura Angelical Premium de 4 Cartas",
-    deckId: "angeles",
-    deckName: "Tarot de los Ángeles",
-    pick: 4,
-    manual: true,
-  },
-
-  "52443409383761": {
-    productName: "Lectura Profunda: Análisis Completo (12 Cartas)",
-    deckId: "arcanos_mayores",
-    deckName: "Tarot Arcanos Mayores",
-    pick: 12,
-  },
-
-  "52458382459217": {
-    productName: "Mentoría de Claridad Total",
-    manual: true,
-  },
-  "52570216857937": {
-    productName: "Tarot del Amor Premium",
-    manual: true,
-  },
+  semilla_estelar: [
+    "Semilla_estelar_El_Llamado_de_la_Noche",
+    "Semilla_estelar_Mision_de_Alma",
+    "Semilla_estelar_Memorias_de_Otras_Vidas",
+    "Semilla_estelar_Rayo_Dorado",
+    "Semilla_estelar_Codigos_de_Luz",
+    "Semilla_estelar_Reconexion_con_el_Corazon",
+    "Semilla_estelar_Portal_de_Encarnacion",
+    "Semilla_estelar_Origen_Galactico",
+    "Semilla_estelar_Puente_entre_Mundos",
+    "Semilla_estelar_Consejo_de_Guias",
+    "Semilla_estelar_Semilla_del_Coraje",
+    "Semilla_estelar_Luz_en_la_Sombra",
+    "Semilla_estelar_Hogar_en_la_Estrella",
+    "Semilla_estelar_Santuario_Interior",
+    "Semilla_estelar_Contrato_Almico",
+    "Semilla_estelar_Guardianes_del_Umbral",
+    "Semilla_estelar_Alianza_con_la_Tierra",
+    "Semilla_estelar_Sincronias_del_Universo",
+    "Semilla_estelar_Renacimiento_Estelar",
+    "Semilla_estelar_Destino_Cuantico",
+    "Semilla_estelar_Llamado_Estelar",
+    "Semilla_estelarTribu_del_Alma"
+  ]
 };
 
-// ------------------------------------------------------
-// 3) SESIONES + REDIS
-// ------------------------------------------------------
-const sessions = new Map();
-const SESSION_TTL_SEC = 86400; // 24h
+// -------------------- HELPERS --------------------
+function isAuthorizedCron(req) {
+  const headerSecret = req.get("x-cron-secret");
+  const querySecret = req.query?.secret;
 
-const redis = process.env.REDIS_URL
-  ? createClient({ url: process.env.REDIS_URL })
-  : null;
+  if (!CRON_SECRET) return false;
+  return headerSecret === CRON_SECRET || querySecret === CRON_SECRET;
+}
 
-let REDIS_CONNECTED = false;
+// Monday-based week key, stable for the whole week
+function getWeekStartISO(date = new Date()) {
+  // Use UTC to avoid timezone surprises
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const day = d.getUTCDay(); // 0 Sun .. 6 Sat
+  const diffToMonday = (day === 0 ? -6 : 1 - day); // move to Monday
+  d.setUTCDate(d.getUTCDate() + diffToMonday);
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
-async function setSession(token, obj) {
-  if (redis && REDIS_CONNECTED) {
-    await redis.set(`sess:${token}`, JSON.stringify(obj), {
-      EX: SESSION_TTL_SEC,
-    });
-    return;
+function weeklyKey(weekISO) {
+  return `weekly:${weekISO}`;
+}
+
+function cardKey(weekISO, deck, cardId) {
+  return `${weeklyKey(weekISO)}:${deck}:${cardId}`;
+}
+
+function deckKey(weekISO, deck) {
+  return `${weeklyKey(weekISO)}:${deck}`;
+}
+
+function assertDeck(deck) {
+  if (!DECKS[deck]) {
+    const e = new Error(`Deck inválido: ${deck}`);
+    e.status = 400;
+    throw e;
   }
-  sessions.set(token, obj);
 }
 
-async function getSession(token) {
-  if (redis && REDIS_CONNECTED) {
-    const raw = await redis.get(`sess:${token}`);
-    return raw ? JSON.parse(raw) : null;
-  }
-  return sessions.get(token) || null;
-}
-
-// ------------------------------------------------------
-// 4) EMAIL HELPERS (Resend)
-// ------------------------------------------------------
-function buildAccessEmailHtml({ customerEmail, links }) {
-  const items = links
-    .map(
-      (l) => `
-        <li style="margin: 10px 0;">
-          <div style="font-weight:600;">${escapeHtml(l.name)}</div>
-          <a href="${escapeHtml(l.url)}" style="color:#6b46c1;">Abrir mi lectura</a>
-        </li>
-      `
-    )
-    .join("");
-
-  return `
-  <div style="font-family:Arial,sans-serif;background:#f6f6fb;padding:24px;">
-    <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #eee;">
-      <div style="padding:20px 22px;background:#1b1036;color:#fff;">
-        <h2 style="margin:0;font-size:18px;">Acceso a tu lectura 🔮</h2>
-        <div style="opacity:.9;font-size:13px;margin-top:6px;">${escapeHtml(customerEmail)}</div>
-      </div>
-      <div style="padding:22px;">
-        <p style="margin-top:0;">Gracias por tu compra ✨</p>
-        <p>Aquí tienes el acceso a tu lectura:</p>
-        <ul style="padding-left:18px;margin:14px 0;">
-          ${items}
-        </ul>
-        <p style="color:#666;font-size:13px;margin-top:18px;">
-          Si tienes cualquier problema, responde a este email y te ayudamos.
-        </p>
-      </div>
-    </div>
-  </div>`;
-}
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-// ------------------------------------------------------
-// 5) RUTAS API
-// ------------------------------------------------------
-app.get("/", (req, res) => {
-  res.send("API de Tarot Activa ✅");
-});
-
-// ---- (A) Endpoint de prueba para navegador ----
-app.get("/api/shopify/order-paid", (req, res) => {
-  res.status(200).json({
-    ok: true,
-    message: "Este endpoint es POST. Shopify debe llamarlo como webhook (order paid).",
-  });
-});
-
-// ---- (B) Webhook real: Shopify Order Paid → Email 1 ----
-app.post("/api/shopify/order-paid", async (req, res) => {
+function safeJsonParse(text) {
   try {
-    const order = req.body || {};
-    const email = (order.email || "").toString().trim();
-    const order_id = order.id;
+    return JSON.parse(text);
+  } catch {
+    // Sometimes models wrap JSON in ```json ... ```
+    const cleaned = String(text)
+      .trim()
+      .replace(/^```json/i, "")
+      .replace(/^```/i, "")
+      .replace(/```$/i, "")
+      .trim();
+    return JSON.parse(cleaned);
+  }
+}
 
-    if (!email || !order_id) {
-      return res.status(400).json({ ok: false, error: "missing_email_or_order_id" });
+function normalizeReading(obj, { deck, cardId, weekISO }) {
+  const required = [
+    "titulo",
+    "significado",
+    "amor",
+    "trabajo",
+    "consejo_espiritual",
+    "consejo_angelical",
+    "afirmacion",
+    "ritual",
+    "invertida"
+  ];
+
+  const out = { ...obj };
+
+  // Ensure required keys exist as strings
+  for (const k of required) {
+    if (typeof out[k] !== "string") out[k] = out[k] == null ? "" : String(out[k]);
+  }
+
+  // Attach meta
+  out.meta = {
+    deck,
+    card_id: cardId,
+    week_start: weekISO,
+    model: OPENAI_MODEL,
+    generated_at: new Date().toISOString()
+  };
+
+  return out;
+}
+
+async function generateReadingForCard({ deck, cardId, weekISO }) {
+  // Prompting: force strict JSON, Spanish, and required structure
+  const system = `
+Eres una IA que escribe interpretaciones de cartas de tarot/ángeles en español.
+Debes responder SOLO con JSON válido (sin markdown, sin texto extra).
+El JSON debe tener exactamente estas claves:
+titulo, significado, amor, trabajo, consejo_espiritual, consejo_angelical, afirmacion, ritual, invertida
+Todas deben ser strings.
+Tono: espiritual, claro, cálido, sin alarmismo, sin predicciones absolutas.
+Longitud: cada campo 2-5 frases (afirmacion 1 frase; ritual 2-4 pasos).
+No uses emojis.
+`;
+
+  const user = `
+Genera la interpretación SEMANAL para:
+- Baraja: ${deck}
+- Carta (ID): ${cardId}
+- Semana (comienza lunes): ${weekISO}
+
+Devuelve el JSON EXACTO con las claves indicadas.
+`;
+
+  const res = await openai.chat.completions.create({
+    model: OPENAI_MODEL,
+    temperature: 0.8,
+    messages: [
+      { role: "system", content: system.trim() },
+      { role: "user", content: user.trim() }
+    ]
+  });
+
+  const text = res.choices?.[0]?.message?.content ?? "";
+  const parsed = safeJsonParse(text);
+  return normalizeReading(parsed, { deck, cardId, weekISO });
+}
+
+async function withRetry(fn, { retries = 3, baseMs = 500 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn(attempt);
+    } catch (e) {
+      lastErr = e;
+      const wait = baseMs * Math.pow(2, attempt);
+      await new Promise((r) => setTimeout(r, wait));
     }
+  }
+  throw lastErr;
+}
 
-    if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
-      return res.status(500).json({ ok: false, error: "missing_resend_env" });
-    }
+async function ensureRedisConnected() {
+  if (redis.status !== "ready") {
+    await redis.connect();
+  }
+}
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+// -------------------- ROUTES --------------------
 
-    const links = [];
-
-    for (const item of order.line_items || []) {
-      const variant_id = String(item.variant_id || "");
-      const cfg = VARIANT_CONFIG[variant_id];
-      if (!cfg) continue;
-
-      const token = crypto.randomBytes(24).toString("hex");
-
-      await setSession(token, {
-        ...cfg,
-        order_id,
-        email,
-        used: false,
-      });
-
-      const base = cfg.manual
-        ? "https://eltarotdelaruedadelafortuna.com/pages/premium"
-        : "https://eltarotdelaruedadelafortuna.com/pages/lectura";
-
-      links.push({
-        name: cfg.productName,
-        url: `${base}?token=${token}`,
-      });
-    }
-
-    if (links.length === 0) {
-      // No rompemos el webhook si el pedido no es de lecturas reconocidas
-      return res.status(200).json({ ok: true, note: "no_matching_variants" });
-    }
-
-    const subject = "Tu acceso a la lectura 🔮";
-    const html = buildAccessEmailHtml({ customerEmail: email, links });
-
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to: email,
-      subject,
-      html,
-    });
-
-    if (error) {
-      console.error("Resend error:", error);
-      return res.status(500).json({ ok: false, error: error.message || "resend_failed" });
-    }
-
-    return res.status(200).json({ ok: true, messageId: data?.id || null, links: links.length });
+// Health
+app.get("/health", async (_req, res) => {
+  try {
+    await ensureRedisConnected();
+    await redis.ping();
+    res.json({ ok: true });
   } catch (e) {
-    console.error("order-paid error:", e);
-    return res.status(500).json({ ok: false, error: e?.message || "server_error" });
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
 });
 
-// ---- Crea link con token (sin enviar email; útil para llamadas internas) ----
-app.post("/api/create-link", async (req, res) => {
-  const { order_id, email, variant_id } = req.body || {};
-
-  const cfg = VARIANT_CONFIG[String(variant_id)];
-  if (!cfg) {
-    return res.status(400).json({ error: "Producto no reconocido" });
-  }
-
-  const token = crypto.randomBytes(24).toString("hex");
-
-  await setSession(token, {
-    ...cfg,
-    order_id,
-    email,
-    used: false,
-  });
-
-  const base = cfg.manual
-    ? "https://eltarotdelaruedadelafortuna.com/pages/premium"
-    : "https://eltarotdelaruedadelafortuna.com/pages/lectura";
-
-  return res.json({
-    ok: true,
-    link: `${base}?token=${token}`,
-  });
-});
-
-// ---- Devuelve sesión por token ----
-app.get("/api/session", async (req, res) => {
+/**
+ * CRON endpoint
+ * POST /cron/weekly-refresh
+ * Header: x-cron-secret: <CRON_SECRET>
+ * (or /cron/weekly-refresh?secret=...)
+ */
+app.post("/cron/weekly-refresh", async (req, res) => {
   try {
-    const token = (req.query.token || "").toString().trim();
-
-    if (!token) {
-      return res.status(400).json({ ok: false, error: "missing_token" });
+    if (!isAuthorizedCron(req)) {
+      return res.status(401).json({ ok: false, error: "Unauthorized cron" });
     }
 
-    const s = await getSession(token);
+    await ensureRedisConnected();
 
-    if (!s) {
-      return res.status(404).json({ ok: false, error: "session_not_found" });
+    const weekISO = getWeekStartISO(new Date());
+    const rootKey = weeklyKey(weekISO);
+
+    // Optional: skip if already generated
+    const already = await redis.get(`${rootKey}:__done`);
+    if (already === "1") {
+      return res.json({ ok: true, week_start: weekISO, skipped: true });
     }
 
-    if (s.used) {
-      return res.status(410).json({ ok: false, error: "session_used" });
+    // Concurrency limit (tune to avoid rate limits)
+    const limit = pLimit(4); // 4 parallel calls (safe). You can set 2-6 depending on quotas.
+    const tasks = [];
+
+    for (const deck of Object.keys(DECKS)) {
+      for (const cardId of DECKS[deck]) {
+        tasks.push(
+          limit(async () => {
+            const ck = cardKey(weekISO, deck, cardId);
+
+            const reading = await withRetry(
+              async () => {
+                // if exists, skip (idempotent)
+                const exists = await redis.exists(ck);
+                if (exists) return null;
+
+                return await generateReadingForCard({ deck, cardId, weekISO });
+              },
+              { retries: 3, baseMs: 700 }
+            );
+
+            if (!reading) return { deck, cardId, skipped: true };
+
+            // Store card data
+            await redis.set(ck, JSON.stringify(reading));
+
+            // Also store in a deck hash for quick fetch
+            await redis.hset(deckKey(weekISO, deck), cardId, JSON.stringify(reading));
+
+            return { deck, cardId, skipped: false };
+          })
+        );
+      }
     }
 
-    return res.json({
-      ok: true,
-      productName: s.productName,
-      deckId: s.deckId || null,
-      deckName: s.deckName || null,
-      pick: s.pick || null,
-      manual: !!s.manual,
-      order_id: s.order_id || null,
-      email: s.email || null,
-    });
-  } catch (err) {
-    console.error("GET /api/session error:", err);
-    return res.status(500).json({ ok: false, error: "server_error" });
-  }
-});
+    const results = await Promise.allSettled(tasks);
 
-// ---- Envía cartas a OpenAI para interpretación ----
-app.post("/api/submit", async (req, res) => {
-  const { token, cards } = req.body || {};
+    const summary = {
+      total: results.length,
+      ok: results.filter((r) => r.status === "fulfilled").length,
+      failed: results.filter((r) => r.status === "rejected").length
+    };
 
-  const s = await getSession(token);
-  if (!s || s.used) {
-    return res.status(400).json({ error: "Sesión inválida" });
-  }
+    // Mark week done + set TTL (e.g., 14 days)
+    await redis.set(`${rootKey}:__done`, "1");
+    await redis.expire(`${rootKey}:__done`, 60 * 60 * 24 * 14);
 
-  try {
-    const list = (cards || [])
-      .map((c) => `${c.name}${c.reversed ? " (Invertida)" : " (Derecha)"}`)
-      .join(", ");
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: `Interpreta tirada de tarot: ${list} para el producto ${s.productName}`,
-        },
-      ],
-    });
-
-    s.used = true;
-    await setSession(token, s);
+    // Set TTL for all keys in this week (optional)
+    // Note: scanning is expensive; we rely on stable weekly keys and optionally a background cleanup.
+    // If you want TTL per card, set expire when saving:
+    // await redis.expire(ck, 60*60*24*14); and same for deckKey hash.
 
     res.json({
-      interpretation: completion.choices[0].message.content,
+      ok: true,
+      week_start: weekISO,
+      summary
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error de interpretación" });
+  } catch (e) {
+    console.error("weekly-refresh error:", e);
+    res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
 });
 
-// ------------------------------------------------------
-// 6) ARRANQUE
-// ------------------------------------------------------
-const PORT = process.env.PORT || 8080;
+/**
+ * Get weekly reading for a single card
+ * GET /weekly/:deck/:cardId
+ */
+app.get("/weekly/:deck/:cardId", async (req, res) => {
+  try {
+    await ensureRedisConnected();
 
-(async () => {
-  if (redis) {
-    try {
-      await redis.connect();
-      REDIS_CONNECTED = true;
-      console.log("Redis conectado ✅");
-    } catch (e) {
-      console.error("Fallo conexión Redis, usando memoria ⚠️");
+    const { deck, cardId } = req.params;
+    assertDeck(deck);
+
+    const weekISO = getWeekStartISO(new Date());
+    const ck = cardKey(weekISO, deck, cardId);
+
+    const raw = await redis.get(ck);
+    if (!raw) {
+      return res.status(404).json({
+        ok: false,
+        error: "Not found (weekly content not generated yet)"
+      });
     }
-  }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Servidor activo en puerto ${PORT}`);
-  });
-})();
+    res.json({ ok: true, week_start: weekISO, data: JSON.parse(raw) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+/**
+ * Get all weekly readings for a deck
+ * GET /weekly/:deck
+ */
+app.get("/weekly/:deck", async (req, res) => {
+  try {
+    await ensureRedisConnected();
+
+    const { deck } = req.params;
+    assertDeck(deck);
+
+    const weekISO = getWeekStartISO(new Date());
+    const dk = deckKey(weekISO, deck);
+
+    const hash = await redis.hgetall(dk);
+    const out = {};
+
+    for (const [cardId, val] of Object.entries(hash)) {
+      try {
+        out[cardId] = JSON.parse(val);
+      } catch {
+        out[cardId] = val;
+      }
+    }
+
+    // If empty, return 404 to signal cron not run yet
+    if (Object.keys(out).length === 0) {
+      return res.status(404).json({
+        ok: false,
+        error: "Not found (weekly content not generated yet)"
+      });
+    }
+
+    res.json({ ok: true, week_start: weekISO, deck, data: out });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, error: String(e?.message || e) });
+  }
+});
+
+// Error fallback
+app.use((err, _req, res, _next) => {
+  console.error("Unhandled:", err);
+  res.status(err.status || 500).json({ ok: false, error: String(err?.message || err) });
+});
+
+// -------------------- START --------------------
+app.listen(PORT, () => {
+  console.log(`Tarot API listening on :${PORT}`);
+});
