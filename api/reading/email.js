@@ -8,19 +8,52 @@ function json(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function buildEmailHtml({ subject, readingText, siteUrl }) {
+  const safeSubject = escapeHtml(subject || "Tu lectura");
+  const safeReading = escapeHtml(readingText || "");
+  const safeSite = siteUrl ? String(siteUrl) : "";
+
+  return `
+  <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45;color:#111;">
+    <h2 style="margin:0 0 12px;">${safeSubject}</h2>
+
+    <div style="white-space:pre-wrap;background:#fafafa;border:1px solid #eee;padding:14px;border-radius:12px;">
+      ${safeReading}
+    </div>
+
+    ${
+      safeSite
+        ? `<p style="margin:14px 0 0;font-size:13px;opacity:.8;">Enviado desde: ${escapeHtml(
+            safeSite
+          )}</p>`
+        : ""
+    }
+  </div>`;
+}
+
 export default async function handler(req, res) {
-  // CORS (Shopify / navegador)
+  // ===== CORS (Shopify / navegador) =====
   const origin = req.headers.origin || "*";
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Max-Age", "86400");
 
+  // Preflight
   if (req.method === "OPTIONS") {
-    res.statusCode = 204;
-    return res.end();
+    return res.status(200).end();
   }
+
   if (req.method !== "POST") {
     return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
   }
@@ -30,21 +63,60 @@ export default async function handler(req, res) {
   if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY." });
   if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM." });
 
+  // Body seguro
   let body = req.body;
   if (typeof body === "string") {
-    try { body = JSON.parse(body); } catch { body = {}; }
+    try {
+      body = JSON.parse(body);
+    } catch {
+      body = {};
+    }
+  }
+  body = body || {};
+
+  const to = String(body.to || "").trim();
+  if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
+
+  // reading puede ser objeto o string
+  const readingRaw = body.reading ?? "";
+  const textRaw = body.text ?? ""; // si tu frontend ya manda un texto listo, lo usamos
+
+  // Subject opcional
+  const subject = String(body.subject || "Tu lectura").trim();
+
+  // siteUrl opcional
+  const siteUrl = String(body.siteUrl || "").trim();
+
+  // Normalizamos readingText
+  let readingText = "";
+
+  if (typeof textRaw === "string" && textRaw.trim()) {
+    readingText = textRaw.trim();
+  } else if (typeof readingRaw === "string") {
+    readingText = readingRaw.trim();
+  } else if (readingRaw && typeof readingRaw === "object") {
+    // intenta sacar campos típicos
+    const short = readingRaw.short || readingRaw.shortText || readingRaw.summary || "";
+    const long = readingRaw.long || readingRaw.longText || readingRaw.full || "";
+    const title = readingRaw.title || readingRaw.titulo || "";
+
+    readingText = [title, short, long].filter(Boolean).join("\n\n").trim();
+
+    // fallback: stringify bonito
+    if (!readingText) {
+      try {
+        readingText = JSON.stringify(readingRaw, null, 2);
+      } catch {
+        readingText = "[Lectura]";
+      }
+    }
   }
 
-  const to = (body?.to || "").toString().trim();
-  const reading = (body?.reading || "").toString();
-  const siteUrl = (body?.siteUrl || "").toString();
+  if (!readingText) {
+    return json(res, 400, { ok: false, error: "Missing 'reading' or 'text'." });
+  }
 
-  if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
-  if (!reading) return json(res, 400, { ok: false, error: "Missing 'reading'." });
-
-  const subject = body?.subject?.toString()?.trim() || "Tu lectura";
-
-  const html = buildEmailHtml({ reading, toEmail: to, siteUrl });
+  const html = buildEmailHtml({ subject, readingText, siteUrl });
 
   try {
     const { data, error } = await resend.emails.send({
