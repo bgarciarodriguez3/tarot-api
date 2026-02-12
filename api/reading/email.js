@@ -41,7 +41,7 @@ function buildEmailHtml({ subject, readingText, siteUrl }) {
 }
 
 export default async function handler(req, res) {
-  // ===== CORS (Shopify / navegador) =====
+  // ===== CORS =====
   const origin = req.headers.origin || "*";
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
@@ -58,72 +58,64 @@ export default async function handler(req, res) {
     return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const emailFrom = process.env.EMAIL_FROM;
-  if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY." });
-  if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM." });
+  try {
+    const apiKey = process.env.RESEND_API_KEY;
+    const emailFrom = process.env.EMAIL_FROM;
+    if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY." });
+    if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM." });
 
-  // Body seguro
-  let body = req.body;
-  if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      body = {};
-    }
-  }
-  body = body || {};
-
-  const to = String(body.to || "").trim();
-  if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
-
-  // reading puede ser objeto o string
-  const readingRaw = body.reading ?? "";
-  const textRaw = body.text ?? ""; // si tu frontend ya manda un texto listo, lo usamos
-
-  // Subject opcional
-  const subject = String(body.subject || "Tu lectura").trim();
-
-  // siteUrl opcional
-  const siteUrl = String(body.siteUrl || "").trim();
-
-  // Normalizamos readingText
-  let readingText = "";
-
-  if (typeof textRaw === "string" && textRaw.trim()) {
-    readingText = textRaw.trim();
-  } else if (typeof readingRaw === "string") {
-    readingText = readingRaw.trim();
-  } else if (readingRaw && typeof readingRaw === "object") {
-    // intenta sacar campos típicos
-    const short = readingRaw.short || readingRaw.shortText || readingRaw.summary || "";
-    const long = readingRaw.long || readingRaw.longText || readingRaw.full || "";
-    const title = readingRaw.title || readingRaw.titulo || "";
-
-    readingText = [title, short, long].filter(Boolean).join("\n\n").trim();
-
-    // fallback: stringify bonito
-    if (!readingText) {
+    let body = req.body;
+    if (typeof body === "string") {
       try {
-        readingText = JSON.stringify(readingRaw, null, 2);
+        body = JSON.parse(body);
       } catch {
-        readingText = "[Lectura]";
+        body = {};
       }
     }
-  }
+    body = body || {};
 
-  if (!readingText) {
-    return json(res, 400, { ok: false, error: "Missing 'reading' or 'text'." });
-  }
+    const to = String(body.to || "").trim();
+    if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
 
-  const html = buildEmailHtml({ subject, readingText, siteUrl });
+    const subject = String(body.subject || "Tu lectura").trim();
+    const siteUrl = String(body.siteUrl || "").trim();
 
-  try {
+    const readingRaw = body.reading ?? "";
+    const textRaw = body.text ?? "";
+
+    let readingText = "";
+
+    if (typeof textRaw === "string" && textRaw.trim()) {
+      readingText = textRaw.trim();
+    } else if (typeof readingRaw === "string") {
+      readingText = readingRaw.trim();
+    } else if (readingRaw && typeof readingRaw === "object") {
+      const short = readingRaw.short || readingRaw.shortText || readingRaw.summary || "";
+      const long = readingRaw.long || readingRaw.longText || readingRaw.full || "";
+      const title = readingRaw.title || readingRaw.titulo || "";
+
+      readingText = [title, short, long].filter(Boolean).join("\n\n").trim();
+
+      if (!readingText) {
+        try {
+          readingText = JSON.stringify(readingRaw, null, 2);
+        } catch {
+          readingText = "[Lectura]";
+        }
+      }
+    }
+
+    if (!readingText) {
+      return json(res, 400, { ok: false, error: "Missing 'reading' or 'text'." });
+    }
+
+    const html = buildEmailHtml({ subject, readingText, siteUrl });
+
     const { data, error } = await resend.emails.send({
       from: emailFrom,
       to,
       subject,
-      html,
+      html
     });
 
     if (error) {
@@ -133,7 +125,7 @@ export default async function handler(req, res) {
 
     return json(res, 200, { ok: true, id: data?.id || null });
   } catch (e) {
-    console.error("Resend send error:", e);
+    console.error("Email handler error:", e);
     return json(res, 500, { ok: false, error: e?.message || "Failed to send email." });
   }
 }
