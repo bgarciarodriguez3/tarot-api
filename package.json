@@ -17,6 +17,7 @@
     "ioredis": "^5.4.1",
     "nodemailer": "^6.9.8",
     "openai": "^4.57.0",
-    "p-limit": "^6.1.0"
+    "p-limit": "^6.1.0",
+    "resend": "^4.0.0"
   }
 }
