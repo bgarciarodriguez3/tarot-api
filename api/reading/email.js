@@ -28,87 +28,29 @@ function json(res, status, data) {
 }
 
 /* ============================================================
-   SEMANA ISO EN HORA ESPAÑA
-============================================================ */
-
-function getISOWeekKeyMadrid(d = new Date()) {
-  const madrid = new Date(
-    d.toLocaleString("en-US", { timeZone: "Europe/Madrid" })
-  );
-
-  const tmp = new Date(
-    madrid.getFullYear(),
-    madrid.getMonth(),
-    madrid.getDate()
-  );
-
-  const dayNum = tmp.getDay() || 7;
-  tmp.setDate(tmp.getDate() + 4 - dayNum);
-
-  const yearStart = new Date(tmp.getFullYear(), 0, 1);
-  const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
-  const isoYear = tmp.getFullYear();
-
-  return `${isoYear}-W${String(weekNo).padStart(2, "0")}`;
-}
-
-/* ============================================================
-   PRNG SEMANAL
-============================================================ */
-
-function hashStringToInt(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed) {
-  return function () {
-    let t = (seed += 0x6D2B79F5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function seededPick(list, seedStr) {
-  if (!Array.isArray(list) || !list.length) return "";
-  const seed = hashStringToInt(seedStr);
-  const rand = mulberry32(seed);
-  return list[Math.floor(rand() * list.length)];
-}
-
-/* ============================================================
    CONFIG 3 BARAJAS + 4 PRODUCTOS
 ============================================================ */
 
 const PRODUCT_CONFIG = [
   {
-    key: "tres_puertas",
     match: ["tres-puertas", "puertas-del-destino", "10493369745745"],
     deck: "arcanos_mayores",
     spread: 3,
     subject: "Tres Puertas del Destino — Tu lectura",
   },
   {
-    key: "angeles_4",
     match: ["mensaje-de-los-angeles", "10496012616017"],
     deck: "angeles",
     spread: 4,
     subject: "Mensaje de los Ángeles — Tu lectura",
   },
   {
-    key: "semilla_5",
     match: ["camino-de-la-semilla", "10495993446737"],
     deck: "semilla_estelar",
     spread: 5,
     subject: "Camino de la Semilla Estelar — Tu lectura",
   },
   {
-    key: "profunda_12",
     match: ["lectura-profunda", "analisis-completo", "10493383082321"],
     deck: "arcanos_mayores",
     spread: 12,
@@ -127,57 +69,20 @@ function detectProductConfig(body) {
 }
 
 /* ============================================================
-   FALLBACK SEMANAL (SI NO LLEGA body.text)
+   FALLBACK SIMPLE (SIN SEMANA NI NOMBRE EXTERNO)
 ============================================================ */
 
-const WEEK_INTROS = [
-  "Esta semana el mensaje se enfoca en:",
-  "La vibración de la semana te invita a:",
-  "Clave energética de la semana:",
-  "Durante estos días conviene:",
-];
-
-const WEEK_ACTIONS = [
-  "actuar con firmeza y calma",
-  "ordenar prioridades y simplificar",
-  "cerrar ciclos pendientes",
-  "elegir lo que te sostiene",
-];
-
-const WEEK_WARNINGS = [
-  "no caer en impulsos",
-  "no repetir patrones del pasado",
-  "no ceder tu poder por dudas",
-  "no cargar con lo que no te corresponde",
-];
-
-function weeklyDescription(card, deckKey) {
-  const weekKey = getISOWeekKeyMadrid();
-  const id = String(card?.id || card?.name || "card");
-
-  const intro = seededPick(WEEK_INTROS, `${weekKey}|${deckKey}|${id}|intro`);
-  const action = seededPick(WEEK_ACTIONS, `${weekKey}|${deckKey}|${id}|action`);
-  const warn = seededPick(WEEK_WARNINGS, `${weekKey}|${deckKey}|${id}|warn`);
-
-  return `${intro} ${action}.\n\n⚠️ Esta semana evita: ${warn}.`;
-}
-
-function buildFallbackText({ cards, deckKey, spread }) {
-  const weekKey = getISOWeekKeyMadrid();
+function buildFallbackText({ cards }) {
   const lines = [];
 
-  if (deckKey) lines.push(`🔮 ${deckKey}`);
-  lines.push(`📅 Semana: ${weekKey}`);
-  if (spread) lines.push(`🃏 Tirada: ${spread} cartas`);
-  lines.push("");
-
   cards.forEach((card) => {
-    lines.push(`— ${card.name || "Carta"}`);
-    lines.push(weeklyDescription(card, deckKey));
-    lines.push("");
+    if (card.description) {
+      lines.push(card.description);
+      lines.push("");
+    }
   });
 
-  return lines.join("\n");
+  return lines.join("\n").trim();
 }
 
 /* ============================================================
@@ -234,7 +139,7 @@ function buildEmailHtml({ subject, text }) {
 }
 
 /* ============================================================
-   HANDLER PRINCIPAL
+   HANDLER
 ============================================================ */
 
 export default async function handler(req, res) {
@@ -260,28 +165,18 @@ export default async function handler(req, res) {
 
     const productCfg = detectProductConfig(body);
 
-    const deckKey =
-      body.deck ||
-      productCfg?.deck ||
-      "tarot";
-
-    const spread =
-      body.spread ||
-      productCfg?.spread ||
-      "";
-
     const subject =
       body.subject ||
       productCfg?.subject ||
       "Tu lectura";
 
-    // PRIORIDAD: usar texto completo que viene de Shopify
+    // PRIORIDAD TOTAL: usar texto completo que manda Shopify
     let text = body.text?.trim();
 
     if (!text) {
       const cards = Array.isArray(body.cards) ? body.cards : [];
       if (cards.length) {
-        text = buildFallbackText({ cards, deckKey, spread });
+        text = buildFallbackText({ cards });
       }
     }
 
