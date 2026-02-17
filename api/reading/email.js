@@ -2,9 +2,12 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/* ============================================================
+   CORS
+============================================================ */
+
 function setCors(req, res) {
   const origin = req.headers.origin || "*";
-
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -24,34 +27,34 @@ function json(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-// Email simple (evita dependencias raras)
-function buildEmailHtml({ subject, text }) {
-  const safe = String(text || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+/* ============================================================
+   SEMANA ISO EN HORA ESPAÑA
+============================================================ */
 
-  return `
-    <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.5;">
-      <h2 style="margin:0 0 12px;">${String(subject || "Tu lectura")}</h2>
-      <pre style="white-space:pre-wrap; background:#f6f6f6; padding:12px; border-radius:12px;">${safe}</pre>
-    </div>
-  `;
+function getISOWeekKeyMadrid(d = new Date()) {
+  const madrid = new Date(
+    d.toLocaleString("en-US", { timeZone: "Europe/Madrid" })
+  );
+
+  const tmp = new Date(
+    madrid.getFullYear(),
+    madrid.getMonth(),
+    madrid.getDate()
+  );
+
+  const dayNum = tmp.getDay() || 7;
+  tmp.setDate(tmp.getDate() + 4 - dayNum);
+
+  const yearStart = new Date(tmp.getFullYear(), 0, 1);
+  const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+  const isoYear = tmp.getFullYear();
+
+  return `${isoYear}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-/* ==========================
-   ✅ Texto semanal por carta
-   (cambia cada lunes y es estable toda la semana)
-   ========================== */
-
-function getISOWeekKey(d = new Date()) {
-  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = utc.getUTCDay() || 7; // domingo=7
-  utc.setUTCDate(utc.getUTCDate() + 4 - dayNum); // jueves
-  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((utc - yearStart) / 86400000) + 1) / 7);
-  return `${utc.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-}
+/* ============================================================
+   PRNG SEMANAL
+============================================================ */
 
 function hashStringToInt(str) {
   let h = 2166136261;
@@ -72,163 +75,238 @@ function mulberry32(seed) {
 }
 
 function seededPick(list, seedStr) {
+  if (!Array.isArray(list) || !list.length) return "";
   const seed = hashStringToInt(seedStr);
   const rand = mulberry32(seed);
   return list[Math.floor(rand() * list.length)];
 }
 
+/* ============================================================
+   CONFIG 3 BARAJAS + 4 PRODUCTOS
+============================================================ */
+
+const PRODUCT_CONFIG = [
+  {
+    key: "tres_puertas",
+    match: ["tres-puertas", "puertas-del-destino", "10493369745745"],
+    deck: "arcanos_mayores",
+    spread: 3,
+    subject: "Tres Puertas del Destino — Tu lectura",
+  },
+  {
+    key: "angeles_4",
+    match: ["mensaje-de-los-angeles", "10496012616017"],
+    deck: "angeles",
+    spread: 4,
+    subject: "Mensaje de los Ángeles — Tu lectura",
+  },
+  {
+    key: "semilla_5",
+    match: ["camino-de-la-semilla", "10495993446737"],
+    deck: "semilla_estelar",
+    spread: 5,
+    subject: "Camino de la Semilla Estelar — Tu lectura",
+  },
+  {
+    key: "profunda_12",
+    match: ["lectura-profunda", "analisis-completo", "10493383082321"],
+    deck: "arcanos_mayores",
+    spread: 12,
+    subject: "Lectura Profunda — Tu lectura",
+  },
+];
+
+function detectProductConfig(body) {
+  const raw = String(body.product || "").toLowerCase();
+  for (const cfg of PRODUCT_CONFIG) {
+    for (const m of cfg.match) {
+      if (raw.includes(String(m).toLowerCase())) return cfg;
+    }
+  }
+  return null;
+}
+
+/* ============================================================
+   FALLBACK SEMANAL (SI NO LLEGA body.text)
+============================================================ */
+
 const WEEK_INTROS = [
   "Esta semana el mensaje se enfoca en:",
   "La vibración de la semana te invita a:",
   "Clave energética de la semana:",
-  "Esta semana se revela:",
   "Durante estos días conviene:",
-  "El aprendizaje de la semana es:",
-  "Tu guía semanal señala:",
-  "La semana ilumina:"
 ];
 
 const WEEK_ACTIONS = [
   "actuar con firmeza y calma",
   "ordenar prioridades y simplificar",
-  "hablar desde la verdad, sin prisa",
-  "cortar con lo que drena energía",
-  "escuchar tu intuición y confirmarla",
-  "dar un paso valiente pero medido",
   "cerrar ciclos pendientes",
-  "elegir lo que te sostiene"
+  "elegir lo que te sostiene",
 ];
 
 const WEEK_WARNINGS = [
-  "no caer en impulsos ni decisiones apresuradas",
-  "no interpretar desde el miedo",
-  "no repetir patrones por nostalgia",
-  "no postergar lo esencial",
+  "no caer en impulsos",
+  "no repetir patrones del pasado",
   "no ceder tu poder por dudas",
   "no cargar con lo que no te corresponde",
-  "no autoexigirte de más",
-  "no negar lo que sientes"
 ];
 
-function weeklyDescription(card, spread = "default") {
-  const weekKey = getISOWeekKey(new Date());
-  const id = String(card?.slug || card?.id || card?.key || card?.name || card?.title || "card");
-  const base = String(card?.description || card?.meaning || card?.text || "").trim();
+function weeklyDescription(card, deckKey) {
+  const weekKey = getISOWeekKeyMadrid();
+  const id = String(card?.id || card?.name || "card");
 
-  const intro = seededPick(WEEK_INTROS, `${weekKey}|${spread}|${id}|intro`);
-  const action = seededPick(WEEK_ACTIONS, `${weekKey}|${spread}|${id}|action`);
-  const warn = seededPick(WEEK_WARNINGS, `${weekKey}|${spread}|${id}|warn`);
+  const intro = seededPick(WEEK_INTROS, `${weekKey}|${deckKey}|${id}|intro`);
+  const action = seededPick(WEEK_ACTIONS, `${weekKey}|${deckKey}|${id}|action`);
+  const warn = seededPick(WEEK_WARNINGS, `${weekKey}|${deckKey}|${id}|warn`);
 
-  const parts = [];
-  if (base) parts.push(base);
-  parts.push(`${intro} ${action}.`);
-  parts.push(`⚠️ Esta semana evita: ${warn}.`);
-
-  return parts.join("\n\n");
+  return `${intro} ${action}.\n\n⚠️ Esta semana evita: ${warn}.`;
 }
 
-function buildReadingTextFromCards({ cards, spread, deckName }) {
-  const s = spread || "default";
+function buildFallbackText({ cards, deckKey, spread }) {
+  const weekKey = getISOWeekKeyMadrid();
   const lines = [];
 
-  if (deckName) lines.push(`🔮 ${deckName}`);
-  lines.push(`📅 Semana: ${getISOWeekKey(new Date())}`);
+  if (deckKey) lines.push(`🔮 ${deckKey}`);
+  lines.push(`📅 Semana: ${weekKey}`);
   if (spread) lines.push(`🃏 Tirada: ${spread} cartas`);
   lines.push("");
 
-  (cards || []).forEach((card, idx) => {
-    const name = card?.name || card?.title || card?.card || `Carta ${idx + 1}`;
-    lines.push(`— ${name}`);
-    lines.push(weeklyDescription(card, s));
+  cards.forEach((card) => {
+    lines.push(`— ${card.name || "Carta"}`);
+    lines.push(weeklyDescription(card, deckKey));
     lines.push("");
   });
 
-  return lines.join("\n").trim();
+  return lines.join("\n");
 }
+
+/* ============================================================
+   PLANTILLA EMAIL CON DESCARGO LEGAL
+============================================================ */
+
+function buildEmailHtml({ subject, text }) {
+  const safe = String(text || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+  return `
+  <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.6; color:#111;">
+
+    <h2 style="margin:0 0 20px; font-weight:600;">
+      ${subject}
+    </h2>
+
+    <div style="
+      background:#f6f6f6;
+      padding:18px;
+      border-radius:16px;
+      font-size:14px;
+      white-space:pre-wrap;
+    ">
+      ${safe}
+    </div>
+
+    <div style="margin:40px 0 20px; border-top:1px solid #e5e5e5;"></div>
+
+    <div style="
+      font-size:9px;
+      color:#777;
+      line-height:1.6;
+    ">
+      <strong>DESCARGO DE RESPONSABILIDAD</strong><br><br>
+
+      Las lecturas de tarot y oráculo ofrecidas bajo el nombre comercial Tarot de la Rueda de la Fortuna tienen un carácter espiritual, orientativo y de entretenimiento.<br><br>
+
+      La información, interpretaciones y mensajes proporcionados a través de este servicio no constituyen hechos objetivos ni predicciones garantizadas.<br><br>
+
+      En ningún caso sustituyen asesoramiento médico, psicológico, legal, financiero ni profesional de ningún tipo.<br><br>
+
+      Este servicio no está dirigido a menores de edad.<br><br>
+
+      El usuario comprende y acepta que cualquier decisión que tome a partir de la información recibida es de su exclusiva responsabilidad.<br><br>
+
+      Al utilizar este sitio web y sus servicios, el usuario acepta expresamente este descargo de responsabilidad.
+    </div>
+
+  </div>
+  `;
+}
+
+/* ============================================================
+   HANDLER PRINCIPAL
+============================================================ */
 
 export default async function handler(req, res) {
   try {
     setCors(req, res);
 
-    // Preflight
     if (req.method === "OPTIONS") {
       res.statusCode = 204;
       return res.end();
     }
 
     if (req.method !== "POST") {
-      return json(res, 405, { ok: false, error: "Method not allowed. Use POST." });
+      return json(res, 405, { ok: false, error: "Method not allowed." });
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    const emailFrom = process.env.EMAIL_FROM;
-    if (!apiKey) return json(res, 500, { ok: false, error: "Missing RESEND_API_KEY." });
-    if (!emailFrom) return json(res, 500, { ok: false, error: "Missing EMAIL_FROM." });
-
-    // Body puede venir como string
-    let body = req.body;
-    if (typeof body === "string") {
-      try { body = JSON.parse(body); } catch { body = {}; }
-    }
-    body = body || {};
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : req.body || {};
 
     const to = String(body.to || "").trim();
     if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
 
-    const subject = String(body.subject || "Tu lectura").trim();
+    const productCfg = detectProductConfig(body);
 
-    // ✅ LÓGICA FINAL:
-    // 1) Si viene reading.cards => construimos texto semanal SIEMPRE
-    // 2) Si no, usamos text o reading (string/objeto) como fallback
-    let text = "";
+    const deckKey =
+      body.deck ||
+      productCfg?.deck ||
+      "tarot";
 
-    if (body.reading && typeof body.reading === "object") {
-      const cards =
-        body.reading.cards ||
-        body.reading.selectedCards ||
-        body.reading.results ||
-        [];
+    const spread =
+      body.spread ||
+      productCfg?.spread ||
+      "";
 
-      const spread = body.reading.spread || body.reading.n || body.spread || "";
-      const deckName = body.reading.deckName || body.reading.deck || body.deck || "";
+    const subject =
+      body.subject ||
+      productCfg?.subject ||
+      "Tu lectura";
 
-      if (Array.isArray(cards) && cards.length) {
-        text = buildReadingTextFromCards({ cards, spread, deckName });
+    // PRIORIDAD: usar texto completo que viene de Shopify
+    let text = body.text?.trim();
+
+    if (!text) {
+      const cards = Array.isArray(body.cards) ? body.cards : [];
+      if (cards.length) {
+        text = buildFallbackText({ cards, deckKey, spread });
       }
     }
 
     if (!text) {
-      text =
-        (typeof body.text === "string" && body.text.trim()) ||
-        (body.reading
-          ? (typeof body.reading === "string"
-              ? body.reading.trim()
-              : JSON.stringify(body.reading, null, 2))
-          : "");
-    }
-
-    if (!text) {
-      return json(res, 400, { ok: false, error: "Missing 'reading.cards' or 'text'." });
+      return json(res, 400, { ok: false, error: "Missing reading content." });
     }
 
     const html = buildEmailHtml({ subject, text });
 
     const { data, error } = await resend.emails.send({
-      from: emailFrom,
+      from: process.env.EMAIL_FROM,
       to,
       subject,
       html,
     });
 
     if (error) {
-      console.error("Resend error:", error);
-      return json(res, 500, { ok: false, error: error.message || "Resend send failed." });
+      console.error(error);
+      return json(res, 500, { ok: false, error: error.message });
     }
 
     return json(res, 200, { ok: true, id: data?.id || null });
+
   } catch (e) {
-    try { setCors(req, res); } catch {}
-    console.error("Email handler error:", e);
-    return json(res, 500, { ok: false, error: e?.message || String(e) });
+    console.error(e);
+    return json(res, 500, { ok: false, error: e.message });
   }
 }
