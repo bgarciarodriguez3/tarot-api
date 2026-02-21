@@ -39,130 +39,104 @@ function randomToken() {
 }
 
 function normalizeOrderNumber(order) {
-  const n =
+  return (
     String(order?.order_number || "").trim() ||
-    String(order?.name || "").replace("#", "").trim();
-  return n;
+    String(order?.name || "").replace("#", "").trim()
+  );
 }
 
+/**
+ * ✅ DETECCIÓN ROBUSTA: SOLO por product_id exacto
+ * (los títulos pueden cambiar o contener palabras comunes)
+ */
 function detectCfgFromOrder(order) {
-  const items = order?.line_items || [];
-  const haystack = items
-    .map(
-      (li) =>
-        `${li.title || ""} ${li.product_id || ""} ${li.variant_id || ""} ${
-          li.sku || ""
-        }`.toLowerCase()
-    )
-    .join(" | ");
+  const items = Array.isArray(order?.line_items) ? order.line_items : [];
 
-  // AUTOMÁTICOS
-  if (
-    haystack.includes("mensaje de los ángeles") ||
-    haystack.includes("mensaje de los angeles") ||
-    haystack.includes("10496012616017")
-  ) {
-    return { productName: "Mensaje de los Ángeles", deckId: "angeles", pick: 4, manual: false };
+  const productIds = new Set(
+    items
+      .map((li) => String(li?.product_id || "").trim())
+      .filter(Boolean)
+  );
+
+  // === PRODUCTOS AUTOMATIZADOS (los tuyos) ===
+  // Mensaje de los Ángeles (4 cartas) - producto 10496012616017
+  if (productIds.has("10496012616017")) {
+    return {
+      productName: "Mensaje de los Ángeles (4 cartas)",
+      deckId: "angeles",
+      pick: 4,
+      manual: false,
+    };
   }
 
-  if (haystack.includes("semilla estelar") || haystack.includes("10495993446737")) {
-    return { productName: "Camino de la Semilla Estelar", deckId: "semilla_estelar", pick: 5, manual: false };
+  // Camino de la Semilla Estelar (5 cartas) - producto 10495993446737
+  if (productIds.has("10495993446737")) {
+    return {
+      productName: "Camino de la Semilla Estelar (5 cartas)",
+      deckId: "semilla_estelar",
+      pick: 5,
+      manual: false,
+    };
   }
 
-  if (
-    (haystack.includes("lectura profunda") ||
-      haystack.includes("analisis completo") ||
-      haystack.includes("10493383082321")) &&
-    haystack.includes("12")
-  ) {
-    return { productName: "Arcanos Mayores (12)", deckId: "arcanos_mayores", pick: 12, manual: false };
+  // Lectura Profunda (12 cartas) - producto 10493383082321
+  if (productIds.has("10493383082321")) {
+    return {
+      productName: "Lectura Profunda: Análisis Completo (12 cartas)",
+      deckId: "arcanos_mayores",
+      pick: 12,
+      manual: false,
+    };
   }
 
-  // “Tres Puertas del Destino (3)” realmente usa tu página de arcanos spread=3
-  if (
-    haystack.includes("tres puertas del destino") ||
-    haystack.includes("puertas del destino") ||
-    haystack.includes("10493369745745") ||
-    (haystack.includes("arcanos mayores") && haystack.includes("3"))
-  ) {
-    return { productName: "Tres Puertas del Destino (3)", deckId: "arcanos_mayores", pick: 3, manual: false };
+  // Tres Puertas del Destino (3 cartas) - producto 10493369745745
+  if (productIds.has("10493369745745")) {
+    return {
+      productName: "Tres Puertas del Destino (3 cartas)",
+      deckId: "arcanos_mayores",
+      pick: 3,
+      manual: false,
+    };
   }
 
-  // Si pone Arcanos Mayores y no dice 12 → asumimos 3
-  if (haystack.includes("arcanos mayores")) {
-    return { productName: "Arcanos Mayores (3)", deckId: "arcanos_mayores", pick: 3, manual: false };
+  // === PREMIUM / MANUAL (fallback por título) ===
+  // Si quieres, luego lo hacemos también por IDs exactos.
+  const titles = items.map((li) => String(li?.title || "").toLowerCase()).join(" | ");
+  if (titles.includes("premium") || titles.includes("mentoría") || titles.includes("mentoria")) {
+    return {
+      productName: "Servicio Premium",
+      deckId: null,
+      pick: null,
+      manual: true,
+    };
   }
 
-  // PREMIUMS MANUALES
-  if (haystack.includes("tarot del amor") && haystack.includes("premium")) {
-    return { productName: "Tarot del Amor Premium", deckId: null, pick: null, manual: true };
-  }
-
-  if ((haystack.includes("mentoría") || haystack.includes("mentoria")) && haystack.includes("claridad")) {
-    return { productName: "Mentoría de Claridad Total", deckId: null, pick: null, manual: true };
-  }
-
-  // Fallback
-  return { productName: "Tu lectura", deckId: "arcanos_mayores", pick: 3, manual: false };
+  // Fallback seguro (si no se detecta nada)
+  return {
+    productName: "Tu lectura (3 cartas)",
+    deckId: "arcanos_mayores",
+    pick: 3,
+    manual: false,
+  };
 }
 
 // ----------------------------
 // HEALTH
 // ----------------------------
 app.get("/", (req, res) => {
-  res.send("Tarot API running ✅");
+  res.send("API de Tarot en funcionamiento ✅");
 });
 
 // ----------------------------
-// WEBHOOK SHOPIFY: Order Paid
-// POST /api/shopify/order-paid
-// ----------------------------
-app.post("/api/shopify/order-paid", async (req, res) => {
-  try {
-    if (!SHOPIFY_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
-
-    const hmac = req.get("X-Shopify-Hmac-Sha256");
-    const rawBody = req.rawBody;
-
-    if (!rawBody) return res.status(400).send("Missing rawBody");
-    if (!verifyShopifyHmac(rawBody, hmac)) return res.status(401).send("Invalid HMAC");
-
-    const order = req.body;
-    const orderNumber = normalizeOrderNumber(order);
-    if (!orderNumber) return res.status(400).send("Missing order number");
-
-    const cfg = detectCfgFromOrder(order);
-    const token = randomToken();
-
-    const session = {
-      token,
-      manual: cfg.manual,
-      productName: cfg.productName,
-      deckId: cfg.deckId,
-      pick: cfg.pick,
-      createdAt: Date.now(),
-    };
-
-    const ttl = 60 * 60 * 24 * 180; // 180 días
-    await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
-    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
-
-    return res.status(200).json({ ok: true, orderNumber });
-  } catch (e) {
-    return res.status(500).send(e.message);
-  }
-});
-
-// ----------------------------
-// GET /api/token?order=1059
+// GET /api/token  (tu API ya lo tiene y devuelve "Falta pedido")
 // ----------------------------
 app.get("/api/token", async (req, res) => {
   try {
     const order = String(req.query.order || "").trim();
-    if (!order) return res.status(400).json({ error: "Missing order" });
+    if (!order) return res.status(400).json({ error: "Falta pedido" });
 
     const token = await redis.get(`order:${order}:token`);
-    if (!token) return res.status(404).json({ error: "Order not found" });
+    if (!token) return res.status(404).json({ error: "Pedido no encontrado" });
 
     return res.json({ token });
   } catch (e) {
@@ -184,6 +158,46 @@ app.get("/api/session", async (req, res) => {
     return res.json(JSON.parse(raw));
   } catch (e) {
     return res.status(500).json({ error: e.message });
+  }
+});
+
+// ----------------------------
+// ✅ WEBHOOK SHOPIFY: Order Paid
+// POST /api/shopify/order-paid
+// ----------------------------
+app.post("/api/shopify/order-paid", async (req, res) => {
+  try {
+    if (!SHOPIFY_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
+
+    const hmac = req.get("X-Shopify-Hmac-Sha256");
+    const rawBody = req.rawBody;
+
+    if (!rawBody) return res.status(400).send("Missing rawBody");
+    if (!verifyShopifyHmac(rawBody, hmac)) return res.status(401).send("Invalid HMAC");
+
+    const order = req.body;
+    const orderNumber = normalizeOrderNumber(order);
+    if (!orderNumber) return res.status(400).send("Missing order number");
+
+    const cfg = detectCfgFromOrder(order);
+
+    const token = randomToken();
+    const session = {
+      token,
+      manual: cfg.manual,
+      productName: cfg.productName,
+      deckId: cfg.deckId,
+      pick: cfg.pick,
+      createdAt: Date.now(),
+    };
+
+    const ttl = 60 * 60 * 24 * 180; // 180 días
+    await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
+    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
+
+    return res.status(200).json({ ok: true, orderNumber, pick: cfg.pick, deckId: cfg.deckId });
+  } catch (e) {
+    return res.status(500).send(e.message);
   }
 });
 
