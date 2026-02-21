@@ -6,7 +6,7 @@ import Redis from "ioredis";
 const app = express();
 app.use(cors());
 
-// Necesario para verificar Shopify HMAC: guardamos rawBody
+// Guardar rawBody para verificar HMAC Shopify
 app.use(
   express.json({
     verify: (req, res, buf) => {
@@ -17,6 +17,7 @@ app.use(
 
 const redis = new Redis(process.env.REDIS_URL);
 const SHOPIFY_SECRET = process.env.SHOPIFY_WEBHOOK_SECRET;
+const ADMIN_SECRET = process.env.ADMIN_SECRET;
 
 function verifyShopifyHmac(rawBody, hmacHeader) {
   const digest = crypto
@@ -46,78 +47,42 @@ function normalizeOrderNumber(order) {
 }
 
 /**
- * ✅ DETECCIÓN ROBUSTA: SOLO por product_id exacto
- * (los títulos pueden cambiar o contener palabras comunes)
+ * ✅ DETECCIÓN POR PRODUCT_ID EXACTO (tus 4 productos)
  */
+function detectCfgFromProductIds(productIds) {
+  // Mensaje de los Ángeles (4)
+  if (productIds.has("10496012616017")) {
+    return { productName: "Mensaje de los Ángeles (4 cartas)", deckId: "angeles", pick: 4, manual: false };
+  }
+
+  // Semilla Estelar (5)
+  if (productIds.has("10495993446737")) {
+    return { productName: "Camino de la Semilla Estelar (5 cartas)", deckId: "semilla_estelar", pick: 5, manual: false };
+  }
+
+  // Lectura Profunda (12)
+  if (productIds.has("10493383082321")) {
+    return { productName: "Lectura Profunda: Análisis Completo (12 cartas)", deckId: "arcanos_mayores", pick: 12, manual: false };
+  }
+
+  // Tres Puertas (3)
+  if (productIds.has("10493369745745")) {
+    return { productName: "Tres Puertas del Destino (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
+  }
+
+  // Fallback seguro
+  return { productName: "Tu lectura (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
+}
+
 function detectCfgFromOrder(order) {
   const items = Array.isArray(order?.line_items) ? order.line_items : [];
-
   const productIds = new Set(
-    items
-      .map((li) => String(li?.product_id || "").trim())
-      .filter(Boolean)
+    items.map(li => String(li?.product_id || "").trim()).filter(Boolean)
   );
 
-  // === PRODUCTOS AUTOMATIZADOS (los tuyos) ===
-  // Mensaje de los Ángeles (4 cartas) - producto 10496012616017
-  if (productIds.has("10496012616017")) {
-    return {
-      productName: "Mensaje de los Ángeles (4 cartas)",
-      deckId: "angeles",
-      pick: 4,
-      manual: false,
-    };
-  }
-
-  // Camino de la Semilla Estelar (5 cartas) - producto 10495993446737
-  if (productIds.has("10495993446737")) {
-    return {
-      productName: "Camino de la Semilla Estelar (5 cartas)",
-      deckId: "semilla_estelar",
-      pick: 5,
-      manual: false,
-    };
-  }
-
-  // Lectura Profunda (12 cartas) - producto 10493383082321
-  if (productIds.has("10493383082321")) {
-    return {
-      productName: "Lectura Profunda: Análisis Completo (12 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 12,
-      manual: false,
-    };
-  }
-
-  // Tres Puertas del Destino (3 cartas) - producto 10493369745745
-  if (productIds.has("10493369745745")) {
-    return {
-      productName: "Tres Puertas del Destino (3 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 3,
-      manual: false,
-    };
-  }
-
-  // === PREMIUM / MANUAL (fallback por título) ===
-  // Si quieres, luego lo hacemos también por IDs exactos.
-  const titles = items.map((li) => String(li?.title || "").toLowerCase()).join(" | ");
-  if (titles.includes("premium") || titles.includes("mentoría") || titles.includes("mentoria")) {
-    return {
-      productName: "Servicio Premium",
-      deckId: null,
-      pick: null,
-      manual: true,
-    };
-  }
-
-  // Fallback seguro (si no se detecta nada)
-  return {
-    productName: "Tu lectura (3 cartas)",
-    deckId: "arcanos_mayores",
-    pick: 3,
-    manual: false,
-  };
+  // Si hay alguno de tus productos automatizados → por IDs
+  const cfg = detectCfgFromProductIds(productIds);
+  return cfg;
 }
 
 // ----------------------------
@@ -128,7 +93,7 @@ app.get("/", (req, res) => {
 });
 
 // ----------------------------
-// GET /api/token  (tu API ya lo tiene y devuelve "Falta pedido")
+// GET /api/token?order=1063
 // ----------------------------
 app.get("/api/token", async (req, res) => {
   try {
@@ -192,12 +157,77 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     };
 
     const ttl = 60 * 60 * 24 * 180; // 180 días
+
+    // OJO: esto sobreescribe el mapping del order si existía
     await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
     await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
 
     return res.status(200).json({ ok: true, orderNumber, pick: cfg.pick, deckId: cfg.deckId });
   } catch (e) {
     return res.status(500).send(e.message);
+  }
+});
+
+// =====================================================
+// ✅ ADMIN: borrar pedido viejo (para regenerar / limpiar)
+// GET /api/admin/clear-order?secret=XXX&order=1063
+// =====================================================
+app.get("/api/admin/clear-order", async (req, res) => {
+  try {
+    const secret = String(req.query.secret || "");
+    const order = String(req.query.order || "").trim();
+    if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
+    if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
+    if (!order) return res.status(400).json({ error: "Missing order" });
+
+    const token = await redis.get(`order:${order}:token`);
+    if (token) {
+      await redis.del(`token:${token}:session`);
+    }
+    await redis.del(`order:${order}:token`);
+
+    return res.json({ ok: true, clearedOrder: order, clearedToken: token || null });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// =====================================================
+// ✅ ADMIN: reconstruir sesión manualmente para un pedido
+// GET /api/admin/rebuild-order?secret=XXX&order=1063&product_id=10493369745745
+// =====================================================
+app.get("/api/admin/rebuild-order", async (req, res) => {
+  try {
+    const secret = String(req.query.secret || "");
+    const order = String(req.query.order || "").trim();
+    const productId = String(req.query.product_id || "").trim();
+
+    if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
+    if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
+    if (!order) return res.status(400).json({ error: "Missing order" });
+    if (!productId) return res.status(400).json({ error: "Missing product_id" });
+
+    const cfg = detectCfgFromProductIds(new Set([productId]));
+    const token = randomToken();
+
+    const session = {
+      token,
+      manual: cfg.manual,
+      productName: cfg.productName,
+      deckId: cfg.deckId,
+      pick: cfg.pick,
+      createdAt: Date.now(),
+      rebuilt: true,
+      rebuiltFromProductId: productId
+    };
+
+    const ttl = 60 * 60 * 24 * 180;
+    await redis.set(`order:${order}:token`, token, "EX", ttl);
+    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
+
+    return res.json({ ok: true, orderNumber: order, token, pick: cfg.pick, deckId: cfg.deckId });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
   }
 });
 
