@@ -16,8 +16,14 @@ app.use(
 );
 
 const redis = new Redis(process.env.REDIS_URL);
+
 const SHOPIFY_SECRET = process.env.SHOPIFY_WEBHOOK_SECRET;
 const ADMIN_SECRET = process.env.ADMIN_SECRET;
+const CRON_SECRET = process.env.CRON_SECRET;
+
+/* =====================================================
+   UTILIDADES
+===================================================== */
 
 function verifyShopifyHmac(rawBody, hmacHeader) {
   const digest = crypto
@@ -46,31 +52,28 @@ function normalizeOrderNumber(order) {
   );
 }
 
-/**
- * ✅ DETECCIÓN POR PRODUCT_ID EXACTO (tus 4 productos)
- */
+/* =====================================================
+   CONFIG PRODUCTOS AUTOMATIZADOS
+===================================================== */
+
 function detectCfgFromProductIds(productIds) {
-  // Mensaje de los Ángeles (4)
+
   if (productIds.has("10496012616017")) {
     return { productName: "Mensaje de los Ángeles (4 cartas)", deckId: "angeles", pick: 4, manual: false };
   }
 
-  // Semilla Estelar (5)
   if (productIds.has("10495993446737")) {
     return { productName: "Camino de la Semilla Estelar (5 cartas)", deckId: "semilla_estelar", pick: 5, manual: false };
   }
 
-  // Lectura Profunda (12)
   if (productIds.has("10493383082321")) {
-    return { productName: "Lectura Profunda: Análisis Completo (12 cartas)", deckId: "arcanos_mayores", pick: 12, manual: false };
+    return { productName: "Lectura Profunda (12 cartas)", deckId: "arcanos_mayores", pick: 12, manual: false };
   }
 
-  // Tres Puertas (3)
   if (productIds.has("10493369745745")) {
     return { productName: "Tres Puertas del Destino (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
   }
 
-  // Fallback seguro
   return { productName: "Tu lectura (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
 }
 
@@ -79,22 +82,21 @@ function detectCfgFromOrder(order) {
   const productIds = new Set(
     items.map(li => String(li?.product_id || "").trim()).filter(Boolean)
   );
-
-  // Si hay alguno de tus productos automatizados → por IDs
-  const cfg = detectCfgFromProductIds(productIds);
-  return cfg;
+  return detectCfgFromProductIds(productIds);
 }
 
-// ----------------------------
-// HEALTH
-// ----------------------------
+/* =====================================================
+   HEALTH
+===================================================== */
+
 app.get("/", (req, res) => {
   res.send("API de Tarot en funcionamiento ✅");
 });
 
-// ----------------------------
-// GET /api/token?order=1063
-// ----------------------------
+/* =====================================================
+   TOKEN
+===================================================== */
+
 app.get("/api/token", async (req, res) => {
   try {
     const order = String(req.query.order || "").trim();
@@ -109,9 +111,6 @@ app.get("/api/token", async (req, res) => {
   }
 });
 
-// ----------------------------
-// GET /api/session?token=xxxx
-// ----------------------------
 app.get("/api/session", async (req, res) => {
   try {
     const token = String(req.query.token || "").trim();
@@ -126,10 +125,10 @@ app.get("/api/session", async (req, res) => {
   }
 });
 
-// ----------------------------
-// ✅ WEBHOOK SHOPIFY: Order Paid
-// POST /api/shopify/order-paid
-// ----------------------------
+/* =====================================================
+   WEBHOOK SHOPIFY
+===================================================== */
+
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     if (!SHOPIFY_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
@@ -156,80 +155,79 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       createdAt: Date.now(),
     };
 
-    const ttl = 60 * 60 * 24 * 180; // 180 días
+    const ttl = 60 * 60 * 24 * 180;
 
-    // OJO: esto sobreescribe el mapping del order si existía
     await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
     await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
 
-    return res.status(200).json({ ok: true, orderNumber, pick: cfg.pick, deckId: cfg.deckId });
+    return res.status(200).json({ ok: true });
   } catch (e) {
     return res.status(500).send(e.message);
   }
 });
 
-// =====================================================
-// ✅ ADMIN: borrar pedido viejo (para regenerar / limpiar)
-// GET /api/admin/clear-order?secret=XXX&order=1063
-// =====================================================
+/* =====================================================
+   ✅ CRON WEEKLY REFRESH (LLAMADO DESDE VERCEL)
+===================================================== */
+
+app.post("/cron/weekly-refresh", async (req, res) => {
+  try {
+    const secret = String(req.query.secret || "");
+
+    if (!CRON_SECRET) {
+      return res.status(500).json({ ok: false, error: "Missing CRON_SECRET" });
+    }
+
+    if (secret !== CRON_SECRET) {
+      return res.status(401).json({ ok: false, error: "Unauthorized" });
+    }
+
+    console.log("🔥 Ejecutando weekly refresh...");
+
+    // 👉 AQUÍ irá la lógica real que actualiza las descripciones
+    // Por ahora dejamos confirmación de ejecución
+
+    return res.json({
+      ok: true,
+      message: "Weekly refresh ejecutado correctamente",
+      at: new Date().toISOString()
+    });
+
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      error: String(e?.message || e)
+    });
+  }
+});
+
+/* =====================================================
+   ADMIN
+===================================================== */
+
 app.get("/api/admin/clear-order", async (req, res) => {
   try {
     const secret = String(req.query.secret || "");
     const order = String(req.query.order || "").trim();
+
     if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
     if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
     if (!order) return res.status(400).json({ error: "Missing order" });
 
     const token = await redis.get(`order:${order}:token`);
-    if (token) {
-      await redis.del(`token:${token}:session`);
-    }
+    if (token) await redis.del(`token:${token}:session`);
     await redis.del(`order:${order}:token`);
 
-    return res.json({ ok: true, clearedOrder: order, clearedToken: token || null });
+    return res.json({ ok: true });
+
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
 });
 
-// =====================================================
-// ✅ ADMIN: reconstruir sesión manualmente para un pedido
-// GET /api/admin/rebuild-order?secret=XXX&order=1063&product_id=10493369745745
-// =====================================================
-app.get("/api/admin/rebuild-order", async (req, res) => {
-  try {
-    const secret = String(req.query.secret || "");
-    const order = String(req.query.order || "").trim();
-    const productId = String(req.query.product_id || "").trim();
-
-    if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
-    if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
-    if (!order) return res.status(400).json({ error: "Missing order" });
-    if (!productId) return res.status(400).json({ error: "Missing product_id" });
-
-    const cfg = detectCfgFromProductIds(new Set([productId]));
-    const token = randomToken();
-
-    const session = {
-      token,
-      manual: cfg.manual,
-      productName: cfg.productName,
-      deckId: cfg.deckId,
-      pick: cfg.pick,
-      createdAt: Date.now(),
-      rebuilt: true,
-      rebuiltFromProductId: productId
-    };
-
-    const ttl = 60 * 60 * 24 * 180;
-    await redis.set(`order:${order}:token`, token, "EX", ttl);
-    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
-
-    return res.json({ ok: true, orderNumber: order, token, pick: cfg.pick, deckId: cfg.deckId });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
-});
+/* =====================================================
+   START SERVER
+===================================================== */
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log("Server running on port", PORT));
