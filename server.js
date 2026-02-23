@@ -30,6 +30,77 @@ app.use(
 );
 
 // ----------------------------
+// REDIS (robusto)
+// ----------------------------
+function cleanRedisUrl(raw) {
+  if (!raw) return "";
+  let s = String(raw).trim();
+
+  // quitar comillas si las hay
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+
+  // si alguien pegó algo tipo: "redis-cli --tls -u redis://...."
+  // intentamos extraer el URL dentro
+  const m = s.match(/(rediss?:\/\/\S+)/i);
+  if (m?.[1]) s = m[1];
+
+  // decodificar si viene URL-encoded
+  try {
+    s = decodeURIComponent(s);
+  } catch {
+    // ok
+  }
+
+  return s.trim();
+}
+
+function createRedisClient() {
+  // Tu código usa ioredis (TCP). Upstash te da un REDIS_URL tipo:
+  // rediss://default:<PASSWORD>@<HOST>:6379
+  // OJO: si en Upstash te sale "predeterminado" en vez de "default", el usuario real suele ser "default".
+  const raw =
+    process.env.REDIS_URL ||
+    process.env.UPSTASH_REDIS_URL ||
+    process.env.KV_URL ||
+    "";
+
+  const url = cleanRedisUrl(raw);
+
+  if (!url) {
+    console.warn("⚠️  REDIS_URL no está configurado. La API seguirá, pero sin cache/sesiones.");
+    // Devolvemos un cliente “dummy” que falla con mensajes claros
+    const dummy = {
+      get: async () => null,
+      set: async () => null,
+      del: async () => null,
+      expire: async () => null,
+      ping: async () => "NO_REDIS",
+      on: () => {},
+      quit: async () => {},
+    };
+    return dummy;
+  }
+
+  const client = new Redis(url, {
+    // Upstash usa TLS con rediss://, pero esto ayuda cuando hay proxies
+    tls: url.startsWith("rediss://") ? {} : undefined,
+    maxRetriesPerRequest: 2,
+    enableReadyCheck: true,
+    lazyConnect: false,
+  });
+
+  client.on("connect", () => console.log("✅ Redis connect"));
+  client.on("ready", () => console.log("✅ Redis ready"));
+  client.on("error", (err) => console.error("❌ Redis error:", err?.message || err));
+
+  return client;
+}
+
+const redis = createRedisClient();
+
+// ----------------------------
 // ENV
 // ----------------------------
 const SHOPIFY_WEBHOOK_SECRET = (process.env.SHOPIFY_WEBHOOK_SECRET || "").trim();
@@ -39,29 +110,6 @@ const CRON_SECRET = (process.env.CRON_SECRET || "").trim();
 const SHOPIFY_STORE_DOMAIN = (process.env.SHOPIFY_STORE_DOMAIN || "").trim();
 const SHOPIFY_ADMIN_TOKEN = (process.env.SHOPIFY_ADMIN_TOKEN || "").trim();
 const SHOPIFY_API_VERSION = (process.env.SHOPIFY_API_VERSION || "2024-07").trim();
-
-// Redis env (usa SOLO variables, no hardcode)
-const REDIS_URL = (process.env.REDIS_URL || "").trim();
-
-// ----------------------------
-// REDIS (Upstash rediss://)
-// ----------------------------
-if (!REDIS_URL) {
-  console.error("❌ Missing REDIS_URL in env (Railway → Variables)");
-}
-
-// ioredis con TLS si es rediss:// (Upstash)
-const redis = new Redis(REDIS_URL, {
-  // Si la URL empieza por rediss://, forzamos TLS
-  tls: REDIS_URL?.startsWith("rediss://") ? {} : undefined,
-  maxRetriesPerRequest: 2,
-  enableReadyCheck: true,
-  lazyConnect: false,
-});
-
-redis.on("connect", () => console.log("✅ Redis connect"));
-redis.on("ready", () => console.log("✅ Redis ready"));
-redis.on("error", (err) => console.error("❌ Redis error:", err?.message || err));
 
 // ----------------------------
 // HELPERS
@@ -115,7 +163,6 @@ function detectCfgFromOrder(order) {
   return detectCfgFromProductIds(productIds);
 }
 
-// Semana ISO simple (año-semana)
 function weekKeyUTC(d = new Date()) {
   const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = date.getUTCDay() || 7;
@@ -160,6 +207,7 @@ function pickWeeklyCards({ deckCards, pickCount, seed }) {
 // ----------------------------
 async function loadDeck(deckId) {
   const cacheKey = `deck:${deckId}:v1`;
+
   const cached = await redis.get(cacheKey);
   if (cached) {
     try { return JSON.parse(cached); } catch {}
@@ -288,12 +336,11 @@ function buildProductHtml({ productName, week, deckName, deckBackImage, cardsBlo
 // ----------------------------
 app.get("/", (req, res) => res.send("API de Tarot en funcionamiento ✅"));
 
-// Health rápido para comprobar que Railway sirve bien
-app.get("/health", async (req, res) => {
+// ✅ comprobar Redis rápido
+app.get("/health/redis", async (req, res) => {
   try {
-    // ping redis (si falla, lo verás aquí)
     const pong = await redis.ping();
-    res.json({ ok: true, redis: pong, time: Date.now() });
+    res.json({ ok: true, redis: pong });
   } catch (e) {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
@@ -421,8 +468,7 @@ async function runWeeklyRefresh() {
   return { week: wk, count: results.length, results };
 }
 
-// ✅ Cron (acepta GET/POST/ALL)
-async function cronHandler(req, res) {
+app.all("/cron/weekly-refresh", async (req, res) => {
   try {
     if (!CRON_SECRET) return res.status(500).json({ ok: false, error: "Missing CRON_SECRET" });
 
@@ -436,14 +482,7 @@ async function cronHandler(req, res) {
   } catch (e) {
     return res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
-}
-
-app.get("/cron/weekly-refresh", cronHandler);
-app.post("/cron/weekly-refresh", cronHandler);
-app.all("/cron/weekly-refresh", cronHandler);
-
-// Alias por si alguna vez llamaste con underscore
-app.all("/cron/weekly_refresh", cronHandler);
+});
 
 // ----------------------------
 // ADMIN
@@ -501,7 +540,13 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
 });
 
 // ----------------------------
-// START
+// START + graceful shutdown
 // ----------------------------
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
+const server = app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
+
+process.on("SIGTERM", async () => {
+  console.log("🧹 SIGTERM recibido. Cerrando...");
+  try { await redis.quit?.(); } catch {}
+  server.close(() => process.exit(0));
+});
