@@ -1,23 +1,21 @@
-// server.js (Railway / Node) — ✅ CommonJS
-// ✅ Lee mazos desde ./data/decks/*.json
+// server.js (ESM) ✅ para "type":"module"
+// ✅ Decks locales ./data/decks/*.json
 // ✅ Selección semanal estable (determinística)
-// ✅ Genera texto largo con ./lib/weekly-reading.js (getWeeklyLongMeaningForCard)
-// ✅ Actualiza descriptionHtml en Shopify por GraphQL Admin API
-// ✅ Cron: GET/POST /cron/weekly-refresh (secret por query o header)
+// ✅ Textos largos con OpenAI (lib/weekly-reading.js)
+// ✅ Actualiza descriptionHtml en Shopify (GraphQL Admin API)
+// ✅ Cron protegido por CRON_SECRET (query o header)
 // ✅ Webhook Shopify order-paid + Redis token/sesión
-// ✅ Admin endpoints: clear-order / rebuild-order
+// ✅ Admin: clear-order / rebuild-order
+// ✅ HTML con imágenes (dorso + cartas)
 
-const express = require("express");
-const cors = require("cors");
-const crypto = require("crypto");
-const Redis = require("ioredis");
-const fs = require("fs/promises");
-const path = require("path");
+import express from "express";
+import cors from "cors";
+import crypto from "crypto";
+import Redis from "ioredis";
+import fs from "fs/promises";
+import path from "path";
 
-// Node 18+ trae fetch global. Si tu runtime fuese <18, instala node-fetch y descomenta:
-// const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
-
-const { getWeeklyLongMeaningForCard } = require("./lib/weekly-reading.js");
+import { getWeeklyLongMeaningForCard } from "./lib/weekly-reading.js";
 
 const app = express();
 app.use(cors());
@@ -40,8 +38,8 @@ const SHOPIFY_WEBHOOK_SECRET = (process.env.SHOPIFY_WEBHOOK_SECRET || "").trim()
 const ADMIN_SECRET = (process.env.ADMIN_SECRET || "").trim();
 const CRON_SECRET = (process.env.CRON_SECRET || "").trim();
 
-const SHOPIFY_STORE_DOMAIN = (process.env.SHOPIFY_STORE_DOMAIN || "").trim(); // xxx.myshopify.com
-const SHOPIFY_ADMIN_TOKEN = (process.env.SHOPIFY_ADMIN_TOKEN || "").trim(); // shpat_...
+const SHOPIFY_STORE_DOMAIN = (process.env.SHOPIFY_STORE_DOMAIN || "").trim();
+const SHOPIFY_ADMIN_TOKEN = (process.env.SHOPIFY_ADMIN_TOKEN || "").trim();
 const SHOPIFY_API_VERSION = (process.env.SHOPIFY_API_VERSION || "2024-07").trim();
 
 // ----------------------------
@@ -74,71 +72,30 @@ function normalizeOrderNumber(order) {
   );
 }
 
-/**
- * ✅ DETECCIÓN POR PRODUCT_ID EXACTO (tus 4 productos)
- */
 function detectCfgFromProductIds(productIds) {
-  // Mensaje de los Ángeles (4)
   if (productIds.has("10496012616017")) {
-    return {
-      productName: "Mensaje de los Ángeles (4 cartas)",
-      deckId: "angeles",
-      pick: 4,
-      manual: false,
-    };
+    return { productName: "Mensaje de los Ángeles (4 cartas)", deckId: "angeles", pick: 4, manual: false };
   }
-
-  // Semilla Estelar (5)
   if (productIds.has("10495993446737")) {
-    return {
-      productName: "Camino de la Semilla Estelar (5 cartas)",
-      deckId: "semilla_estelar",
-      pick: 5,
-      manual: false,
-    };
+    return { productName: "Camino de la Semilla Estelar (5 cartas)", deckId: "semilla_estelar", pick: 5, manual: false };
   }
-
-  // Lectura Profunda (12)
   if (productIds.has("10493383082321")) {
-    return {
-      productName: "Lectura Profunda: Análisis Completo (12 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 12,
-      manual: false,
-    };
+    return { productName: "Lectura Profunda: Análisis Completo (12 cartas)", deckId: "arcanos_mayores", pick: 12, manual: false };
   }
-
-  // Tres Puertas (3)
   if (productIds.has("10493369745745")) {
-    return {
-      productName: "Tres Puertas del Destino (3 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 3,
-      manual: false,
-    };
+    return { productName: "Tres Puertas del Destino (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
   }
-
-  return {
-    productName: "Tu lectura (3 cartas)",
-    deckId: "arcanos_mayores",
-    pick: 3,
-    manual: false,
-  };
+  return { productName: "Tu lectura (3 cartas)", deckId: "arcanos_mayores", pick: 3, manual: false };
 }
 
 function detectCfgFromOrder(order) {
   const items = Array.isArray(order?.line_items) ? order.line_items : [];
-  const productIds = new Set(
-    items.map((li) => String(li?.product_id || "").trim()).filter(Boolean)
-  );
+  const productIds = new Set(items.map(li => String(li?.product_id || "").trim()).filter(Boolean));
   return detectCfgFromProductIds(productIds);
 }
 
-// Semana ISO simple (año-semana) en UTC
 function weekKeyUTC(d = new Date()) {
-  const date = new Date(
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-  );
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
@@ -147,20 +104,14 @@ function weekKeyUTC(d = new Date()) {
   return `${yyyy}-W${String(weekNo).padStart(2, "0")}`;
 }
 
-// Secret por query o header (robusto)
 function getProvidedCronSecret(req) {
   const q = String(req.query.secret || "").trim();
   const h = String(req.get("x-cron-secret") || "").trim();
   const raw = h || q;
   if (!raw) return "";
-  try {
-    return decodeURIComponent(raw);
-  } catch {
-    return raw;
-  }
+  try { return decodeURIComponent(raw); } catch { return raw; }
 }
 
-// RNG determinístico por seed
 function seededRandom(seedStr) {
   const h = crypto.createHash("sha256").update(seedStr).digest();
   let x = h.readUInt32BE(0);
@@ -183,16 +134,13 @@ function pickWeeklyCards({ deckCards, pickCount, seed }) {
 }
 
 // ----------------------------
-// LOAD DECKS from repo (data/decks/*.json)
-// Cache en Redis 1h
+// LOAD DECKS (cache redis 1h)
 // ----------------------------
 async function loadDeck(deckId) {
   const cacheKey = `deck:${deckId}:v1`;
   const cached = await redis.get(cacheKey);
   if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch {}
+    try { return JSON.parse(cached); } catch {}
   }
 
   const deckPath = path.join(process.cwd(), "data", "decks", `${deckId}.json`);
@@ -229,17 +177,8 @@ async function shopifyGraphQL(query, variables) {
   });
 
   const json = await r.json().catch(() => ({}));
-  if (!r.ok) {
-    throw new Error(
-      `Shopify GraphQL HTTP ${r.status}: ${JSON.stringify(json).slice(0, 800)}`
-    );
-  }
-  if (json.errors?.length) {
-    throw new Error(
-      `Shopify GraphQL errors: ${JSON.stringify(json.errors).slice(0, 800)}`
-    );
-  }
-
+  if (!r.ok) throw new Error(`Shopify GraphQL HTTP ${r.status}: ${JSON.stringify(json).slice(0, 900)}`);
+  if (json.errors?.length) throw new Error(`Shopify GraphQL errors: ${JSON.stringify(json.errors).slice(0, 900)}`);
   return json.data;
 }
 
@@ -254,10 +193,7 @@ async function updateProductDescriptionHtml(productId, html) {
   `;
 
   const data = await shopifyGraphQL(mutation, {
-    input: {
-      id: toProductGid(productId),
-      descriptionHtml: html,
-    },
+    input: { id: toProductGid(productId), descriptionHtml: html },
   });
 
   const errs = data?.productUpdate?.userErrors || [];
@@ -267,7 +203,7 @@ async function updateProductDescriptionHtml(productId, html) {
 }
 
 // ----------------------------
-// HTML builder (✅ con imágenes de cartas + dorso del mazo)
+// HTML builder (imágenes)
 // ----------------------------
 function escapeHtml(s = "") {
   return String(s)
@@ -282,45 +218,35 @@ function buildProductHtml({ productName, week, deckName, deckBackImage, cardsBlo
   const back = deckBackImage
     ? `
       <div style="margin:12px 0 18px;">
-        <img
-          src="${escapeHtml(deckBackImage)}"
-          alt="Dorso del mazo"
-          style="width:100%; max-width:520px; border-radius:18px; display:block;"
-          loading="lazy"
-        />
+        <img src="${escapeHtml(deckBackImage)}" alt="Dorso del mazo"
+          style="width:100%; max-width:520px; border-radius:18px; display:block;" loading="lazy" />
       </div>
     `.trim()
     : "";
 
-  const blocks = cardsBlocks
-    .map((b) => {
-      const img = b.image
-        ? `
-          <div style="margin: 0 0 10px;">
-            <img
-              src="${escapeHtml(b.image)}"
-              alt="${escapeHtml(b.name)}"
-              style="width:100%; max-width:420px; border-radius:16px; display:block;"
-              loading="lazy"
-            />
-          </div>
-        `.trim()
-        : "";
-
-      const body = escapeHtml(b.text || "")
-        .split(/\n{2,}/g)
-        .map((p) => `<p>${p.replaceAll("\n", "<br/>")}</p>`)
-        .join("\n");
-
-      return `
-        <div style="margin:18px 0; padding:14px; border:1px solid rgba(0,0,0,.08); border-radius:14px;">
-          <div style="font-weight:900; margin-bottom:10px;">🃏 ${escapeHtml(b.name)}</div>
-          ${img}
-          <div style="line-height:1.6; font-size:14px;">${body}</div>
+  const blocks = cardsBlocks.map((b) => {
+    const img = b.image
+      ? `
+        <div style="margin: 0 0 10px;">
+          <img src="${escapeHtml(b.image)}" alt="${escapeHtml(b.name)}"
+            style="width:100%; max-width:420px; border-radius:16px; display:block;" loading="lazy" />
         </div>
-      `.trim();
-    })
-    .join("\n");
+      `.trim()
+      : "";
+
+    const body = escapeHtml(b.text || "")
+      .split(/\n{2,}/g)
+      .map((p) => `<p>${p.replaceAll("\n", "<br/>")}</p>`)
+      .join("\n");
+
+    return `
+      <div style="margin:18px 0; padding:14px; border:1px solid rgba(0,0,0,.08); border-radius:14px;">
+        <div style="font-weight:900; margin-bottom:10px;">🃏 ${escapeHtml(b.name)}</div>
+        ${img}
+        <div style="line-height:1.6; font-size:14px;">${body}</div>
+      </div>
+    `.trim();
+  }).join("\n");
 
   return `
     <div style="max-width:900px; margin:0 auto; line-height:1.6;">
@@ -336,15 +262,10 @@ function buildProductHtml({ productName, week, deckName, deckBackImage, cardsBlo
 }
 
 // ----------------------------
-// HEALTH
+// ROUTES
 // ----------------------------
-app.get("/", (req, res) => {
-  res.send("API de Tarot en funcionamiento ✅");
-});
+app.get("/", (req, res) => res.send("API de Tarot en funcionamiento ✅"));
 
-// ----------------------------
-// GET /api/token?order=1063
-// ----------------------------
 app.get("/api/token", async (req, res) => {
   try {
     const order = String(req.query.order || "").trim();
@@ -359,9 +280,6 @@ app.get("/api/token", async (req, res) => {
   }
 });
 
-// ----------------------------
-// GET /api/session?token=xxxx
-// ----------------------------
 app.get("/api/session", async (req, res) => {
   try {
     const token = String(req.query.token || "").trim();
@@ -376,10 +294,6 @@ app.get("/api/session", async (req, res) => {
   }
 });
 
-// ----------------------------
-// ✅ WEBHOOK SHOPIFY: Order Paid
-// POST /api/shopify/order-paid
-// ----------------------------
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     if (!SHOPIFY_WEBHOOK_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
@@ -395,8 +309,8 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     if (!orderNumber) return res.status(400).send("Missing order number");
 
     const cfg = detectCfgFromOrder(order);
-
     const token = randomToken();
+
     const session = {
       token,
       manual: cfg.manual,
@@ -406,57 +320,42 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       createdAt: Date.now(),
     };
 
-    const ttl = 60 * 60 * 24 * 180; // 180 días
+    const ttl = 60 * 60 * 24 * 180;
     await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
     await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
 
-    return res.status(200).json({
-      ok: true,
-      orderNumber,
-      pick: cfg.pick,
-      deckId: cfg.deckId,
-    });
+    return res.status(200).json({ ok: true, orderNumber, pick: cfg.pick, deckId: cfg.deckId });
   } catch (e) {
     return res.status(500).send(e.message);
   }
 });
 
-// =====================================================
-// ✅ CRON: Weekly refresh (actualiza los 4 productos)
-// GET/POST /cron/weekly-refresh?secret=XXXX
-// (o header x-cron-secret: XXXX)
-// =====================================================
+// ----------------------------
+// CRON
+// ----------------------------
 const AUTOMATED_PRODUCTS = [
-  "10493369745745", // Tres Puertas (3)
-  "10496012616017", // Ángeles (4)
-  "10495993446737", // Semilla Estelar (5)
-  "10493383082321", // Lectura Profunda (12)
+  "10493369745745",
+  "10496012616017",
+  "10495993446737",
+  "10493383082321",
 ];
 
 async function runWeeklyRefresh() {
-  if (typeof getWeeklyLongMeaningForCard !== "function") {
-    throw new Error("getWeeklyLongMeaningForCard no está disponible (lib/weekly-reading.js)");
-  }
-
   const wk = weekKeyUTC();
   const results = [];
 
   for (const productId of AUTOMATED_PRODUCTS) {
     const cfg = detectCfgFromProductIds(new Set([productId]));
 
-    // 1) cargar mazo local
     const deck = await loadDeck(cfg.deckId);
-    const cards = deck.cards;
-
-    // 2) elegir cartas semanales estables
     const seed = `weekly:${wk}:${productId}:${cfg.deckId}`;
+
     const picked = pickWeeklyCards({
-      deckCards: cards,
+      deckCards: deck.cards,
       pickCount: cfg.pick,
       seed,
     });
 
-    // 3) generar texto largo por carta
     const blocks = [];
     for (const card of picked) {
       const text = await getWeeklyLongMeaningForCard({
@@ -473,7 +372,6 @@ async function runWeeklyRefresh() {
       });
     }
 
-    // 4) construir HTML y actualizar Shopify
     const html = buildProductHtml({
       productName: cfg.productName,
       week: wk,
@@ -484,13 +382,7 @@ async function runWeeklyRefresh() {
 
     const updated = await updateProductDescriptionHtml(productId, html);
 
-    results.push({
-      productId,
-      deckId: cfg.deckId,
-      pick: cfg.pick,
-      updatedTitle: updated?.title || null,
-      ok: true,
-    });
+    results.push({ productId, deckId: cfg.deckId, pick: cfg.pick, updatedTitle: updated?.title || null, ok: true });
   }
 
   return { week: wk, count: results.length, results };
@@ -498,18 +390,11 @@ async function runWeeklyRefresh() {
 
 app.all("/cron/weekly-refresh", async (req, res) => {
   try {
-    if (!CRON_SECRET) {
-      return res.status(500).json({ ok: false, error: "Missing CRON_SECRET in Railway env" });
-    }
+    if (!CRON_SECRET) return res.status(500).json({ ok: false, error: "Missing CRON_SECRET" });
 
     const provided = getProvidedCronSecret(req);
     if (!provided || provided !== CRON_SECRET) {
-      return res.status(401).json({
-        ok: false,
-        error: "Unauthorized cron",
-        hint:
-          "Si tu CRON_SECRET tiene #, &, etc, prueba con un secret URL-safe (solo letras/números) o envíalo por header x-cron-secret.",
-      });
+      return res.status(401).json({ ok: false, error: "Unauthorized cron" });
     }
 
     const out = await runWeeklyRefresh();
@@ -519,14 +404,13 @@ app.all("/cron/weekly-refresh", async (req, res) => {
   }
 });
 
-// =====================================================
-// ✅ ADMIN: clear-order / rebuild-order
-// =====================================================
+// ----------------------------
+// ADMIN
+// ----------------------------
 app.get("/api/admin/clear-order", async (req, res) => {
   try {
     const secret = String(req.query.secret || "");
     const order = String(req.query.order || "").trim();
-
     if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
     if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
     if (!order) return res.status(400).json({ error: "Missing order" });
@@ -534,7 +418,6 @@ app.get("/api/admin/clear-order", async (req, res) => {
     const token = await redis.get(`order:${order}:token`);
     if (token) await redis.del(`token:${token}:session`);
     await redis.del(`order:${order}:token`);
-
     return res.json({ ok: true, clearedOrder: order, clearedToken: token || null });
   } catch (e) {
     return res.status(500).json({ error: e.message });
