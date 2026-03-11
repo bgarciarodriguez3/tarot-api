@@ -48,9 +48,7 @@ function cleanRedisUrl(raw) {
 
   try {
     s = decodeURIComponent(s);
-  } catch {
-    // ok
-  }
+  } catch {}
 
   return s.trim();
 }
@@ -66,7 +64,7 @@ function createRedisClient() {
 
   if (!url) {
     console.warn("⚠️ REDIS_URL no está configurado. La API seguirá, pero sin cache/sesiones.");
-    const dummy = {
+    return {
       get: async () => null,
       set: async () => null,
       del: async () => null,
@@ -75,7 +73,6 @@ function createRedisClient() {
       on: () => {},
       quit: async () => {},
     };
-    return dummy;
   }
 
   const client = new Redis(url, {
@@ -105,43 +102,45 @@ const SHOPIFY_STORE_DOMAIN = (process.env.SHOPIFY_STORE_DOMAIN || "").trim();
 const SHOPIFY_ADMIN_TOKEN = (process.env.SHOPIFY_ADMIN_TOKEN || "").trim();
 const SHOPIFY_API_VERSION = (process.env.SHOPIFY_API_VERSION || "2024-07").trim();
 
+const SITE_URL = (process.env.SITE_URL || "https://eltarotdelaruedadelafortuna.com").trim();
+
 const GMAIL_USER = (process.env.GMAIL_USER || "").trim();
 const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "").trim();
-const MAIL_FROM_NAME = (process.env.MAIL_FROM_NAME || "El Tarot de la Rueda de la Fortuna").trim();
 
-const SITE_URL = (process.env.SITE_URL || "https://eltarotdelaruedadelafortuna.com").trim();
-const ARCANOS_READING_PATH = (process.env.ARCANOS_READING_PATH || "/pages/arcanos-mayores-tirada-personalizada").trim();
-const ANGELS_READING_PATH = (process.env.ANGELS_READING_PATH || "/pages/mensaje-de-los-angeles-tirada-de-4-cartas").trim();
-const SEEDSTAR_READING_PATH = (process.env.SEEDSTAR_READING_PATH || "/pages/camino-de-la-semilla-estelar-tirada-de-5-cartas").trim();
+const ACCESS_PATHS = {
+  arcanos_mayores_3: "/pages/arcanos-mayores-tirada-personalizada?spread=3",
+  arcanos_mayores_12: "/pages/arcanos-mayores-tirada-personalizada?spread=12",
+  angeles_4: "/pages/mensaje-de-los-angeles-tirada-de-4-cartas",
+  semilla_estelar_5: "/pages/camino-de-la-semilla-estelar-tirada-de-5-cartas",
+};
 
 // ----------------------------
 // MAILER
 // ----------------------------
-let transporter = null;
-
-function getTransporter() {
-  if (transporter) return transporter;
-
+function createMailer() {
   if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-    console.warn("⚠️ Faltan GMAIL_USER / GMAIL_APP_PASSWORD. No se podrán enviar emails.");
+    console.warn("⚠️ Gmail no configurado. No se enviarán correos de acceso.");
     return null;
   }
 
-  transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: GMAIL_USER,
       pass: GMAIL_APP_PASSWORD,
     },
   });
-
-  return transporter;
 }
+
+const mailer = createMailer();
 
 // ----------------------------
 // HELPERS
 // ----------------------------
 function verifyShopifyHmac(rawBody, hmacHeader) {
+  if (!SHOPIFY_WEBHOOK_SECRET) return false;
+  if (!rawBody || !hmacHeader) return false;
+
   const digest = crypto
     .createHmac("sha256", SHOPIFY_WEBHOOK_SECRET)
     .update(rawBody)
@@ -150,7 +149,7 @@ function verifyShopifyHmac(rawBody, hmacHeader) {
   try {
     return crypto.timingSafeEqual(
       Buffer.from(digest),
-      Buffer.from(hmacHeader || "")
+      Buffer.from(String(hmacHeader))
     );
   } catch {
     return false;
@@ -168,7 +167,7 @@ function normalizeOrderNumber(order) {
   );
 }
 
-function normalizeCustomerEmail(order) {
+function getOrderEmail(order) {
   return (
     String(order?.email || "").trim() ||
     String(order?.contact_email || "").trim() ||
@@ -176,88 +175,75 @@ function normalizeCustomerEmail(order) {
   );
 }
 
-function getProductConfigByProductId(productId) {
-  const id = String(productId || "").trim();
-
-  if (id === "10496012616017") {
-    return {
-      automated: true,
-      manual: false,
-      productName: "Mensaje de los Ángeles (4 cartas)",
-      deckId: "angeles",
-      pick: 4,
-      readingPath: ANGELS_READING_PATH,
-    };
-  }
-
-  if (id === "10495993446737") {
-    return {
-      automated: true,
-      manual: false,
-      productName: "Camino de la Semilla Estelar (5 cartas)",
-      deckId: "semilla_estelar",
-      pick: 5,
-      readingPath: SEEDSTAR_READING_PATH,
-    };
-  }
-
-  if (id === "10493383082321") {
-    return {
-      automated: true,
-      manual: false,
-      productName: "Lectura Profunda: Análisis Completo (12 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 12,
-      readingPath: ARCANOS_READING_PATH,
-    };
-  }
-
-  if (id === "10493369745745") {
-    return {
-      automated: true,
-      manual: false,
-      productName: "Tres Puertas del Destino (3 cartas)",
-      deckId: "arcanos_mayores",
-      pick: 3,
-      readingPath: ARCANOS_READING_PATH,
-    };
-  }
-
-  return null;
+function getCustomerName(order) {
+  const first = String(order?.customer?.first_name || "").trim();
+  const last = String(order?.customer?.last_name || "").trim();
+  return [first, last].filter(Boolean).join(" ").trim();
 }
 
 function detectCfgFromProductIds(productIds) {
-  for (const pid of productIds) {
-    const cfg = getProductConfigByProductId(pid);
-    if (cfg) return cfg;
+  if (productIds.has("10496012616017")) {
+    return {
+      productId: "10496012616017",
+      productName: "Mensaje de los Ángeles (4 cartas)",
+      deckId: "angeles",
+      pick: 4,
+      manual: false,
+      accessPath: ACCESS_PATHS.angeles_4,
+    };
+  }
+
+  if (productIds.has("10495993446737")) {
+    return {
+      productId: "10495993446737",
+      productName: "Camino de la Semilla Estelar (5 cartas)",
+      deckId: "semilla_estelar",
+      pick: 5,
+      manual: false,
+      accessPath: ACCESS_PATHS.semilla_estelar_5,
+    };
+  }
+
+  if (productIds.has("10493383082321")) {
+    return {
+      productId: "10493383082321",
+      productName: "Lectura Profunda: Análisis Completo (12 cartas)",
+      deckId: "arcanos_mayores",
+      pick: 12,
+      manual: false,
+      accessPath: ACCESS_PATHS.arcanos_mayores_12,
+    };
+  }
+
+  if (productIds.has("10493369745745")) {
+    return {
+      productId: "10493369745745",
+      productName: "Tres Puertas del Destino (3 cartas)",
+      deckId: "arcanos_mayores",
+      pick: 3,
+      manual: false,
+      accessPath: ACCESS_PATHS.arcanos_mayores_3,
+    };
   }
 
   return {
-    automated: false,
-    manual: true,
-    productName: "Lectura premium o producto no automático",
-    deckId: null,
-    pick: null,
-    readingPath: null,
+    productId: null,
+    productName: "Tu lectura (3 cartas)",
+    deckId: "arcanos_mayores",
+    pick: 3,
+    manual: false,
+    accessPath: ACCESS_PATHS.arcanos_mayores_3,
   };
 }
 
 function detectCfgFromOrder(order) {
   const items = Array.isArray(order?.line_items) ? order.line_items : [];
   const productIds = new Set(
-    items.map((li) => String(li?.product_id || "").trim()).filter(Boolean)
+    items
+      .map((li) => String(li?.product_id || "").trim())
+      .filter(Boolean)
   );
   return detectCfgFromProductIds(productIds);
-}
-
-function weekKeyUTC(d = new Date()) {
-  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  const yyyy = date.getUTCFullYear();
-  return `${yyyy}-W${String(weekNo).padStart(2, "0")}`;
 }
 
 function getProvidedCronSecret(req) {
@@ -270,6 +256,16 @@ function getProvidedCronSecret(req) {
   } catch {
     return raw;
   }
+}
+
+function weekKeyUTC(d = new Date()) {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  const yyyy = date.getUTCFullYear();
+  return `${yyyy}-W${String(weekNo).padStart(2, "0")}`;
 }
 
 function seededRandom(seedStr) {
@@ -293,109 +289,21 @@ function pickWeeklyCards({ deckCards, pickCount, seed }) {
   return arr.slice(0, pickCount);
 }
 
-function escapeHtml(s = "") {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function buildAccessUrl({ token, orderNumber, accessPath }) {
+  const orderParam = orderNumber ? `&order=${encodeURIComponent(orderNumber)}` : "";
+  return `${SITE_URL}${accessPath}${accessPath.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}${orderParam}`;
 }
 
-function buildReadingUrl({ cfg, token, orderNumber }) {
-  const base = new URL(cfg.readingPath, SITE_URL);
-
-  base.searchParams.set("token", token);
-  base.searchParams.set("order", orderNumber);
-
-  if (cfg.deckId) base.searchParams.set("deck", cfg.deckId);
-  if (cfg.pick) base.searchParams.set("cartas", String(cfg.pick));
-
-  return base.toString();
+function emailWasAlreadySentKey(orderNumber) {
+  return `order:${orderNumber}:email_sent`;
 }
 
-function buildAccessEmailHtml({ customerName, productName, accessUrl, orderNumber }) {
-  const safeName = escapeHtml(customerName || "querida alma");
-  const safeProduct = escapeHtml(productName);
-  const safeAccessUrl = escapeHtml(accessUrl);
-  const safeOrder = escapeHtml(orderNumber);
-
-  return `
-    <div style="font-family:Arial,Helvetica,sans-serif; background:#f8f5ff; padding:24px; color:#222;">
-      <div style="max-width:680px; margin:0 auto; background:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.08);">
-        <div style="background:#1a102f; color:#fff; padding:28px 24px; text-align:center;">
-          <h1 style="margin:0; font-size:28px;">🔮 Tu lectura está lista</h1>
-          <p style="margin:10px 0 0; font-size:15px; opacity:.9;">Accede ahora a tu tirada automática</p>
-        </div>
-
-        <div style="padding:28px 24px;">
-          <p style="margin:0 0 14px;">Hola, ${safeName}.</p>
-
-          <p style="margin:0 0 14px;">
-            Hemos preparado tu acceso para:
-            <strong>${safeProduct}</strong>
-          </p>
-
-          <p style="margin:0 0 24px;">
-            Pedido: <strong>#${safeOrder}</strong>
-          </p>
-
-          <div style="text-align:center; margin:28px 0;">
-            <a href="${safeAccessUrl}"
-               style="display:inline-block; background:#5b2be0; color:#fff; text-decoration:none; font-weight:700; padding:16px 26px; border-radius:12px; font-size:16px;">
-              Acceder a mi lectura
-            </a>
-          </div>
-
-          <p style="margin:0 0 12px; font-size:14px; color:#444;">
-            Si el botón no funciona, copia y pega este enlace en tu navegador:
-          </p>
-
-          <p style="margin:0 0 20px; font-size:13px; line-height:1.6; word-break:break-all; color:#5b2be0;">
-            ${safeAccessUrl}
-          </p>
-
-          <hr style="border:none; border-top:1px solid #eee; margin:24px 0;" />
-
-          <p style="margin:0; font-size:13px; color:#666;">
-            Si además compraste una lectura premium, recibirás su información por separado.
-          </p>
-        </div>
-      </div>
-    </div>
-  `.trim();
+function tokenKey(orderNumber) {
+  return `order:${orderNumber}:token`;
 }
 
-function buildAccessEmailText({ customerName, productName, accessUrl, orderNumber }) {
-  return [
-    `Hola ${customerName || ""},`,
-    "",
-    `Tu acceso para "${productName}" ya está listo.`,
-    `Pedido: #${orderNumber}`,
-    "",
-    "Accede aquí a tu lectura:",
-    accessUrl,
-    "",
-    "Si además compraste una lectura premium, recibirás su información por separado.",
-  ].join("\n");
-}
-
-async function sendAccessEmail({ to, customerName, productName, accessUrl, orderNumber }) {
-  const tx = getTransporter();
-  if (!tx) throw new Error("Mailer no configurado");
-
-  const from = `"${MAIL_FROM_NAME}" <${GMAIL_USER}>`;
-
-  const mail = {
-    from,
-    to,
-    subject: `🔮 Accede a tu lectura — Pedido #${orderNumber}`,
-    text: buildAccessEmailText({ customerName, productName, accessUrl, orderNumber }),
-    html: buildAccessEmailHtml({ customerName, productName, accessUrl, orderNumber }),
-  };
-
-  const info = await tx.sendMail(mail);
-  return info;
+function sessionKey(token) {
+  return `token:${token}:session`;
 }
 
 // ----------------------------
@@ -408,9 +316,7 @@ async function loadDeck(deckId) {
   if (cached) {
     try {
       return JSON.parse(cached);
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 
   const deckPath = path.join(process.cwd(), "data", "decks", `${deckId}.json`);
@@ -447,8 +353,14 @@ async function shopifyGraphQL(query, variables) {
   });
 
   const json = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`Shopify GraphQL HTTP ${r.status}: ${JSON.stringify(json).slice(0, 900)}`);
-  if (json.errors?.length) throw new Error(`Shopify GraphQL errors: ${JSON.stringify(json.errors).slice(0, 900)}`);
+
+  if (!r.ok) {
+    throw new Error(`Shopify GraphQL HTTP ${r.status}: ${JSON.stringify(json).slice(0, 900)}`);
+  }
+  if (json.errors?.length) {
+    throw new Error(`Shopify GraphQL errors: ${JSON.stringify(json.errors).slice(0, 900)}`);
+  }
+
   return json.data;
 }
 
@@ -475,6 +387,15 @@ async function updateProductDescriptionHtml(productId, html) {
 // ----------------------------
 // HTML builder (imágenes)
 // ----------------------------
+function escapeHtml(s = "") {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function buildProductHtml({ productName, week, deckName, deckBackImage, cardsBlocks }) {
   const back = deckBackImage
     ? `
@@ -523,162 +444,120 @@ function buildProductHtml({ productName, week, deckName, deckBackImage, cardsBlo
 }
 
 // ----------------------------
-// ROUTES
+// EMAIL acceso lectura
 // ----------------------------
-app.get("/", (req, res) => res.send("API de Tarot en funcionamiento ✅"));
-
-app.get("/health/redis", async (req, res) => {
-  try {
-    const pong = await redis.ping();
-    res.json({ ok: true, redis: pong });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e?.message || String(e) });
+async function sendAccessEmail({ to, customerName, orderNumber, productName, accessUrl }) {
+  if (!mailer) {
+    console.warn("⚠️ No hay mailer configurado. Saltando envío email acceso.");
+    return { ok: false, skipped: true, reason: "mailer_not_configured" };
   }
-});
 
-app.get("/api/token", async (req, res) => {
-  try {
-    const order = String(req.query.order || "").trim();
-    if (!order) return res.status(400).json({ error: "Falta pedido" });
-
-    const token = await redis.get(`order:${order}:token`);
-    if (!token) return res.status(404).json({ error: "Pedido no encontrado" });
-
-    return res.json({ token });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
+  if (!to) {
+    return { ok: false, skipped: true, reason: "missing_recipient" };
   }
-});
 
-app.get("/api/session", async (req, res) => {
-  try {
-    const token = String(req.query.token || "").trim();
-    if (!token) return res.status(400).json({ error: "Missing token" });
+  const subject = `Tu acceso a la lectura automática #${orderNumber}`;
+  const safeName = customerName ? escapeHtml(customerName) : "alma bella";
 
-    const raw = await redis.get(`token:${token}:session`);
-    if (!raw) return res.status(404).json({ error: "Session not found" });
+  const html = `
+    <div style="margin:0; padding:0; background:#f7f7fa;">
+      <div style="max-width:700px; margin:0 auto; padding:24px;">
+        <div style="background:#ffffff; border-radius:22px; box-shadow:0 18px 40px rgba(0,0,0,.08); overflow:hidden;">
+          <div style="padding:28px 24px; background:linear-gradient(180deg,#0b0f2a,#111); color:#fff;">
+            <div style="font-size:24px; font-weight:900;">✨ Tu lectura está lista</div>
+            <div style="opacity:.86; margin-top:8px;">${escapeHtml(productName || "Lectura automática")}</div>
+          </div>
 
-    return res.json(JSON.parse(raw));
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
-});
+          <div style="padding:24px;">
+            <p>Hola ${safeName},</p>
+            <p>Gracias por tu compra. Ya puedes acceder a tu lectura automática desde este botón:</p>
 
-app.post("/api/shopify/order-paid", async (req, res) => {
-  try {
-    if (!SHOPIFY_WEBHOOK_SECRET) return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
+            <div style="margin:24px 0; text-align:center;">
+              <a href="${escapeHtml(accessUrl)}"
+                 style="display:inline-block; padding:14px 22px; border-radius:999px; background:#111; color:#fff; text-decoration:none; font-weight:900;">
+                 🔮 Acceder a mi lectura
+              </a>
+            </div>
 
-    const hmac = req.get("X-Shopify-Hmac-Sha256");
-    const rawBody = req.rawBody;
+            <p style="font-size:14px; opacity:.8;">
+              Pedido #${escapeHtml(orderNumber)}
+            </p>
 
-    if (!rawBody) return res.status(400).send("Missing rawBody");
-    if (!verifyShopifyHmac(rawBody, hmac)) return res.status(401).send("Invalid HMAC");
+            <p style="font-size:13px; opacity:.75; margin-top:18px;">
+              Si el botón no funciona, copia y pega este enlace en tu navegador:
+            </p>
+            <p style="font-size:12px; word-break:break-all; opacity:.75;">
+              ${escapeHtml(accessUrl)}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 
-    const order = req.body;
-    const orderNumber = normalizeOrderNumber(order);
-    const customerEmail = normalizeCustomerEmail(order);
+  const text = [
+    `Hola ${customerName || ""}`.trim(),
+    "",
+    `Tu lectura automática ya está lista.`,
+    `Producto: ${productName || "Lectura automática"}`,
+    `Pedido: #${orderNumber}`,
+    "",
+    `Accede aquí:`,
+    accessUrl,
+  ].join("\n");
 
-    if (!orderNumber) return res.status(400).send("Missing order number");
-    if (!customerEmail) return res.status(400).send("Missing customer email");
+  await mailer.sendMail({
+    from: `"La Rueda de la Fortuna" <${GMAIL_USER}>`,
+    to,
+    subject,
+    text,
+    html,
+  });
 
-    const cfg = detectCfgFromOrder(order);
+  return { ok: true };
+}
 
-    // Si no es un producto automático, no hacemos nada y respondemos ok.
-    if (!cfg.automated) {
-      console.log(`ℹ️ Pedido #${orderNumber}: sin producto automático. No se envía email de acceso.`);
-      return res.status(200).json({ ok: true, skipped: true, reason: "non-automated-product" });
-    }
+// ----------------------------
+// Guardar sesión
+// ----------------------------
+async function saveOrderSession({ order, cfg }) {
+  const orderNumber = normalizeOrderNumber(order);
+  if (!orderNumber) throw new Error("Missing order number");
 
-    const mailSentKey = `order:${orderNumber}:mail_sent`;
-    const existingMailSent = await redis.get(mailSentKey);
+  const existingToken = await redis.get(tokenKey(orderNumber));
+  const token = existingToken || randomToken();
 
-    let token = await redis.get(`order:${orderNumber}:token`);
-    const isDuplicate = Boolean(token);
+  const session = {
+    token,
+    orderNumber,
+    orderId: String(order?.id || "").trim() || null,
+    email: getOrderEmail(order) || null,
+    customerName: getCustomerName(order) || null,
+    manual: cfg.manual,
+    productName: cfg.productName,
+    deckId: cfg.deckId,
+    pick: cfg.pick,
+    accessPath: cfg.accessPath,
+    productId: cfg.productId,
+    createdAt: Date.now(),
+    source: "shopify_order_paid",
+  };
 
-    if (existingMailSent === "1" && token) {
-      console.log(`ℹ️ Pedido #${orderNumber}: webhook duplicado, email ya enviado.`);
-      return res.status(200).json({
-        ok: true,
-        duplicate: true,
-        orderNumber,
-        productName: cfg.productName,
-      });
-    }
+  const ttl = 60 * 60 * 24 * 180;
+  await redis.set(tokenKey(orderNumber), token, "EX", ttl);
+  await redis.set(sessionKey(token), JSON.stringify(session), "EX", ttl);
 
-    if (!token) token = randomToken();
-
-    const customerName =
-      String(order?.customer?.first_name || "").trim() ||
-      String(order?.billing_address?.first_name || "").trim() ||
-      String(order?.shipping_address?.first_name || "").trim() ||
-      "";
-
-    const session = {
-      token,
-      manual: cfg.manual,
-      automated: cfg.automated,
-      productName: cfg.productName,
-      deckId: cfg.deckId,
-      pick: cfg.pick,
-      orderNumber,
-      customerEmail,
-      customerName,
-      createdAt: Date.now(),
-    };
-
-    const ttl = 60 * 60 * 24 * 180;
-
-    await redis.set(`order:${orderNumber}:token`, token, "EX", ttl);
-    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
-
-    const accessUrl = buildReadingUrl({ cfg, token, orderNumber });
-
-    try {
-      const info = await sendAccessEmail({
-        to: customerEmail,
-        customerName,
-        productName: cfg.productName,
-        accessUrl,
-        orderNumber,
-      });
-
-      await redis.set(mailSentKey, "1", "EX", ttl);
-
-      console.log(`✅ Email de acceso enviado para pedido #${orderNumber} a ${customerEmail}`, {
-        messageId: info?.messageId || null,
-        duplicateWebhook: isDuplicate,
-      });
-
-      return res.status(200).json({
-        ok: true,
-        orderNumber,
-        pick: cfg.pick,
-        deckId: cfg.deckId,
-        productName: cfg.productName,
-        accessUrl,
-        emailed: true,
-      });
-    } catch (mailErr) {
-      console.error(`❌ Error enviando email de acceso para pedido #${orderNumber}:`, mailErr?.message || mailErr);
-
-      await redis.del(mailSentKey);
-
-      return res.status(500).send(`Email send failed: ${mailErr?.message || mailErr}`);
-    }
-  } catch (e) {
-    console.error("❌ Error en /api/shopify/order-paid:", e?.message || e);
-    return res.status(500).send(e.message);
-  }
-});
+  return session;
+}
 
 // ----------------------------
 // CRON
 // ----------------------------
 const AUTOMATED_PRODUCTS = [
-  "10493369745745",
-  "10496012616017",
-  "10495993446737",
-  "10493383082321",
+  "10493369745745", // 3 cartas
+  "10496012616017", // ángeles
+  "10495993446737", // semilla
+  "10493383082321", // 12 cartas
 ];
 
 async function runWeeklyRefresh() {
@@ -687,10 +566,9 @@ async function runWeeklyRefresh() {
 
   for (const productId of AUTOMATED_PRODUCTS) {
     const cfg = detectCfgFromProductIds(new Set([productId]));
-
     const deck = await loadDeck(cfg.deckId);
-    const seed = `weekly:${wk}:${productId}:${cfg.deckId}`;
 
+    const seed = `weekly:${wk}:${productId}:${cfg.deckId}`;
     const picked = pickWeeklyCards({
       deckCards: deck.cards,
       pickCount: cfg.pick,
@@ -735,6 +613,116 @@ async function runWeeklyRefresh() {
   return { week: wk, count: results.length, results };
 }
 
+// ----------------------------
+// ROUTES
+// ----------------------------
+app.get("/", (req, res) => {
+  res.send("API de Tarot en funcionamiento ✅");
+});
+
+app.get("/health/redis", async (req, res) => {
+  try {
+    const pong = await redis.ping();
+    res.json({ ok: true, redis: pong });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
+app.get("/api/token", async (req, res) => {
+  try {
+    const order = String(req.query.order || "").trim();
+    if (!order) return res.status(400).json({ error: "Falta pedido" });
+
+    const token = await redis.get(tokenKey(order));
+    if (!token) return res.status(404).json({ error: "Pedido no encontrado" });
+
+    return res.json({ token });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/session", async (req, res) => {
+  try {
+    const token = String(req.query.token || "").trim();
+    if (!token) return res.status(400).json({ error: "Missing token" });
+
+    const raw = await redis.get(sessionKey(token));
+    if (!raw) return res.status(404).json({ error: "Session not found" });
+
+    return res.json(JSON.parse(raw));
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/shopify/order-paid", async (req, res) => {
+  try {
+    if (!SHOPIFY_WEBHOOK_SECRET) {
+      return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
+    }
+
+    const hmac = req.get("X-Shopify-Hmac-Sha256");
+    const rawBody = req.rawBody;
+
+    if (!rawBody) {
+      return res.status(400).send("Missing rawBody");
+    }
+
+    if (!verifyShopifyHmac(rawBody, hmac)) {
+      console.error("❌ Invalid HMAC");
+      return res.status(401).send("Invalid HMAC");
+    }
+
+    const order = req.body;
+    const orderNumber = normalizeOrderNumber(order);
+
+    if (!orderNumber) {
+      return res.status(400).send("Missing order number");
+    }
+
+    const cfg = detectCfgFromOrder(order);
+    const session = await saveOrderSession({ order, cfg });
+
+    // idempotencia: no reenviar correo si ya fue enviado
+    const alreadySent = await redis.get(emailWasAlreadySentKey(orderNumber));
+    let emailResult = { ok: false, skipped: true, reason: "already_sent" };
+
+    if (!alreadySent) {
+      const accessUrl = buildAccessUrl({
+        token: session.token,
+        orderNumber,
+        accessPath: cfg.accessPath,
+      });
+
+      emailResult = await sendAccessEmail({
+        to: session.email,
+        customerName: session.customerName,
+        orderNumber,
+        productName: session.productName,
+        accessUrl,
+      });
+
+      if (emailResult.ok) {
+        await redis.set(emailWasAlreadySentKey(orderNumber), "1", "EX", 60 * 60 * 24 * 180);
+      }
+    }
+
+    return res.status(200).json({
+      ok: true,
+      orderNumber,
+      token: session.token,
+      deckId: session.deckId,
+      pick: session.pick,
+      email: emailResult,
+    });
+  } catch (e) {
+    console.error("❌ /api/shopify/order-paid error:", e);
+    return res.status(500).send(e.message);
+  }
+});
+
 app.all("/cron/weekly-refresh", async (req, res) => {
   try {
     if (!CRON_SECRET) return res.status(500).json({ ok: false, error: "Missing CRON_SECRET" });
@@ -747,6 +735,7 @@ app.all("/cron/weekly-refresh", async (req, res) => {
     const out = await runWeeklyRefresh();
     return res.json({ ok: true, ...out });
   } catch (e) {
+    console.error("❌ cron/weekly-refresh:", e);
     return res.status(500).json({ ok: false, error: String(e?.message || e) });
   }
 });
@@ -763,13 +752,20 @@ app.get("/api/admin/clear-order", async (req, res) => {
     if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
     if (!order) return res.status(400).json({ error: "Missing order" });
 
-    const token = await redis.get(`order:${order}:token`);
-    if (token) await redis.del(`token:${token}:session`);
+    const token = await redis.get(tokenKey(order));
 
-    await redis.del(`order:${order}:token`);
-    await redis.del(`order:${order}:mail_sent`);
+    if (token) {
+      await redis.del(sessionKey(token));
+    }
 
-    return res.json({ ok: true, clearedOrder: order, clearedToken: token || null });
+    await redis.del(tokenKey(order));
+    await redis.del(emailWasAlreadySentKey(order));
+
+    return res.json({
+      ok: true,
+      clearedOrder: order,
+      clearedToken: token || null,
+    });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
@@ -781,7 +777,7 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
     const order = String(req.query.order || "").trim();
     const productId = String(req.query.product_id || "").trim();
     const email = String(req.query.email || "").trim();
-    const name = String(req.query.name || "").trim();
+    const customerName = String(req.query.customer_name || "").trim();
 
     if (!ADMIN_SECRET) return res.status(500).json({ error: "Missing ADMIN_SECRET" });
     if (secret !== ADMIN_SECRET) return res.status(401).json({ error: "Unauthorized" });
@@ -789,31 +785,30 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
     if (!productId) return res.status(400).json({ error: "Missing product_id" });
 
     const cfg = detectCfgFromProductIds(new Set([productId]));
-    if (!cfg.automated) return res.status(400).json({ error: "El producto no es automático" });
-
-    const token = randomToken();
+    const existingToken = await redis.get(tokenKey(order));
+    const token = existingToken || randomToken();
 
     const session = {
       token,
+      orderNumber: order,
+      orderId: null,
+      email: email || null,
+      customerName: customerName || null,
       manual: cfg.manual,
-      automated: cfg.automated,
       productName: cfg.productName,
       deckId: cfg.deckId,
       pick: cfg.pick,
-      orderNumber: order,
-      customerEmail: email || null,
-      customerName: name || null,
+      accessPath: cfg.accessPath,
+      productId: cfg.productId,
       createdAt: Date.now(),
       rebuilt: true,
       rebuiltFromProductId: productId,
     };
 
     const ttl = 60 * 60 * 24 * 180;
-    await redis.set(`order:${order}:token`, token, "EX", ttl);
-    await redis.set(`token:${token}:session`, JSON.stringify(session), "EX", ttl);
-    await redis.del(`order:${order}:mail_sent`);
-
-    const accessUrl = buildReadingUrl({ cfg, token, orderNumber: order });
+    await redis.set(tokenKey(order), token, "EX", ttl);
+    await redis.set(sessionKey(token), JSON.stringify(session), "EX", ttl);
+    await redis.del(emailWasAlreadySentKey(order));
 
     return res.json({
       ok: true,
@@ -821,8 +816,11 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
       token,
       pick: cfg.pick,
       deckId: cfg.deckId,
-      productName: cfg.productName,
-      accessUrl,
+      accessUrl: buildAccessUrl({
+        token,
+        orderNumber: order,
+        accessPath: cfg.accessPath,
+      }),
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -833,14 +831,12 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
 // START + graceful shutdown
 // ----------------------------
 const PORT = process.env.PORT || 8080;
-const server = app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
+const server = app.listen(PORT, () => {
+  console.log("🚀 Server running on port", PORT);
+});
 
 process.on("SIGTERM", async () => {
   console.log("🧹 SIGTERM recibido. Cerrando...");
-  try {
-    await redis.quit?.();
-  } catch {
-    // ignore
-  }
+  try { await redis.quit?.(); } catch {}
   server.close(() => process.exit(0));
 });
