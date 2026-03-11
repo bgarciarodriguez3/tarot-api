@@ -661,10 +661,8 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     } catch (mailErr) {
       console.error(`❌ Error enviando email de acceso para pedido #${orderNumber}:`, mailErr?.message || mailErr);
 
-      // Limpiamos la marca de envío por si Shopify reintenta el webhook.
       await redis.del(mailSentKey);
 
-      // Conservamos token y sesión para poder recuperarlos manualmente si hace falta.
       return res.status(500).send(`Email send failed: ${mailErr?.message || mailErr}`);
     }
   } catch (e) {
