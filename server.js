@@ -1,10 +1,11 @@
-// server.js (ESM) ✅ para "type":"module"
+// server.js (ESM)
 // ✅ Decks locales ./data/decks/*.json
 // ✅ Selección semanal estable (determinística)
 // ✅ Textos largos con OpenAI (lib/weekly-reading.js)
 // ✅ Actualiza descriptionHtml en Shopify (GraphQL Admin API)
 // ✅ Cron protegido por CRON_SECRET (query o header)
-// ✅ Webhook Shopify order-paid + Redis token/sesión
+// ✅ Webhook Shopify order-paid + alias orders-create
+// ✅ Redis token/sesión
 // ✅ Email de acceso a la lectura automática
 // ✅ Idempotencia para evitar correos duplicados
 // ✅ Admin: clear-order / rebuild-order
@@ -520,7 +521,7 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
 // ----------------------------
 // Guardar sesión
 // ----------------------------
-async function saveOrderSession({ order, cfg }) {
+async function saveOrderSession({ order, cfg, source = "shopify_webhook" }) {
   const orderNumber = normalizeOrderNumber(order);
   if (!orderNumber) throw new Error("Missing order number");
 
@@ -540,14 +541,79 @@ async function saveOrderSession({ order, cfg }) {
     accessPath: cfg.accessPath,
     productId: cfg.productId,
     createdAt: Date.now(),
-    source: "shopify_order_paid",
+    source,
   };
 
   const ttl = 60 * 60 * 24 * 180;
   await redis.set(tokenKey(orderNumber), token, "EX", ttl);
   await redis.set(sessionKey(token), JSON.stringify(session), "EX", ttl);
 
+  console.log("💾 Sesión guardada", {
+    orderNumber,
+    token,
+    email: session.email,
+    productName: session.productName,
+    source,
+  });
+
   return session;
+}
+
+// ----------------------------
+// Procesar pedido + email
+// ----------------------------
+async function processOrderAndMaybeSendEmail(order, source = "shopify_webhook") {
+  const orderNumber = normalizeOrderNumber(order);
+  if (!orderNumber) throw new Error("Missing order number");
+
+  const cfg = detectCfgFromOrder(order);
+  const session = await saveOrderSession({ order, cfg, source });
+
+  const alreadySent = await redis.get(emailWasAlreadySentKey(orderNumber));
+  if (alreadySent) {
+    console.log("ℹ️ Email ya enviado para pedido", orderNumber);
+    return {
+      ok: true,
+      orderNumber,
+      token: session.token,
+      email: { ok: false, skipped: true, reason: "already_sent" },
+    };
+  }
+
+  const accessUrl = buildAccessUrl({
+    token: session.token,
+    orderNumber,
+    accessPath: cfg.accessPath,
+  });
+
+  console.log("📩 Enviando email acceso", {
+    to: session.email,
+    orderNumber,
+    accessUrl,
+  });
+
+  const emailResult = await sendAccessEmail({
+    to: session.email,
+    customerName: session.customerName,
+    orderNumber,
+    productName: session.productName,
+    accessUrl,
+  });
+
+  console.log("📩 Resultado email", emailResult);
+
+  if (emailResult.ok) {
+    await redis.set(emailWasAlreadySentKey(orderNumber), "1", "EX", 60 * 60 * 24 * 180);
+  }
+
+  return {
+    ok: true,
+    orderNumber,
+    token: session.token,
+    deckId: session.deckId,
+    pick: session.pick,
+    email: emailResult,
+  };
 }
 
 // ----------------------------
@@ -671,7 +737,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     if (!verifyShopifyHmac(rawBody, hmac)) {
-      console.error("❌ Invalid HMAC");
+      console.error("❌ Invalid HMAC /api/shopify/order-paid");
       return res.status(401).send("Invalid HMAC");
     }
 
@@ -682,43 +748,61 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       return res.status(400).send("Missing order number");
     }
 
-    const cfg = detectCfgFromOrder(order);
-    const session = await saveOrderSession({ order, cfg });
+    // responder rápido a Shopify
+    res.status(200).json({ ok: true, received: true, orderNumber });
 
-    // idempotencia: no reenviar correo si ya fue enviado
-    const alreadySent = await redis.get(emailWasAlreadySentKey(orderNumber));
-    let emailResult = { ok: false, skipped: true, reason: "already_sent" };
-
-    if (!alreadySent) {
-      const accessUrl = buildAccessUrl({
-        token: session.token,
-        orderNumber,
-        accessPath: cfg.accessPath,
-      });
-
-      emailResult = await sendAccessEmail({
-        to: session.email,
-        customerName: session.customerName,
-        orderNumber,
-        productName: session.productName,
-        accessUrl,
-      });
-
-      if (emailResult.ok) {
-        await redis.set(emailWasAlreadySentKey(orderNumber), "1", "EX", 60 * 60 * 24 * 180);
+    // seguir en background
+    setImmediate(async () => {
+      try {
+        await processOrderAndMaybeSendEmail(order, "shopify_order_paid");
+      } catch (e) {
+        console.error("❌ Background /api/shopify/order-paid error:", e);
       }
-    }
-
-    return res.status(200).json({
-      ok: true,
-      orderNumber,
-      token: session.token,
-      deckId: session.deckId,
-      pick: session.pick,
-      email: emailResult,
     });
   } catch (e) {
     console.error("❌ /api/shopify/order-paid error:", e);
+    return res.status(500).send(e.message);
+  }
+});
+
+app.post("/webhooks/orders-create", async (req, res) => {
+  try {
+    if (!SHOPIFY_WEBHOOK_SECRET) {
+      return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
+    }
+
+    const hmac = req.get("X-Shopify-Hmac-Sha256");
+    const rawBody = req.rawBody;
+
+    if (!rawBody) {
+      return res.status(400).send("Missing rawBody");
+    }
+
+    if (!verifyShopifyHmac(rawBody, hmac)) {
+      console.error("❌ Invalid HMAC /webhooks/orders-create");
+      return res.status(401).send("Invalid HMAC");
+    }
+
+    const order = req.body;
+    const orderNumber = normalizeOrderNumber(order);
+
+    if (!orderNumber) {
+      return res.status(400).send("Missing order number");
+    }
+
+    // responder rápido a Shopify
+    res.status(200).json({ ok: true, received: true, orderNumber });
+
+    // seguir en background
+    setImmediate(async () => {
+      try {
+        await processOrderAndMaybeSendEmail(order, "shopify_orders_create");
+      } catch (e) {
+        console.error("❌ Background /webhooks/orders-create error:", e);
+      }
+    });
+  } catch (e) {
+    console.error("❌ /webhooks/orders-create error:", e);
     return res.status(500).send(e.message);
   }
 });
