@@ -1,207 +1,327 @@
-import { Resend } from "resend";
+{% comment %}
+Tapete Arcanos Mayores (3/12) — versión automatizada
+Flujo:
+1. Cliente entra con token
+2. Voltea 3 o 12 cartas
+3. La lectura se genera automáticamente
+4. Puede enviársela por email
+{% endcomment %}
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+<section id="ta-arc-{{ section.id }}" class="ta-arc">
+  <div class="page-width">
 
-/* ============================================================
-   CORS
-============================================================ */
-
-function setCors(req, res) {
-  const origin = req.headers.origin || "*";
-  res.setHeader("Access-Control-Allow-Origin", origin);
-  res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-
-  const reqHeaders = req.headers["access-control-request-headers"];
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    reqHeaders ? String(reqHeaders) : "Content-Type, Authorization"
-  );
-
-  res.setHeader("Access-Control-Max-Age", "86400");
-}
-
-function json(res, status, data) {
-  res.statusCode = status;
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.end(JSON.stringify(data));
-}
-
-/* ============================================================
-   CONFIG 3 BARAJAS + 4 PRODUCTOS
-============================================================ */
-
-const PRODUCT_CONFIG = [
-  {
-    match: ["tres-puertas", "puertas-del-destino", "10493369745745"],
-    deck: "arcanos_mayores",
-    spread: 3,
-    subject: "Tres Puertas del Destino — Tu lectura",
-  },
-  {
-    match: ["mensaje-de-los-angeles", "10496012616017"],
-    deck: "angeles",
-    spread: 4,
-    subject: "Mensaje de los Ángeles — Tu lectura",
-  },
-  {
-    match: ["camino-de-la-semilla", "10495993446737"],
-    deck: "semilla_estelar",
-    spread: 5,
-    subject: "Camino de la Semilla Estelar — Tu lectura",
-  },
-  {
-    match: ["lectura-profunda", "analisis-completo", "10493383082321"],
-    deck: "arcanos_mayores",
-    spread: 12,
-    subject: "Lectura Profunda — Tu lectura",
-  },
-];
-
-function detectProductConfig(body) {
-  const raw = String(body.product || "").toLowerCase();
-  for (const cfg of PRODUCT_CONFIG) {
-    for (const m of cfg.match) {
-      if (raw.includes(String(m).toLowerCase())) return cfg;
-    }
-  }
-  return null;
-}
-
-/* ============================================================
-   FALLBACK SIMPLE (SIN SEMANA NI NOMBRE EXTERNO)
-============================================================ */
-
-function buildFallbackText({ cards }) {
-  const lines = [];
-
-  cards.forEach((card) => {
-    if (card.description) {
-      lines.push(card.description);
-      lines.push("");
-    }
-  });
-
-  return lines.join("\n").trim();
-}
-
-/* ============================================================
-   PLANTILLA EMAIL CON DESCARGO LEGAL
-============================================================ */
-
-function buildEmailHtml({ subject, text }) {
-  const safe = String(text || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
-
-  return `
-  <div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.6; color:#111;">
-
-    <h2 style="margin:0 0 20px; font-weight:600;">
-      ${subject}
-    </h2>
-
-    <div style="
-      background:#f6f6f6;
-      padding:18px;
-      border-radius:16px;
-      font-size:14px;
-      white-space:pre-wrap;
-    ">
-      ${safe}
+    <div class="ta-arc__access" id="arc_access_{{ section.id }}">
+      <div class="ta-arc__accessbox" id="arc_accessbox_{{ section.id }}">
+        <strong>🔮 Verificando tu acceso…</strong>
+      </div>
     </div>
 
-    <div style="margin:40px 0 20px; border-top:1px solid #e5e5e5;"></div>
+    {% if section.settings.heading != blank %}
+      <h1 class="ta-arc__title">{{ section.settings.heading | escape }}</h1>
+    {% endif %}
 
-    <div style="
-      font-size:9px;
-      color:#777;
-      line-height:1.6;
-    ">
-      <strong>DESCARGO DE RESPONSABILIDAD</strong><br><br>
+    {% if section.settings.texto != blank %}
+      <div class="ta-arc__intro rte">{{ section.settings.texto }}</div>
+    {% endif %}
 
-      Las lecturas de tarot y oráculo ofrecidas bajo el nombre comercial Tarot de la Rueda de la Fortuna tienen un carácter espiritual, orientativo y de entretenimiento.<br><br>
+    <div class="ta-arc__controls">
+      <div class="ta-arc__counter" id="arc_counter_{{ section.id }}">Seleccionadas: 0/3</div>
+    </div>
 
-      La información, interpretaciones y mensajes proporcionados a través de este servicio no constituyen hechos objetivos ni predicciones garantizadas.<br><br>
+    <div class="ta-arc__grid" id="arc_grid_{{ section.id }}"></div>
 
-      En ningún caso sustituyen asesoramiento médico, psicológico, legal, financiero ni profesional de ningún tipo.<br><br>
+    <div class="ta-arc__actions">
+      <button type="button" class="ta-arc__btn ta-arc__btn--ghost" id="arc_reset_{{ section.id }}">
+        Reiniciar
+      </button>
+    </div>
 
-      Este servicio no está dirigido a menores de edad.<br><br>
+    <div class="ta-arc__results" id="arc_results_{{ section.id }}" style="display:none;">
+      <div class="ta-arc__box">
 
-      El usuario comprende y acepta que cualquier decisión que tome a partir de la información recibida es de su exclusiva responsabilidad.<br><br>
+        <h3 class="ta-arc__resulttitle">✨ Tu lectura</h3>
 
-      Al utilizar este sitio web y sus servicios, el usuario acepta expresamente este descargo de responsabilidad.
+        <h4>Mensaje general</h4>
+
+        <div id="arc_short_{{ section.id }}"></div>
+
+        <div id="arc_long_{{ section.id }}"></div>
+
+        <hr>
+
+        <h4>Tus cartas</h4>
+
+        <div id="arc_cardsread_{{ section.id }}"></div>
+
+      </div>
+
+      <div class="ta-arc__email">
+
+        <input
+          id="arc_email_{{ section.id }}"
+          class="ta-arc__input"
+          type="email"
+          placeholder="Email para enviarte la lectura"
+        />
+
+        <button
+          type="button"
+          class="ta-arc__btn"
+          id="arc_send_{{ section.id }}"
+          disabled>
+
+          📩 Enviarme esta lectura
+
+        </button>
+
+        <div class="ta-arc__hint" id="arc_hint_{{ section.id }}"></div>
+
+      </div>
+
     </div>
 
   </div>
-  `;
+</section>
+
+<script>
+(function(){
+
+function getParam(name){
+return new URLSearchParams(window.location.search).get(name);
 }
 
-/* ============================================================
-   HANDLER
-============================================================ */
+const token = getParam("token");
+const order = getParam("order");
 
-export default async function handler(req, res) {
-  try {
-    setCors(req, res);
+const apiAccess = "{{ section.settings.access_api_base }}";
+const apiReading = "{{ section.settings.api_base }}";
 
-    if (req.method === "OPTIONS") {
-      res.statusCode = 204;
-      return res.end();
-    }
+const grid = document.getElementById("arc_grid_{{ section.id }}");
+const counter = document.getElementById("arc_counter_{{ section.id }}");
 
-    if (req.method !== "POST") {
-      return json(res, 405, { ok: false, error: "Method not allowed." });
-    }
+const resultsWrap = document.getElementById("arc_results_{{ section.id }}");
+const shortEl = document.getElementById("arc_short_{{ section.id }}");
+const longEl = document.getElementById("arc_long_{{ section.id }}");
 
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body)
-        : req.body || {};
+const cardsRead = document.getElementById("arc_cardsread_{{ section.id }}");
 
-    const to = String(body.to || "").trim();
-    if (!to) return json(res, 400, { ok: false, error: "Missing 'to'." });
+const btnSend = document.getElementById("arc_send_{{ section.id }}");
+const emailInput = document.getElementById("arc_email_{{ section.id }}");
 
-    const productCfg = detectProductConfig(body);
+const hint = document.getElementById("arc_hint_{{ section.id }}");
 
-    const subject =
-      body.subject ||
-      productCfg?.subject ||
-      "Tu lectura";
+let selected = [];
 
-    // PRIORIDAD TOTAL: usar texto completo que manda Shopify
-    let text = body.text?.trim();
+let MAX = 3;
 
-    if (!text) {
-      const cards = Array.isArray(body.cards) ? body.cards : [];
-      if (cards.length) {
-        text = buildFallbackText({ cards });
-      }
-    }
+function detectSpread(){
+const qs = new URLSearchParams(window.location.search);
 
-    if (!text) {
-      return json(res, 400, { ok: false, error: "Missing reading content." });
-    }
+const spread = parseInt(qs.get("spread"),10);
 
-    const html = buildEmailHtml({ subject, text });
+if(spread === 12) return 12;
 
-    const { data, error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject,
-      html,
-    });
-
-    if (error) {
-      console.error(error);
-      return json(res, 500, { ok: false, error: error.message });
-    }
-
-    return json(res, 200, { ok: true, id: data?.id || null });
-
-  } catch (e) {
-    console.error(e);
-    return json(res, 500, { ok: false, error: e.message });
-  }
+return 3;
 }
+
+MAX = detectSpread();
+
+counter.innerText = "Seleccionadas: 0/" + MAX;
+
+async function validateAccess(){
+
+if(!token) return false;
+
+const res = await fetch(apiAccess + "/api/session?token=" + token);
+
+if(!res.ok) return false;
+
+return true;
+
+}
+
+async function fetchReading(){
+
+const payload = {
+token: token,
+order: order,
+spread: MAX,
+cards: selected
+};
+
+const res = await fetch(apiReading + "/api/reading/result",{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body: JSON.stringify(payload)
+});
+
+return await res.json();
+
+}
+
+async function sendEmail(){
+
+const to = emailInput.value.trim();
+
+if(!to.includes("@")){
+hint.innerText="Escribe un email válido";
+return;
+}
+
+btnSend.disabled=true;
+btnSend.innerText="Enviando…";
+
+const payload = {
+to: to,
+order: order,
+spread: MAX,
+cards: selected,
+text: buildEmailText()
+};
+
+await fetch(apiReading + "/api/reading/email",{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body: JSON.stringify(payload)
+});
+
+hint.innerText="✅ Lectura enviada";
+
+btnSend.innerText="Enviar por email";
+
+}
+
+function buildEmailText(){
+
+let txt="✨ Tu lectura\n\n";
+
+selected.forEach((c,i)=>{
+
+txt += (i+1)+". "+c.name+"\n";
+
+if(c.description){
+txt += c.description+"\n\n";
+}
+
+});
+
+return txt;
+
+}
+
+function renderReading(data){
+
+resultsWrap.style.display="block";
+
+shortEl.innerText=data.short || "";
+
+longEl.innerText=data.long || "";
+
+cardsRead.innerHTML="";
+
+selected.forEach((c,i)=>{
+
+const div=document.createElement("div");
+
+div.innerHTML="<strong>"+(i+1)+". "+c.name+"</strong>";
+
+cardsRead.appendChild(div);
+
+});
+
+btnSend.disabled=false;
+
+}
+
+function autoReading(){
+
+fetchReading().then(data=>{
+renderReading(data);
+});
+
+}
+
+function selectCard(card){
+
+if(selected.length >= MAX) return;
+
+selected.push(card);
+
+counter.innerText="Seleccionadas: "+selected.length+"/"+MAX;
+
+if(selected.length === MAX){
+
+setTimeout(autoReading,400);
+
+}
+
+}
+
+async function init(){
+
+const access = await validateAccess();
+
+if(!access){
+
+grid.innerHTML="<p>🔒 Acceso restringido</p>";
+
+return;
+
+}
+
+const cards = `{{ section.settings.cards_list }}`.split("\n");
+
+cards.forEach(line=>{
+
+const p=line.split("|");
+
+const id=p[0];
+const name=p[1];
+const url=p[2];
+
+const div=document.createElement("div");
+
+div.className="ta-arc__card";
+
+div.innerHTML='<img src="'+url+'" style="width:100%">';
+
+div.onclick=function(){
+
+selectCard({
+id:id,
+name:name
+});
+
+};
+
+grid.appendChild(div);
+
+});
+
+}
+
+btnSend.onclick=sendEmail;
+
+init();
+
+})();
+</script>
+
+{% schema %}
+{
+"name": "Arcanos 3/12",
+"settings": [
+
+{ "type":"text","id":"heading","label":"Título","default":"Arcanos Mayores" },
+
+{ "type":"richtext","id":"texto","label":"Texto","default":"<p>Elige tus cartas.</p>" },
+
+{ "type":"textarea","id":"cards_list","label":"Cartas (id|nombre|url)" },
+
+{ "type":"text","id":"api_base","label":"API lectura","default":"https://tarot-api-vercel.vercel.app" },
+
+{ "type":"text","id":"access_api_base","label":"API acceso","default":"https://tarot-api-production-4364.up.railway.app" }
+
+]
+}
+{% endschema %}
