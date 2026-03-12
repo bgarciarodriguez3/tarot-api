@@ -4,7 +4,7 @@
 // ✅ Textos largos con OpenAI (lib/weekly-reading.js)
 // ✅ Actualiza descriptionHtml en Shopify (GraphQL Admin API)
 // ✅ Cron protegido por CRON_SECRET (query o header)
-// ✅ Webhook Shopify order-paid + alias orders-create
+// ✅ Webhook Shopify order-paid
 // ✅ Redis token/sesión
 // ✅ Email de acceso a la lectura automática
 // ✅ Idempotencia para evitar correos duplicados
@@ -227,14 +227,7 @@ function detectCfgFromProductIds(productIds) {
     };
   }
 
-  return {
-    productId: null,
-    productName: "Tu lectura (3 cartas)",
-    deckId: "arcanos_mayores",
-    pick: 3,
-    manual: false,
-    accessPath: ACCESS_PATHS.arcanos_mayores_3,
-  };
+  return null;
 }
 
 function detectCfgFromOrder(order) {
@@ -244,6 +237,7 @@ function detectCfgFromOrder(order) {
       .map((li) => String(li?.product_id || "").trim())
       .filter(Boolean)
   );
+
   return detectCfgFromProductIds(productIds);
 }
 
@@ -476,7 +470,7 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
             <div style="margin:24px 0; text-align:center;">
               <a href="${escapeHtml(accessUrl)}"
                  style="display:inline-block; padding:14px 22px; border-radius:999px; background:#111; color:#fff; text-decoration:none; font-weight:900;">
-                 🔮 Acceder a mi lectura
+                 🔮 Accede a tu lectura
               </a>
             </div>
 
@@ -499,11 +493,11 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
   const text = [
     `Hola ${customerName || ""}`.trim(),
     "",
-    `Tu lectura automática ya está lista.`,
+    "Tu lectura automática ya está lista.",
     `Producto: ${productName || "Lectura automática"}`,
     `Pedido: #${orderNumber}`,
     "",
-    `Accede aquí:`,
+    "Accede aquí:",
     accessUrl,
   ].join("\n");
 
@@ -524,6 +518,7 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
 async function saveOrderSession({ order, cfg, source = "shopify_webhook" }) {
   const orderNumber = normalizeOrderNumber(order);
   if (!orderNumber) throw new Error("Missing order number");
+  if (!cfg) throw new Error("Missing product config");
 
   const existingToken = await redis.get(tokenKey(orderNumber));
   const token = existingToken || randomToken();
@@ -567,6 +562,26 @@ async function processOrderAndMaybeSendEmail(order, source = "shopify_webhook") 
   if (!orderNumber) throw new Error("Missing order number");
 
   const cfg = detectCfgFromOrder(order);
+
+  if (!cfg) {
+    console.log("ℹ️ Pedido ignorado: no corresponde a un producto automatizado", {
+      orderNumber,
+      lineItems: Array.isArray(order?.line_items)
+        ? order.line_items.map((li) => ({
+            product_id: li?.product_id || null,
+            title: li?.title || null,
+          }))
+        : [],
+    });
+
+    return {
+      ok: true,
+      ignored: true,
+      reason: "non_automated_product",
+      orderNumber,
+    };
+  }
+
   const session = await saveOrderSession({ order, cfg, source });
 
   const alreadySent = await redis.get(emailWasAlreadySentKey(orderNumber));
@@ -590,6 +605,8 @@ async function processOrderAndMaybeSendEmail(order, source = "shopify_webhook") 
     to: session.email,
     orderNumber,
     accessUrl,
+    productId: cfg.productId,
+    productName: cfg.productName,
   });
 
   const emailResult = await sendAccessEmail({
@@ -612,6 +629,7 @@ async function processOrderAndMaybeSendEmail(order, source = "shopify_webhook") 
     token: session.token,
     deckId: session.deckId,
     pick: session.pick,
+    productId: session.productId,
     email: emailResult,
   };
 }
@@ -632,6 +650,15 @@ async function runWeeklyRefresh() {
 
   for (const productId of AUTOMATED_PRODUCTS) {
     const cfg = detectCfgFromProductIds(new Set([productId]));
+    if (!cfg) {
+      results.push({
+        productId,
+        ok: false,
+        error: "missing_product_config",
+      });
+      continue;
+    }
+
     const deck = await loadDeck(cfg.deckId);
 
     const seed = `weekly:${wk}:${productId}:${cfg.deckId}`;
@@ -748,10 +775,8 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       return res.status(400).send("Missing order number");
     }
 
-    // responder rápido a Shopify
     res.status(200).json({ ok: true, received: true, orderNumber });
 
-    // seguir en background
     setImmediate(async () => {
       try {
         await processOrderAndMaybeSendEmail(order, "shopify_order_paid");
@@ -766,45 +791,11 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 });
 
 app.post("/webhooks/orders-create", async (req, res) => {
-  try {
-    if (!SHOPIFY_WEBHOOK_SECRET) {
-      return res.status(500).send("Missing SHOPIFY_WEBHOOK_SECRET");
-    }
-
-    const hmac = req.get("X-Shopify-Hmac-Sha256");
-    const rawBody = req.rawBody;
-
-    if (!rawBody) {
-      return res.status(400).send("Missing rawBody");
-    }
-
-    if (!verifyShopifyHmac(rawBody, hmac)) {
-      console.error("❌ Invalid HMAC /webhooks/orders-create");
-      return res.status(401).send("Invalid HMAC");
-    }
-
-    const order = req.body;
-    const orderNumber = normalizeOrderNumber(order);
-
-    if (!orderNumber) {
-      return res.status(400).send("Missing order number");
-    }
-
-    // responder rápido a Shopify
-    res.status(200).json({ ok: true, received: true, orderNumber });
-
-    // seguir en background
-    setImmediate(async () => {
-      try {
-        await processOrderAndMaybeSendEmail(order, "shopify_orders_create");
-      } catch (e) {
-        console.error("❌ Background /webhooks/orders-create error:", e);
-      }
-    });
-  } catch (e) {
-    console.error("❌ /webhooks/orders-create error:", e);
-    return res.status(500).send(e.message);
-  }
+  return res.status(410).json({
+    ok: false,
+    disabled: true,
+    message: "Use /api/shopify/order-paid",
+  });
 });
 
 app.all("/cron/weekly-refresh", async (req, res) => {
@@ -869,6 +860,10 @@ app.get("/api/admin/rebuild-order", async (req, res) => {
     if (!productId) return res.status(400).json({ error: "Missing product_id" });
 
     const cfg = detectCfgFromProductIds(new Set([productId]));
+    if (!cfg) {
+      return res.status(400).json({ error: "Unsupported automated product_id" });
+    }
+
     const existingToken = await redis.get(tokenKey(order));
     const token = existingToken || randomToken();
 
@@ -921,6 +916,8 @@ const server = app.listen(PORT, () => {
 
 process.on("SIGTERM", async () => {
   console.log("🧹 SIGTERM recibido. Cerrando...");
-  try { await redis.quit?.(); } catch {}
+  try {
+    await redis.quit?.();
+  } catch {}
   server.close(() => process.exit(0));
 });
