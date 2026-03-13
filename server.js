@@ -12,11 +12,14 @@ const PORT = process.env.PORT || 3000;
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
-app.use(express.json({
-  verify: (req, res, buf) => {
-    req.rawBody = buf;
-  }
-}));
+
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 
 const sessions = new Map();
 const readings = new Map();
@@ -26,79 +29,84 @@ function generateToken() {
 }
 
 function verifyShopifyWebhook(req) {
-  const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
-  if (!hmacHeader) return false;
-
-  const digest = crypto
-    .createHmac("sha256", process.env.SHOPIFY_WEBHOOK_SECRET)
-    .update(req.rawBody)
-    .digest("base64");
-
   try {
+    const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
+
+    if (!hmacHeader) {
+      console.error("No viene X-Shopify-Hmac-Sha256");
+      return false;
+    }
+
+    if (!req.rawBody) {
+      console.error("req.rawBody no existe");
+      return false;
+    }
+
+    if (!process.env.SHOPIFY_WEBHOOK_SECRET) {
+      console.error("SHOPIFY_WEBHOOK_SECRET no está definido");
+      return false;
+    }
+
+    const digest = crypto
+      .createHmac("sha256", process.env.SHOPIFY_WEBHOOK_SECRET)
+      .update(req.rawBody)
+      .digest("base64");
+
     return crypto.timingSafeEqual(
       Buffer.from(digest),
       Buffer.from(hmacHeader)
     );
   } catch (error) {
+    console.error("Error verificando firma Shopify:", error);
     return false;
   }
 }
 
 function buildIntroEmailHtml({ customerName, spreadUrl }) {
   return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
-      <h2>Tu tirada está lista para comenzar</h2>
+    <div style="font-family: Arial, sans-serif;">
+      <h2>Tu tirada está lista</h2>
       <p>Hola ${customerName || "bella alma"},</p>
-      <p>Gracias por tu compra. Ya puedes acceder a tu tirada desde este enlace:</p>
+      <p>Puedes acceder a tu tirada desde aquí:</p>
       <p>
-        <a href="${spreadUrl}" style="display:inline-block;padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">
-          Abrir mi tirada
+        <a href="${spreadUrl}" style="padding:12px 20px;background:#111;color:#fff;text-decoration:none;border-radius:8px;">
+          Abrir tirada
         </a>
       </p>
-      <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
       <p>${spreadUrl}</p>
-      <hr />
-      <p style="font-size: 12px; color: #666;">Este enlace es personal y está asociado a tu compra.</p>
     </div>
   `;
 }
 
 function buildReadingEmailHtml({ customerName, spreadName, cards, interpretation }) {
-  const cardsHtml = Array.isArray(cards)
-    ? cards.map((card, index) => {
-        return `
-          <li style="margin-bottom: 8px;">
-            <strong>Carta ${index + 1}:</strong> ${card.name || "Sin nombre"}
-            ${card.position ? ` — <em>${card.position}</em>` : ""}
-            ${card.reversed ? " (invertida)" : ""}
-          </li>
-        `;
-      }).join("")
-    : "";
+  const cardsHtml = cards
+    .map(
+      (card, i) => `
+        <li>
+          <strong>Carta ${i + 1}:</strong> ${card.name}
+          ${card.position ? " — " + card.position : ""}
+          ${card.reversed ? " (invertida)" : ""}
+        </li>
+      `
+    )
+    .join("");
 
   return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #111;">
+    <div style="font-family: Arial;">
       <h2>Tu lectura de tarot</h2>
-      <p>Hola ${customerName || "bella alma"},</p>
-      <p>Tu lectura ya ha sido completada. Aquí tienes el resultado:</p>
+      <p>Hola ${customerName}</p>
 
-      <h3>Tapete / Tirada</h3>
-      <p>${spreadName || "Tirada personalizada"}</p>
+      <h3>${spreadName}</h3>
 
-      <h3>Cartas</h3>
       <ul>
         ${cardsHtml}
       </ul>
 
       <h3>Interpretación</h3>
-      <div style="white-space: pre-line; background: #fafafa; border: 1px solid #eee; padding: 16px; border-radius: 10px;">
-        ${interpretation || ""}
-      </div>
 
-      <hr />
-      <p style="font-size: 12px; color: #666;">
-        Gracias por confiar en esta lectura.
-      </p>
+      <div style="white-space:pre-line;background:#fafafa;padding:15px;border-radius:8px">
+      ${interpretation}
+      </div>
     </div>
   `;
 }
@@ -106,16 +114,16 @@ function buildReadingEmailHtml({ customerName, spreadName, cards, interpretation
 async function sendIntroEmail({ to, customerName, token }) {
   const spreadUrl = `${process.env.SHOPIFY_SUCCESS_URL}?token=${token}`;
 
-  return resend.emails.send({
+  return await resend.emails.send({
     from: process.env.RESEND_FROM,
     to,
-    subject: "Tu tirada de tarot ya está disponible",
-    html: buildIntroEmailHtml({ customerName, spreadUrl })
+    subject: "Tu tirada de tarot está lista",
+    html: buildIntroEmailHtml({ customerName, spreadUrl }),
   });
 }
 
 async function sendReadingEmail({ to, customerName, spreadName, cards, interpretation }) {
-  return resend.emails.send({
+  return await resend.emails.send({
     from: process.env.RESEND_FROM,
     to,
     subject: "Tu lectura de tarot",
@@ -123,54 +131,94 @@ async function sendReadingEmail({ to, customerName, spreadName, cards, interpret
       customerName,
       spreadName,
       cards,
-      interpretation
-    })
+      interpretation,
+    }),
   });
 }
 
 app.get("/", (req, res) => {
   res.json({
     ok: true,
-    service: "tarot-backend-railway"
+    service: "tarot-backend-railway",
   });
+});
+
+app.get("/api/session", (req, res) => {
+  try {
+    const token = req.query.token;
+
+    if (!token) {
+      return res.status(400).json({ ok: false, error: "token_required" });
+    }
+
+    const session = sessions.get(token);
+
+    if (!session) {
+      return res.status(404).json({ ok: false, error: "session_not_found" });
+    }
+
+    return res.json({ ok: true, session });
+  } catch (error) {
+    console.error("Error en /api/session", error);
+
+    res.status(500).json({
+      ok: false,
+      error: "internal_error",
+    });
+  }
 });
 
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
+    console.log("=== WEBHOOK /api/shopify/order-paid ===");
+
+    console.log("Headers:", req.headers);
+
+    console.log("Body recibido:", JSON.stringify(req.body, null, 2));
+
     const valid = verifyShopifyWebhook(req);
+
+    console.log("Firma válida:", valid);
 
     if (!valid) {
       return res.status(401).json({
         ok: false,
-        error: "invalid_webhook_signature"
+        error: "invalid_webhook_signature",
       });
     }
 
     const order = req.body;
 
     const orderId = String(order.id || "");
+
     const customerEmail = order.email || order.contact_email || "";
+
     const customerName =
       order.customer?.first_name ||
       order.billing_address?.first_name ||
       "Cliente";
 
+    console.log("orderId:", orderId);
+    console.log("customerEmail:", customerEmail);
+
     if (!orderId || !customerEmail) {
       return res.status(400).json({
         ok: false,
-        error: "missing_order_id_or_email"
+        error: "missing_order_id_or_email",
       });
     }
 
     const existingSession = Array.from(sessions.values()).find(
-      (session) => session.orderId === orderId
+      (s) => s.orderId === orderId
     );
 
     if (existingSession) {
+      console.log("Sesion ya existente");
+
       return res.json({
         ok: true,
         alreadyExists: true,
-        token: existingSession.token
+        token: existingSession.token,
       });
     }
 
@@ -181,99 +229,51 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       orderId,
       customerEmail,
       customerName,
-      status: "created",
+      createdAt: new Date().toISOString(),
       emailSent: false,
-      emailSentAt: null,
-      readingCompletedAt: null,
-      createdAt: new Date().toISOString()
     };
 
     sessions.set(token, session);
 
-    await sendIntroEmail({
+    console.log("Sesion creada:", token);
+
+    console.log("Enviando email inicial...");
+
+    const emailResult = await sendIntroEmail({
       to: customerEmail,
       customerName,
-      token
+      token,
     });
+
+    console.log("Resultado resend:", emailResult);
 
     return res.json({
       ok: true,
-      token
+      token,
     });
   } catch (error) {
-    console.error("Error en /api/shopify/order-paid:", error);
-    return res.status(500).json({
+    console.error("ERROR EN WEBHOOK");
+
+    console.error(error);
+
+    res.status(500).json({
       ok: false,
-      error: "internal_error"
-    });
-  }
-});
-
-app.get("/api/session", (req, res) => {
-  try {
-    const token = req.query.token;
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "token_required"
-      });
-    }
-
-    const session = sessions.get(token);
-
-    if (!session) {
-      return res.status(404).json({
-        ok: false,
-        error: "session_not_found"
-      });
-    }
-
-    return res.json({
-      ok: true,
-      session: {
-        token: session.token,
-        orderId: session.orderId,
-        customerEmail: session.customerEmail,
-        customerName: session.customerName,
-        status: session.status,
-        emailSent: session.emailSent,
-        emailSentAt: session.emailSentAt,
-        readingCompletedAt: session.readingCompletedAt,
-        createdAt: session.createdAt
-      }
-    });
-  } catch (error) {
-    console.error("Error en /api/session:", error);
-    return res.status(500).json({
-      ok: false,
-      error: "internal_error"
+      error: "internal_error",
+      message: error.message,
     });
   }
 });
 
 app.post("/api/reading/result", async (req, res) => {
   try {
-    const {
-      token,
-      spreadName,
-      cards,
-      interpretation
-    } = req.body;
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "token_required"
-      });
-    }
+    const { token, spreadName, cards, interpretation } = req.body;
 
     const session = sessions.get(token);
 
     if (!session) {
       return res.status(404).json({
         ok: false,
-        error: "session_not_found"
+        error: "session_not_found",
       });
     }
 
@@ -281,118 +281,45 @@ app.post("/api/reading/result", async (req, res) => {
       return res.json({
         ok: true,
         alreadySent: true,
-        message: "La lectura ya fue enviada anteriormente"
-      });
-    }
-
-    if (!Array.isArray(cards) || cards.length === 0) {
-      return res.status(400).json({
-        ok: false,
-        error: "cards_required"
-      });
-    }
-
-    if (!interpretation || typeof interpretation !== "string") {
-      return res.status(400).json({
-        ok: false,
-        error: "interpretation_required"
       });
     }
 
     const reading = {
       token,
-      orderId: session.orderId,
-      customerEmail: session.customerEmail,
-      customerName: session.customerName,
-      spreadName: spreadName || "Tirada personalizada",
+      spreadName,
       cards,
       interpretation,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     readings.set(token, reading);
 
     await sendReadingEmail({
-      to: reading.customerEmail,
-      customerName: reading.customerName,
-      spreadName: reading.spreadName,
-      cards: reading.cards,
-      interpretation: reading.interpretation
+      to: session.customerEmail,
+      customerName: session.customerName,
+      spreadName,
+      cards,
+      interpretation,
     });
 
-    session.status = "completed";
     session.emailSent = true;
-    session.emailSentAt = new Date().toISOString();
-    session.readingCompletedAt = new Date().toISOString();
 
     sessions.set(token, session);
 
-    return res.json({
+    res.json({
       ok: true,
-      emailed: true
+      emailed: true,
     });
   } catch (error) {
-    console.error("Error en /api/reading/result:", error);
-    return res.status(500).json({
+    console.error("Error en /api/reading/result", error);
+
+    res.status(500).json({
       ok: false,
-      error: "internal_error"
+      error: "internal_error",
     });
   }
 });
 
-app.post("/api/reading/email", async (req, res) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "token_required"
-      });
-    }
-
-    const session = sessions.get(token);
-    const reading = readings.get(token);
-
-    if (!session) {
-      return res.status(404).json({
-        ok: false,
-        error: "session_not_found"
-      });
-    }
-
-    if (!reading) {
-      return res.status(404).json({
-        ok: false,
-        error: "reading_not_found"
-      });
-    }
-
-    await sendReadingEmail({
-      to: reading.customerEmail,
-      customerName: reading.customerName,
-      spreadName: reading.spreadName,
-      cards: reading.cards,
-      interpretation: reading.interpretation
-    });
-
-    session.emailSent = true;
-    session.emailSentAt = new Date().toISOString();
-    sessions.set(token, session);
-
-    return res.json({
-      ok: true,
-      resent: true
-    });
-  } catch (error) {
-    console.error("Error en /api/reading/email:", error);
-    return res.status(500).json({
-      ok: false,
-      error: "internal_error"
-    });
-  }
-});
-
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor iniciado en puerto ${PORT}`);
 });
