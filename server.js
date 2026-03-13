@@ -8,7 +8,36 @@ import Redis from "ioredis";
 import { Resend } from "resend";
 
 const app = express();
-app.use(cors());
+
+const ALLOWED_ORIGINS = [
+  "https://eltarotdelaruedadelafortuna.com",
+  "https://www.eltarotdelaruedadelafortuna.com",
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
+app.options(
+  "*",
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(
   express.json({
@@ -178,7 +207,9 @@ function escapeHtml(s = "") {
   return String(s)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function randomToken() {
@@ -220,7 +251,12 @@ function buildAccessUrl({ token, orderNumber, accessPath }) {
 async function sendAccessEmail({ to, customerName, orderNumber, productName, accessUrl }) {
   if (!resend) {
     console.warn("⚠️ Resend no configurado.");
-    return { ok: false };
+    return { ok: false, error: "Resend no configurado" };
+  }
+
+  if (!EMAIL_FROM) {
+    console.warn("⚠️ EMAIL_FROM no configurado.");
+    return { ok: false, error: "EMAIL_FROM no configurado" };
   }
 
   const safeName = customerName || "alma bella";
@@ -229,40 +265,60 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
   const subject = `✨ Tu lectura está lista — Pedido #${orderNumber}`;
 
   const html = `
-<div style="font-family:Arial;padding:20px">
-<h2>✨ Tu lectura está lista</h2>
-<p>Hola ${escapeHtml(safeName)},</p>
-<p>Tu lectura <b>${escapeHtml(safeProduct)}</b> ya está disponible.</p>
+<div style="font-family:Arial,sans-serif;padding:20px;background:#f6f6f8;">
+  <div style="max-width:700px;margin:0 auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 12px 30px rgba(0,0,0,.08);">
+    <h2 style="margin-top:0;">✨ Tu lectura está lista</h2>
+    <p>Hola ${escapeHtml(safeName)},</p>
+    <p>Tu lectura <b>${escapeHtml(safeProduct)}</b> ya está disponible.</p>
 
-<p style="margin:30px 0">
-<a href="${escapeHtml(accessUrl)}"
-style="background:#111;color:#fff;padding:14px 20px;border-radius:30px;text-decoration:none">
-🔮 Acceder a tu lectura
-</a>
-</p>
+    <p style="margin:30px 0">
+      <a href="${escapeHtml(accessUrl)}"
+         style="background:#111;color:#fff;padding:14px 20px;border-radius:30px;text-decoration:none;display:inline-block;font-weight:700;">
+         🔮 Acceder a tu lectura
+      </a>
+    </p>
 
-<p>Pedido #${escapeHtml(orderNumber)}</p>
+    <p>Pedido #${escapeHtml(orderNumber)}</p>
+
+    <p style="font-size:12px;opacity:.8;margin-top:18px;">
+      Si el botón no funciona, copia y pega este enlace en tu navegador:
+    </p>
+    <p style="font-size:12px;word-break:break-all;opacity:.85;">
+      ${escapeHtml(accessUrl)}
+    </p>
+  </div>
 </div>
 `;
+
+  const text = [
+    `Hola ${safeName}`,
+    "",
+    `Tu lectura ${safeProduct} ya está disponible.`,
+    `Pedido #${orderNumber}`,
+    "",
+    "Accede aquí:",
+    accessUrl,
+  ].join("\n");
 
   const { data, error } = await resend.emails.send({
     from: EMAIL_FROM,
     to,
     subject,
+    text,
     html,
   });
 
   if (error) {
     console.error("❌ Resend error:", error);
-    return { ok: false };
+    return { ok: false, error: error.message || "No se pudo enviar el email" };
   }
 
   console.log("✅ Email enviado con Resend", {
     orderNumber,
-    id: data?.id,
+    id: data?.id || null,
   });
 
-  return { ok: true };
+  return { ok: true, id: data?.id || null };
 }
 
 // --------------------------------------------------
@@ -279,8 +335,8 @@ function sessionKey(token) {
 
 async function saveOrderSession({ order, cfg }) {
   const orderNumber = normalizeOrderNumber(order);
-
-  const token = randomToken();
+  const existingToken = await redis.get(tokenKey(orderNumber));
+  const token = existingToken || randomToken();
 
   const session = {
     token,
@@ -288,8 +344,12 @@ async function saveOrderSession({ order, cfg }) {
     email: getOrderEmail(order),
     customerName: getCustomerName(order),
     productName: cfg.productName,
+    productId: cfg.productId,
+    deckId: cfg.deckId,
     accessPath: cfg.accessPath,
     pick: cfg.pick,
+    automated: true,
+    createdAt: Date.now(),
   };
 
   await redis.set(tokenKey(orderNumber), token);
@@ -307,33 +367,174 @@ async function saveOrderSession({ order, cfg }) {
 app.post("/api/shopify/order-paid", async (req, res) => {
   console.log("➡️ Entró webhook /api/shopify/order-paid");
 
-  const order = req.body;
-  const orderNumber = normalizeOrderNumber(order);
+  try {
+    const order = req.body || {};
+    const orderNumber = normalizeOrderNumber(order);
 
-  const cfg = detectCfgFromOrder(order);
+    const cfg = detectCfgFromOrder(order);
 
-  if (!cfg) {
-    console.log("Pedido ignorado: no automatizado");
-    return res.json({ ok: true });
+    if (!cfg) {
+      console.log("Pedido ignorado: no automatizado");
+      return res.json({ ok: true, ignored: true });
+    }
+
+    const session = await saveOrderSession({ order, cfg });
+
+    const accessUrl = buildAccessUrl({
+      token: session.token,
+      orderNumber,
+      accessPath: cfg.accessPath,
+    });
+
+    const emailResult = await sendAccessEmail({
+      to: session.email,
+      customerName: session.customerName,
+      orderNumber,
+      productName: cfg.productName,
+      accessUrl,
+    });
+
+    return res.json({ ok: true, email: emailResult });
+  } catch (e) {
+    console.error("❌ /api/shopify/order-paid error:", e?.stack || e);
+    return res.status(500).json({
+      ok: false,
+      error: e?.message || "Error interno",
+    });
   }
+});
 
-  const session = await saveOrderSession({ order, cfg });
+// --------------------------------------------------
+// API LECTURA
+// --------------------------------------------------
 
-  const accessUrl = buildAccessUrl({
-    token: session.token,
-    orderNumber,
-    accessPath: cfg.accessPath,
-  });
+app.post("/api/reading/result", async (req, res) => {
+  try {
+    const { spread, cards } = req.body || {};
 
-  await sendAccessEmail({
-    to: session.email,
-    customerName: session.customerName,
-    orderNumber,
-    productName: cfg.productName,
-    accessUrl,
-  });
+    return res.json({
+      ok: true,
+      title: "Tu lectura",
+      short: `Has realizado una tirada de ${spread || 0} cartas.`,
+      long: Array.isArray(cards) && cards.length
+        ? "Las cartas seleccionadas ya están listas para interpretarse."
+        : "No se recibieron cartas.",
+    });
+  } catch (e) {
+    console.error("❌ /api/reading/result error:", e?.stack || e);
+    return res.status(500).json({
+      ok: false,
+      error: e?.message || "Error interno",
+    });
+  }
+});
 
-  res.json({ ok: true });
+app.post("/api/reading/email", async (req, res) => {
+  try {
+    if (!resend) {
+      return res.status(500).json({
+        ok: false,
+        error: "Resend no configurado",
+      });
+    }
+
+    if (!EMAIL_FROM) {
+      return res.status(500).json({
+        ok: false,
+        error: "EMAIL_FROM no configurado",
+      });
+    }
+
+    const {
+      to,
+      subject,
+      text,
+      html,
+      order,
+      spread,
+      cards,
+    } = req.body || {};
+
+    if (!to || !String(to).includes("@")) {
+      return res.status(400).json({
+        ok: false,
+        error: "Email inválido",
+      });
+    }
+
+    const safeSubject =
+      String(subject || "").trim() ||
+      `✨ Tu lectura está lista${order ? ` — Pedido #${order}` : ""}`;
+
+    const fallbackText = [
+      "✨ Tu lectura",
+      order ? `Pedido: #${order}` : "",
+      spread ? `Tirada: ${spread} cartas` : "",
+      "",
+      String(text || "").trim(),
+      "",
+      Array.isArray(cards) && cards.length
+        ? "Cartas:\n" +
+          cards
+            .map((c, i) => {
+              const inv = c?.inverted ? " (Invertida)" : "";
+              const desc = c?.description ? `\n${c.description}` : "";
+              return `${i + 1}. ${c?.name || "Carta"}${inv}${desc}`;
+            })
+            .join("\n\n")
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const fallbackHtml = html || `
+      <div style="margin:0;padding:0;background:#f6f6f8;">
+        <div style="max-width:720px;margin:0 auto;padding:22px;">
+          <div style="border-radius:22px;padding:20px;background:linear-gradient(180deg,#0b0f2a,#111);color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.18);">
+            <div style="font-size:18px;font-weight:900;">✨ Tu lectura</div>
+            ${order ? `<div style="opacity:.85;margin-top:6px;font-size:13px;">Pedido #${escapeHtml(order)}</div>` : ""}
+          </div>
+
+          <div style="border-radius:22px;padding:18px;background:#fff;margin-top:14px;box-shadow:0 14px 40px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.06);">
+            <div style="white-space:pre-wrap;line-height:1.6;font-size:14px;color:#111;">${escapeHtml(fallbackText)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to,
+      subject: safeSubject,
+      text: fallbackText,
+      html: fallbackHtml,
+    });
+
+    if (error) {
+      console.error("❌ /api/reading/email Resend error:", error);
+      return res.status(500).json({
+        ok: false,
+        error: error.message || "No se pudo enviar el email",
+      });
+    }
+
+    console.log("✅ Lectura enviada por email", {
+      to,
+      order: order || null,
+      id: data?.id || null,
+    });
+
+    return res.json({
+      ok: true,
+      id: data?.id || null,
+    });
+  } catch (e) {
+    console.error("❌ /api/reading/email error:", e?.stack || e);
+    return res.status(500).json({
+      ok: false,
+      error: e?.message || "Error interno",
+    });
+  }
 });
 
 // --------------------------------------------------
@@ -341,13 +542,33 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 // --------------------------------------------------
 
 app.get("/api/session", async (req, res) => {
-  const token = String(req.query.token || "").trim();
+  try {
+    const token = String(req.query.token || "").trim();
 
-  const raw = await redis.get(sessionKey(token));
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing token",
+      });
+    }
 
-  if (!raw) return res.status(404).json({ ok: false });
+    const raw = await redis.get(sessionKey(token));
 
-  return res.json(JSON.parse(raw));
+    if (!raw) {
+      return res.status(404).json({
+        ok: false,
+        error: "Session not found",
+      });
+    }
+
+    return res.json(JSON.parse(raw));
+  } catch (e) {
+    console.error("❌ /api/session error:", e?.stack || e);
+    return res.status(500).json({
+      ok: false,
+      error: e?.message || "Error interno",
+    });
+  }
 });
 
 // --------------------------------------------------
@@ -355,8 +576,15 @@ app.get("/api/session", async (req, res) => {
 // --------------------------------------------------
 
 app.get("/health/redis", async (req, res) => {
-  const pong = await redis.ping();
-  res.json({ ok: true, redis: pong });
+  try {
+    const pong = await redis.ping();
+    res.json({ ok: true, redis: pong });
+  } catch (e) {
+    res.status(500).json({
+      ok: false,
+      error: e?.message || "Redis error",
+    });
+  }
 });
 
 // --------------------------------------------------
