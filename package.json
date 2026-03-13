@@ -1,23 +1,16 @@
 {
-  "name": "tarot-api",
+  "name": "tarot-backend-railway",
   "version": "1.0.0",
-  "description": "Backend Tarot semanal con Cron, Redis y OpenAI",
-  "type": "module",
-  "private": true,
+  "description": "Backend para tiradas de tarot automatizadas con Shopify + Railway + Resend",
+  "main": "server.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "start": "node server.js"
   },
   "dependencies": {
+    "@resend/node": "^3.0.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "ioredis": "^5.4.1",
-    "nodemailer": "^6.9.8",
-    "openai": "^4.57.0",
-    "p-limit": "^6.1.0",
-    "resend": "^4.0.0"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
   }
 }
