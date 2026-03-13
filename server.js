@@ -58,6 +58,8 @@ const SITE_URL = String(process.env.SITE_URL || "https://eltarotdelaruedadelafor
 const RESEND_API_KEY = String(process.env.RESEND_API_KEY || "").trim();
 const EMAIL_FROM = String(process.env.EMAIL_FROM || "").trim();
 
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 180;
+
 // --------------------------------------------------
 // REDIS
 // --------------------------------------------------
@@ -244,6 +246,42 @@ function buildAccessUrl({ token, orderNumber, accessPath }) {
   }token=${encodeURIComponent(token)}${orderParam}`;
 }
 
+function tokenKey(orderNumber) {
+  return `order:${orderNumber}:token`;
+}
+
+function sessionKey(token) {
+  return `token:${token}:session`;
+}
+
+function tokenOpenedKey(token) {
+  return `token:${token}:opened`;
+}
+
+function tokenUsedKey(token) {
+  return `token:${token}:used`;
+}
+
+function orderReadingDoneKey(orderNumber) {
+  return `order:${orderNumber}:reading_done`;
+}
+
+function orderReadingResultKey(orderNumber) {
+  return `order:${orderNumber}:reading_result`;
+}
+
+function orderEmailSentKey(orderNumber) {
+  return `order:${orderNumber}:access_email_sent`;
+}
+
+async function safeJsonParse(raw, fallback = null) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
 // --------------------------------------------------
 // EMAIL
 // --------------------------------------------------
@@ -325,14 +363,6 @@ async function sendAccessEmail({ to, customerName, orderNumber, productName, acc
 // SESIÓN
 // --------------------------------------------------
 
-function tokenKey(orderNumber) {
-  return `order:${orderNumber}:token`;
-}
-
-function sessionKey(token) {
-  return `token:${token}:session`;
-}
-
 async function saveOrderSession({ order, cfg }) {
   const orderNumber = normalizeOrderNumber(order);
   const existingToken = await redis.get(tokenKey(orderNumber));
@@ -352,12 +382,24 @@ async function saveOrderSession({ order, cfg }) {
     createdAt: Date.now(),
   };
 
-  await redis.set(tokenKey(orderNumber), token);
-  await redis.set(sessionKey(token), JSON.stringify(session));
+  await redis.set(tokenKey(orderNumber), token, "EX", SESSION_TTL_SECONDS);
+  await redis.set(sessionKey(token), JSON.stringify(session), "EX", SESSION_TTL_SECONDS);
 
   console.log("💾 Sesión guardada", { orderNumber, token });
 
   return session;
+}
+
+async function getSessionByToken(token) {
+  const raw = await redis.get(sessionKey(token));
+  if (!raw) return null;
+  return safeJsonParse(raw, null);
+}
+
+async function getStoredReading(orderNumber) {
+  const raw = await redis.get(orderReadingResultKey(orderNumber));
+  if (!raw) return null;
+  return safeJsonParse(raw, null);
 }
 
 // --------------------------------------------------
@@ -386,13 +428,22 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       accessPath: cfg.accessPath,
     });
 
-    const emailResult = await sendAccessEmail({
-      to: session.email,
-      customerName: session.customerName,
-      orderNumber,
-      productName: cfg.productName,
-      accessUrl,
-    });
+    const alreadySent = await redis.get(orderEmailSentKey(orderNumber));
+    let emailResult = { ok: true, skipped: true, reason: "already_sent" };
+
+    if (!alreadySent) {
+      emailResult = await sendAccessEmail({
+        to: session.email,
+        customerName: session.customerName,
+        orderNumber,
+        productName: cfg.productName,
+        accessUrl,
+      });
+
+      if (emailResult.ok) {
+        await redis.set(orderEmailSentKey(orderNumber), "1", "EX", SESSION_TTL_SECONDS);
+      }
+    }
 
     return res.json({ ok: true, email: emailResult });
   } catch (e) {
@@ -410,15 +461,76 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
 app.post("/api/reading/result", async (req, res) => {
   try {
-    const { spread, cards } = req.body || {};
+    const { token, order, spread, cards } = req.body || {};
 
-    return res.json({
-      ok: true,
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing token",
+      });
+    }
+
+    const session = await getSessionByToken(String(token).trim());
+    if (!session) {
+      return res.status(404).json({
+        ok: false,
+        error: "Session not found",
+      });
+    }
+
+    const orderNumber = String(order || session.orderNumber || "").trim();
+    if (!orderNumber || orderNumber !== String(session.orderNumber || "").trim()) {
+      return res.status(400).json({
+        ok: false,
+        error: "Order mismatch",
+      });
+    }
+
+    const storedReading = await getStoredReading(orderNumber);
+    if (storedReading) {
+      return res.json({
+        ok: true,
+        reused: true,
+        ...storedReading,
+      });
+    }
+
+    const tokenAlreadyUsed = await redis.get(tokenUsedKey(session.token));
+    if (tokenAlreadyUsed === "1") {
+      return res.status(403).json({
+        ok: false,
+        error: "Esta lectura ya fue realizada",
+      });
+    }
+
+    const result = {
       title: "Tu lectura",
       short: `Has realizado una tirada de ${spread || 0} cartas.`,
       long: Array.isArray(cards) && cards.length
         ? "Las cartas seleccionadas ya están listas para interpretarse."
         : "No se recibieron cartas.",
+      orderNumber,
+      token: session.token,
+      spread: spread || session.pick || null,
+      cards: Array.isArray(cards) ? cards : [],
+      createdAt: Date.now(),
+    };
+
+    await redis.set(orderReadingDoneKey(orderNumber), "1", "EX", SESSION_TTL_SECONDS);
+    await redis.set(orderReadingResultKey(orderNumber), JSON.stringify(result), "EX", SESSION_TTL_SECONDS);
+    await redis.set(tokenUsedKey(session.token), "1", "EX", SESSION_TTL_SECONDS);
+
+    console.log("✅ Lectura generada y bloqueada", {
+      orderNumber,
+      token: session.token,
+      spread: result.spread,
+      cards: result.cards.length,
+    });
+
+    return res.json({
+      ok: true,
+      reused: false,
+      ...result,
     });
   } catch (e) {
     console.error("❌ /api/reading/result error:", e?.stack || e);
@@ -447,12 +559,14 @@ app.post("/api/reading/email", async (req, res) => {
 
     const {
       to,
+      token,
+      order,
       subject,
       text,
       html,
-      order,
       spread,
       cards,
+      reading,
     } = req.body || {};
 
     if (!to || !String(to).includes("@")) {
@@ -462,16 +576,44 @@ app.post("/api/reading/email", async (req, res) => {
       });
     }
 
+    let session = null;
+    if (token) {
+      session = await getSessionByToken(String(token).trim());
+      if (!session) {
+        return res.status(404).json({
+          ok: false,
+          error: "Session not found",
+        });
+      }
+    }
+
+    const orderNumber = String(order || session?.orderNumber || "").trim();
+    if (!orderNumber) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing order",
+      });
+    }
+
+    if (session && orderNumber !== String(session.orderNumber || "").trim()) {
+      return res.status(400).json({
+        ok: false,
+        error: "Order mismatch",
+      });
+    }
+
+    const storedReading = await getStoredReading(orderNumber);
+
     const safeSubject =
       String(subject || "").trim() ||
-      `✨ Tu lectura está lista${order ? ` — Pedido #${order}` : ""}`;
+      `✨ Tu lectura está lista${orderNumber ? ` — Pedido #${orderNumber}` : ""}`;
 
     const fallbackText = [
       "✨ Tu lectura",
-      order ? `Pedido: #${order}` : "",
+      orderNumber ? `Pedido: #${orderNumber}` : "",
       spread ? `Tirada: ${spread} cartas` : "",
       "",
-      String(text || "").trim(),
+      String(text || storedReading?.long || "").trim(),
       "",
       Array.isArray(cards) && cards.length
         ? "Cartas:\n" +
@@ -492,7 +634,7 @@ app.post("/api/reading/email", async (req, res) => {
         <div style="max-width:720px;margin:0 auto;padding:22px;">
           <div style="border-radius:22px;padding:20px;background:linear-gradient(180deg,#0b0f2a,#111);color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.18);">
             <div style="font-size:18px;font-weight:900;">✨ Tu lectura</div>
-            ${order ? `<div style="opacity:.85;margin-top:6px;font-size:13px;">Pedido #${escapeHtml(order)}</div>` : ""}
+            ${orderNumber ? `<div style="opacity:.85;margin-top:6px;font-size:13px;">Pedido #${escapeHtml(orderNumber)}</div>` : ""}
           </div>
 
           <div style="border-radius:22px;padding:18px;background:#fff;margin-top:14px;box-shadow:0 14px 40px rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.06);">
@@ -520,8 +662,9 @@ app.post("/api/reading/email", async (req, res) => {
 
     console.log("✅ Lectura enviada por email", {
       to,
-      order: order || null,
+      order: orderNumber || null,
       id: data?.id || null,
+      reusedReading: !!storedReading,
     });
 
     return res.json({
@@ -552,16 +695,31 @@ app.get("/api/session", async (req, res) => {
       });
     }
 
-    const raw = await redis.get(sessionKey(token));
+    const session = await getSessionByToken(token);
 
-    if (!raw) {
+    if (!session) {
       return res.status(404).json({
         ok: false,
         error: "Session not found",
       });
     }
 
-    return res.json(JSON.parse(raw));
+    const opened = await redis.get(tokenOpenedKey(token));
+    const used = await redis.get(tokenUsedKey(token));
+    const readingDone = await redis.get(orderReadingDoneKey(session.orderNumber));
+    const storedReading = await getStoredReading(session.orderNumber);
+
+    if (!opened) {
+      await redis.set(tokenOpenedKey(token), "1", "EX", SESSION_TTL_SECONDS);
+    }
+
+    return res.json({
+      ...session,
+      opened: opened === "1" || !opened,
+      used: used === "1",
+      readingDone: readingDone === "1",
+      reading: storedReading || null,
+    });
   } catch (e) {
     console.error("❌ /api/session error:", e?.stack || e);
     return res.status(500).json({
