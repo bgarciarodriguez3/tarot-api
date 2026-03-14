@@ -7,104 +7,165 @@ const app = express();
 const PORT = 8080;
 
 app.use(cors());
-app.use(express.json({ limit: "2mb" }));
+app.use(
+  express.json({
+    limit: "2mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    }
+  })
+);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sessions = new Map();
 const readings = new Map();
 
-function generateToken() {
-  return crypto.randomBytes(24).toString("hex");
-}
+const PRODUCT_CONFIGS = {
+  "10496012616017": {
+    productId: "10496012616017",
+    deckId: "angeles",
+    pick: 4,
+    label: "Mensaje de los Ángeles ✨ Lectura Angelical de tirada de 4 Cartas",
+    emailSubject: "✨ Tu lectura del Oráculo de los Ángeles",
+    positions: [
+      "🌤 Energía actual",
+      "✨ Portal de transformación",
+      "👼 Consejo angelical",
+      "✨ Resultado de la semana"
+    ]
+  },
+  "10495993446737": {
+    productId: "10495993446737",
+    deckId: "semilla_estelar",
+    pick: 5,
+    label: "Camino de la Semilla Estelar",
+    emailSubject: "✨ Tu lectura de la Semilla Estelar",
+    positions: [
+      "🌌 Origen del llamado",
+      "⭐ Carta clave",
+      "🛸 Memoria que despierta",
+      "🪐 Consejo de tus guías",
+      "✨ Próximo portal"
+    ]
+  },
+  "10493383082321": {
+    productId: "10493383082321",
+    deckId: "arcanos_mayores",
+    pick: 12,
+    label: "Lectura Profunda: Análisis Completo",
+    emailSubject: "🔮 Tu Lectura Profunda",
+    positions: [
+      "1. Situación actual",
+      "2. Energía oculta",
+      "3. Origen del conflicto",
+      "4. Don o recurso",
+      "5. Bloqueo",
+      "6. Influencia externa",
+      "7. Aprendizaje",
+      "8. Acción recomendada",
+      "9. Evolución inmediata",
+      "10. Resultado probable",
+      "11. Integración espiritual",
+      "12. Síntesis final"
+    ]
+  },
+  "10493369745745": {
+    productId: "10493369745745",
+    deckId: "arcanos_mayores",
+    pick: 3,
+    label: "Tres Puertas del Destino",
+    emailSubject: "✨ Tres Puertas del Destino",
+    positions: [
+      "🚪 Primera puerta",
+      "🚪 Segunda puerta",
+      "🚪 Tercera puerta"
+    ]
+  }
+};
 
 function safeStr(v) {
   return v === null || v === undefined ? "" : String(v);
 }
 
+function cleanStr(v) {
+  return safeStr(v).trim();
+}
+
+function generateToken() {
+  return crypto.randomBytes(24).toString("hex");
+}
+
 function normalizeCards(cards) {
   if (!Array.isArray(cards)) return [];
   return cards.map((card, index) => ({
-    id: safeStr(card.id),
-    name: safeStr(card.name) || `Carta ${index + 1}`,
-    inverted: !!card.inverted
+    id: cleanStr(card.id),
+    name: cleanStr(card.name) || `Carta ${index + 1}`,
+    inverted: !!card.inverted,
+    description: cleanStr(card.description),
+    is_key: !!card.is_key
   }));
 }
 
-function getPositionTitle(index) {
-  const positions = [
-    "🌤 Energía actual",
-    "✨ Portal de transformación",
-    "👼 Consejo angelical",
-    "✨ Resultado de la semana"
-  ];
-  return positions[index] || `Posición ${index + 1}`;
-}
+function verifyShopifyWebhook(req) {
+  const secret = cleanStr(process.env.SHOPIFY_WEBHOOK_SECRET);
 
-function generateAngelsReading(cards, productName) {
-  const cleanCards = normalizeCards(cards);
-
-  const title = productName
-    ? `✨ ${productName}`
-    : "✨ Tu lectura del Oráculo de los Ángeles";
-
-  if (!cleanCards.length) {
-    return {
-      title,
-      short: "La lectura se ha generado, pero no se recibieron cartas válidas.",
-      long: "No se pudieron procesar las cartas seleccionadas. Revisa la tirada e inténtalo de nuevo."
-    };
+  if (!secret) {
+    return true;
   }
 
-  const names = cleanCards.map((c) => {
-    return `${c.name}${c.inverted ? " (invertida)" : ""}`;
-  });
+  const hmacHeader = req.get("X-Shopify-Hmac-Sha256");
+  if (!hmacHeader || !req.rawBody) {
+    return false;
+  }
 
-  const short =
-    `Los ángeles muestran una secuencia de guía a través de ${names.join(", ")}. ` +
-    `Esta tirada de 4 cartas señala un momento de conciencia, transformación y apertura espiritual.`;
+  const digest = crypto
+    .createHmac("sha256", secret)
+    .update(req.rawBody)
+    .digest("base64");
 
-  const longParts = cleanCards.map((card, index) => {
-    const posTitle = getPositionTitle(index);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
+  } catch (_) {
+    return false;
+  }
+}
 
-    let message = "";
-    if (index === 0) {
-      message =
-        `Esta carta marca la energía dominante que te rodea ahora. ${card.name}` +
-        (card.inverted
-          ? " pide revisar bloqueos emocionales o dudas internas antes de avanzar."
-          : " habla de una vibración activa, disponible y receptiva para ti.");
-    } else if (index === 1) {
-      message =
-        `Esta es la carta clave de la tirada. ${card.name}` +
-        (card.inverted
-          ? " sugiere soltar resistencias, miedos o viejas expectativas para permitir el cambio."
-          : " abre un portal de transformación y señala aquello que comienza a alinearse a tu favor.");
-    } else if (index === 2) {
-      message =
-        `Aquí aparece el consejo angelical. ${card.name}` +
-        (card.inverted
-          ? " recomienda pausa, escucha interior y una revisión consciente de tus pasos."
-          : " invita a confiar, pedir señales y sostener tu intención con fe.");
-    } else if (index === 3) {
-      message =
-        `Esta posición muestra el resultado o la energía que se consolida. ${card.name}` +
-        (card.inverted
-          ? " indica que el desenlace llega, pero requiere paciencia y reajuste."
-          : " anuncia una evolución favorable si mantienes claridad, serenidad y apertura.");
-    } else {
-      message = `${card.name} aporta una capa adicional a la lectura.`;
-    }
+function detectProductConfig(order) {
+  const firstItem =
+    Array.isArray(order.line_items) && order.line_items.length > 0
+      ? order.line_items[0]
+      : null;
 
-    return `${posTitle}: ${message}`;
-  });
+  const productId = cleanStr(firstItem && firstItem.product_id);
 
-  const long =
-    longParts.join("\n\n") +
-    `\n\n✨ Mensaje general:\n` +
-    `Tu lectura habla de guía, movimiento interior y una apertura sutil pero real. Los ángeles te invitan a escuchar con calma, sostener tu fe y permitir que el proceso revele su sentido paso a paso.`;
+  if (productId && PRODUCT_CONFIGS[productId]) {
+    return PRODUCT_CONFIGS[productId];
+  }
 
-  return { title, short, long };
+  const title = cleanStr(firstItem && firstItem.title).toLowerCase();
+
+  if (title.includes("ángeles") || title.includes("angeles")) {
+    return PRODUCT_CONFIGS["10496012616017"];
+  }
+  if (title.includes("semilla")) {
+    return PRODUCT_CONFIGS["10495993446737"];
+  }
+  if (title.includes("profunda") || title.includes("análisis completo") || title.includes("analisis completo")) {
+    return PRODUCT_CONFIGS["10493383082321"];
+  }
+  if (title.includes("tres puertas")) {
+    return PRODUCT_CONFIGS["10493369745745"];
+  }
+
+  return PRODUCT_CONFIGS["10493369745745"];
+}
+
+function getConfigByDeckAndSpread(deckId, spread) {
+  const found = Object.values(PRODUCT_CONFIGS).find(
+    (cfg) => cfg.deckId === deckId && cfg.pick === Number(spread)
+  );
+  return found || null;
 }
 
 function buildAccessEmailHtml({ customerName, readingUrl, productName, orderNumber }) {
@@ -121,46 +182,98 @@ function buildAccessEmailHtml({ customerName, readingUrl, productName, orderNumb
           Acceder a mi lectura
         </a>
       </p>
-      <p>Si el botón no funciona, copia este enlace en tu navegador:</p>
+      <p>Si el botón no funciona, copia este enlace:</p>
       <p>${readingUrl}</p>
     </div>
   `;
 }
 
-function buildAutomaticReadingEmailHtml({ customerName, reading, cards }) {
+function buildReadingEmailHtml({ customerName, reading, config, cards }) {
   const cardsHtml = normalizeCards(cards)
     .map((card, index) => {
+      const position = config.positions[index] || `Carta ${index + 1}`;
+      const descriptionHtml = card.description
+        ? `<div style="white-space:pre-line;margin-top:6px;">${card.description}</div>`
+        : "";
       return `
-        <li style="margin-bottom:8px;">
-          <strong>${getPositionTitle(index)}:</strong> ${card.name}${card.inverted ? " (invertida)" : ""}
-        </li>
+        <div style="border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:14px;margin:0 0 12px;background:#fff;">
+          <div style="font-weight:800;">${position}</div>
+          <div style="margin-top:4px;">${card.name}${card.inverted ? " (invertida)" : ""}</div>
+          ${descriptionHtml}
+        </div>
       `;
     })
     .join("");
 
   return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111;">
-      <h2>${reading.title || "Tu lectura del Oráculo de los Ángeles"}</h2>
-      <p>Hola ${customerName || "bella alma"},</p>
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111; background:#f7f7fa; padding:20px;">
+      <div style="max-width:720px;margin:0 auto;background:#fff;border-radius:20px;padding:20px;border:1px solid rgba(0,0,0,.06);">
+        <h2 style="margin-top:0;">${reading.title || config.label}</h2>
+        <p>Hola ${customerName || "bella alma"},</p>
 
-      <h3>Mensaje general</h3>
-      <p style="white-space:pre-line;">${reading.short || ""}</p>
+        <h3>Mensaje general</h3>
+        <div style="white-space:pre-line;background:#f7f7fa;padding:14px;border-radius:12px;border:1px solid rgba(0,0,0,.06);">
+          ${reading.short || ""}
+        </div>
 
-      <h3>Profundización</h3>
-      <div style="white-space:pre-line;background:#fafafa;padding:16px;border:1px solid #eee;border-radius:8px;">
-        ${reading.long || ""}
-      </div>
+        <h3 style="margin-top:18px;">Profundización</h3>
+        <div style="white-space:pre-line;background:#fff7e8;padding:14px;border-radius:12px;border:1px solid rgba(218,165,32,.18);">
+          ${reading.long || ""}
+        </div>
 
-      <h3 style="margin-top:16px;">Tus cartas</h3>
-      <ul>
+        <h3 style="margin-top:18px;">Tus cartas</h3>
         ${cardsHtml}
-      </ul>
+      </div>
     </div>
   `;
 }
 
+function generateReading(cards, config, productName) {
+  const normalized = normalizeCards(cards);
+
+  const title = productName
+    ? `✨ ${productName}`
+    : `✨ ${config.label}`;
+
+  if (!normalized.length) {
+    return {
+      title,
+      short: "La lectura se ha generado, pero no se recibieron cartas válidas.",
+      long: "No se pudieron procesar las cartas seleccionadas."
+    };
+  }
+
+  const names = normalized.map((c) => `${c.name}${c.inverted ? " (invertida)" : ""}`);
+
+  const short =
+    `${config.label}: las cartas ${names.join(", ")} muestran una secuencia de guía y revelación. ` +
+    `Esta tirada de ${config.pick} cartas abre un mapa simbólico para comprender tu momento actual.`;
+
+  const long = normalized
+    .map((card, index) => {
+      const position = config.positions[index] || `Carta ${index + 1}`;
+
+      if (index === 1) {
+        return `${position}: ${card.name}${card.inverted ? " (invertida)" : ""} actúa como eje central de la lectura y marca el aprendizaje más importante del proceso.`;
+      }
+
+      return `${position}: ${card.name}${card.inverted ? " (invertida)" : ""} aporta una capa de comprensión sobre esta tirada y amplía el mensaje general.`;
+    })
+    .join("\n\n");
+
+  return {
+    title,
+    short,
+    long:
+      `${long}\n\n✨ Mensaje final:\n` +
+      `Permite que esta lectura se asiente dentro de ti. Observa lo que resuena, lo que se repite y lo que te pide una acción consciente.`
+  };
+}
+
 async function sendAccessEmail({ to, customerName, token, productName, orderNumber }) {
-  const readingUrl = `${process.env.SHOPIFY_SUCCESS_URL}?token=${encodeURIComponent(token)}&order=${encodeURIComponent(orderNumber || "")}`;
+  const readingUrl =
+    `${process.env.SHOPIFY_SUCCESS_URL}?token=${encodeURIComponent(token)}` +
+    `&order=${encodeURIComponent(orderNumber || "")}`;
 
   return resend.emails.send({
     from: process.env.RESEND_FROM,
@@ -175,15 +288,16 @@ async function sendAccessEmail({ to, customerName, token, productName, orderNumb
   });
 }
 
-async function sendAutomaticReadingEmail({ to, customerName, reading, cards }) {
-  const html = buildAutomaticReadingEmailHtml({
+async function sendAutomaticReadingEmail({ to, customerName, reading, config, cards }) {
+  const html = buildReadingEmailHtml({
     customerName,
     reading,
+    config,
     cards
   });
 
   const text = [
-    reading.title || "Tu lectura del Oráculo de los Ángeles",
+    reading.title || config.label,
     "",
     "Mensaje general:",
     reading.short || "",
@@ -195,7 +309,7 @@ async function sendAutomaticReadingEmail({ to, customerName, reading, cards }) {
   return resend.emails.send({
     from: process.env.RESEND_FROM,
     to,
-    subject: "✨ Tu lectura del Oráculo de los Ángeles",
+    subject: config.emailSubject,
     html,
     text
   });
@@ -211,7 +325,7 @@ app.get("/", (req, res) => {
 
 app.get("/api/session", (req, res) => {
   try {
-    const token = safeStr(req.query.token).trim();
+    const token = cleanStr(req.query.token);
 
     if (!token) {
       return res.status(400).json({
@@ -229,18 +343,25 @@ app.get("/api/session", (req, res) => {
       });
     }
 
+    const reading = readings.get(token);
+
     return res.json({
       ok: true,
       token: session.token,
+      orderId: session.orderId,
       orderNumber: session.orderNumber,
+      productId: session.productId,
       productName: session.productName,
       deckId: session.deckId,
       pick: session.pick,
+      email: session.customerEmail,
       customerEmail: session.customerEmail,
       customerName: session.customerName,
       status: session.status,
-      emailSent: session.emailSent,
-      createdAt: session.createdAt
+      emailSent: !!session.emailSent,
+      createdAt: session.createdAt,
+      readingDone: !!reading,
+      reading: reading || null
     });
   } catch (error) {
     console.error("Error en /api/session:", error);
@@ -253,23 +374,35 @@ app.get("/api/session", (req, res) => {
 
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
-    console.log("Webhook recibido");
-    console.log(JSON.stringify(req.body, null, 2));
+    if (!verifyShopifyWebhook(req)) {
+      return res.status(401).json({
+        ok: false,
+        error: "invalid_webhook_signature"
+      });
+    }
 
     const order = req.body || {};
+    console.log("Webhook recibido");
+    console.log(JSON.stringify(order, null, 2));
 
-    const orderId = safeStr(order.id).trim();
-    const orderNumber = safeStr(order.name || order.order_number || order.id).trim();
-    const customerEmail = safeStr(order.email || order.contact_email).trim();
-    const customerName =
-      safeStr(order.customer && order.customer.first_name).trim() ||
-      safeStr(order.billing_address && order.billing_address.first_name).trim() ||
-      "Cliente";
-
-    const productName =
+    const firstItem =
       Array.isArray(order.line_items) && order.line_items.length > 0
-        ? safeStr(order.line_items[0].title).trim() || "Lectura"
-        : "Lectura";
+        ? order.line_items[0]
+        : null;
+
+    const config = detectProductConfig(order);
+
+    const orderId = cleanStr(order.id);
+    const orderNumber = cleanStr(order.name || order.order_number || order.id);
+    const productId = cleanStr(firstItem && firstItem.product_id);
+    const productName =
+      cleanStr(firstItem && firstItem.title) || config.label;
+
+    const customerEmail = cleanStr(order.email || order.contact_email);
+    const customerName =
+      cleanStr(order.customer && order.customer.first_name) ||
+      cleanStr(order.billing_address && order.billing_address.first_name) ||
+      "Cliente";
 
     if (!orderId || !customerEmail) {
       return res.status(400).json({
@@ -279,18 +412,21 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     const existingSession = Array.from(sessions.values()).find(
-      (session) => session.orderId === orderId
+      (s) => s.orderId === orderId
     );
 
     if (existingSession) {
+      const reading = readings.get(existingSession.token);
       return res.json({
         ok: true,
         alreadyExists: true,
         token: existingSession.token,
         orderNumber: existingSession.orderNumber,
+        productId: existingSession.productId,
         productName: existingSession.productName,
         deckId: existingSession.deckId,
-        pick: existingSession.pick
+        pick: existingSession.pick,
+        readingDone: !!reading
       });
     }
 
@@ -300,9 +436,10 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       token,
       orderId,
       orderNumber,
+      productId,
       productName,
-      deckId: "angeles",
-      pick: 4,
+      deckId: config.deckId,
+      pick: config.pick,
       customerEmail,
       customerName,
       status: "created",
@@ -312,16 +449,16 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
     sessions.set(token, session);
 
-    let accessEmail = null;
+    let accessEmailSent = false;
     try {
-      accessEmail = await sendAccessEmail({
+      await sendAccessEmail({
         to: customerEmail,
         customerName,
         token,
         productName,
         orderNumber
       });
-      console.log("Email acceso enviado:", accessEmail);
+      accessEmailSent = true;
     } catch (emailError) {
       console.error("Error enviando email de acceso:", emailError);
     }
@@ -330,10 +467,11 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       ok: true,
       token,
       orderNumber,
+      productId,
       productName,
-      deckId: "angeles",
-      pick: 4,
-      accessEmailSent: !!accessEmail
+      deckId: config.deckId,
+      pick: config.pick,
+      accessEmailSent
     });
   } catch (error) {
     console.error("Error en /api/shopify/order-paid:", error);
@@ -347,12 +485,12 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
 app.post("/api/reading/result", async (req, res) => {
   try {
-    const token = safeStr(req.body.token).trim();
-    const orderNumber = safeStr(req.body.order).trim();
-    const deck = safeStr(req.body.deck).trim();
+    const token = cleanStr(req.body.token);
+    const deckId = cleanStr(req.body.deck);
     const spread = Number(req.body.spread);
+    const product = cleanStr(req.body.product);
+    const orderNumber = cleanStr(req.body.order);
     const cards = normalizeCards(req.body.cards);
-    const product = safeStr(req.body.product).trim();
 
     if (!token) {
       return res.status(400).json({
@@ -370,33 +508,40 @@ app.post("/api/reading/result", async (req, res) => {
       });
     }
 
-    if (deck && deck !== "angeles") {
+    if (deckId && deckId !== session.deckId) {
       return res.status(400).json({
         ok: false,
         error: "invalid_deck"
       });
     }
 
-    if (spread && spread !== 4) {
+    if (spread && spread !== Number(session.pick)) {
       return res.status(400).json({
         ok: false,
         error: "invalid_spread"
       });
     }
 
-    const reading = generateAngelsReading(cards, session.productName || product);
+    const config =
+      getConfigByDeckAndSpread(session.deckId, session.pick) ||
+      detectProductConfig({
+        line_items: [{ title: session.productName, product_id: session.productId }]
+      });
 
-    readings.set(token, {
-      token,
-      orderNumber: orderNumber || session.orderNumber,
-      deckId: "angeles",
-      spread: 4,
-      cards,
+    const reading = generateReading(cards, config, session.productName || product);
+
+    const readingRecord = {
       title: reading.title,
       short: reading.short,
       long: reading.long,
+      cards,
+      deckId: session.deckId,
+      spread: session.pick,
+      orderNumber: orderNumber || session.orderNumber,
       createdAt: new Date().toISOString()
-    });
+    };
+
+    readings.set(token, readingRecord);
 
     let emailed = false;
 
@@ -405,7 +550,8 @@ app.post("/api/reading/result", async (req, res) => {
         await sendAutomaticReadingEmail({
           to: session.customerEmail,
           customerName: session.customerName,
-          reading,
+          reading: readingRecord,
+          config,
           cards
         });
 
@@ -413,7 +559,6 @@ app.post("/api/reading/result", async (req, res) => {
         session.status = "completed";
         session.completedAt = new Date().toISOString();
         sessions.set(token, session);
-
         emailed = true;
       } catch (emailError) {
         console.error("Error enviando email automático de lectura:", emailError);
@@ -422,9 +567,10 @@ app.post("/api/reading/result", async (req, res) => {
 
     return res.json({
       ok: true,
-      title: reading.title,
-      short: reading.short,
-      long: reading.long,
+      title: readingRecord.title,
+      short: readingRecord.short,
+      long: readingRecord.long,
+      cards,
       emailed
     });
   } catch (error) {
@@ -439,11 +585,12 @@ app.post("/api/reading/result", async (req, res) => {
 
 app.post("/api/reading/email", async (req, res) => {
   try {
-    const to = safeStr(req.body.to).trim();
-    const token = safeStr(req.body.token).trim();
-    const subject = safeStr(req.body.subject).trim() || "Tu lectura";
-    const text = safeStr(req.body.text).trim();
-    const html = safeStr(req.body.html).trim();
+    const to = cleanStr(req.body.to);
+    const token = cleanStr(req.body.token);
+    const subject = cleanStr(req.body.subject) || "Tu lectura";
+    const text = safeStr(req.body.text);
+    const html = safeStr(req.body.html);
+    const force = !!req.body.force;
 
     if (!to) {
       return res.status(400).json({
@@ -468,6 +615,13 @@ app.post("/api/reading/email", async (req, res) => {
       });
     }
 
+    if (session.emailSent && !force) {
+      return res.json({
+        ok: true,
+        alreadySent: true
+      });
+    }
+
     const result = await resend.emails.send({
       from: process.env.RESEND_FROM,
       to,
@@ -477,6 +631,9 @@ app.post("/api/reading/email", async (req, res) => {
     });
 
     console.log("Email manual enviado:", result);
+
+    session.emailSent = true;
+    sessions.set(token, session);
 
     return res.json({
       ok: true,
