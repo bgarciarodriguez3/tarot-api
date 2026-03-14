@@ -1,29 +1,336 @@
 {
-  "name": "Arcanos Mayores",
-  "description": "El viaje evolutivo del alma a través de los arcanos.",
-  "back": "arcanos_mayores_Dorso_tarot_normal.png",
+  "deck": "arcanos_mayores",
+  "title": "Arcanos Mayores",
+  "total_cards": 22,
   "cards": [
-    { "id": "am_00", "name": "El Loco", "image": "arcanos_mayores_El_Loco.png", "upright": { "general": "Nuevos comienzos, fe y espontaneidad.", "love": "Aventura romántica.", "work": "Nuevos proyectos.", "spiritualAdvice": "Da el salto de fe." }, "reversed": { "meaning": "Imprudencia o miedo a lo desconocido." } },
-    { "id": "am_01", "name": "El Mago", "image": "arcanos_mayores_El_Mago.png", "upright": { "general": "Poder de manifestación y herramientas listas.", "love": "Iniciativa afectiva.", "work": "Capacidad creativa.", "spiritualAdvice": "Crea tu realidad." }, "reversed": { "meaning": "Talento mal usado o falta de confianza." } },
-    { "id": "am_02", "name": "La Sacerdotisa", "image": "arcanos_mayores_La_Sacerdotisa.png", "upright": { "general": "Intuición y sabiduría oculta.", "love": "Conexión profunda.", "work": "Espera el momento justo.", "spiritualAdvice": "Escucha tu silencio." }, "reversed": { "meaning": "Desconexión interior o secretos que dañan." } },
-    { "id": "am_03", "name": "La Emperatriz", "image": "arcanos_mayores_La_Emperatriz.png", "upright": { "general": "Fertilidad, abundancia y creatividad.", "love": "Amor nutritivo.", "work": "Crecimiento de proyectos.", "spiritualAdvice": "Conecta con la naturaleza." }, "reversed": { "meaning": "Bloqueo creativo o dependencia emocional." } },
-    { "id": "am_04", "name": "El Emperador", "image": "arcanos_mayores_El_Emperador.png", "upright": { "general": "Estructura, autoridad y estabilidad.", "love": "Seguridad.", "work": "Liderazgo sólido.", "spiritualAdvice": "Pon orden en tu vida." }, "reversed": { "meaning": "Rigidez excesiva o falta de control." } },
-    { "id": "am_05", "name": "El Sumo Sacerdote", "image": "arcanos_mayores_El_Sumo_Sacerdote.png", "upright": { "general": "Tradición y guía espiritual.", "love": "Compromiso.", "work": "Aprendizaje.", "spiritualAdvice": "Busca la sabiduría." }, "reversed": { "meaning": "Rebelión o dogmatismo." } },
-    { "id": "am_06", "name": "Los Enamorados", "image": "arcanos_mayores_Los_Enamorados.png", "upright": { "general": "Elecciones del corazón y unión.", "love": "Conexión alma a alma.", "work": "Sociedades exitosas.", "spiritualAdvice": "Elige desde el amor." }, "reversed": { "meaning": "Dudas o desequilibrio en la pareja." } },
-    { "id": "am_07", "name": "El Carro", "image": "arcanos_mayores_El_Carro.png", "upright": { "general": "Determinación, victoria y avance.", "love": "Avance en la relación.", "work": "Éxito por esfuerzo.", "spiritualAdvice": "Mantén el control." }, "reversed": { "meaning": "Falta de dirección o impulsividad." } },
-    { "id": "am_08", "name": "La Fuerza", "image": "arcanos_mayores_La_Fuerza.png", "upright": { "general": "Coraje interno y paciencia.", "love": "Dominio de impulsos.", "work": "Resistencia.", "spiritualAdvice": "Tu suavidad es tu fuerza." }, "reversed": { "meaning": "Inseguridad o debilidad emocional." } },
-    { "id": "am_09", "name": "El Ermitaño", "image": "arcanos_mayores_El_Ermitaño.png", "upright": { "general": "Introspección y sabiduría interior.", "love": "Tiempo de soledad necesaria.", "work": "Reflexión.", "spiritualAdvice": "Busca tu propia luz." }, "reversed": { "meaning": "Aislamiento excesivo o miedo a la verdad." } },
-    { "id": "am_10", "name": "La Rueda de la Fortuna", "image": "arcanos_mayores_La_Rueda_De_La_Fortuna.png", "upright": { "general": "Cambios de ciclo y destino.", "love": "Giros positivos.", "work": "Oportunidades.", "spiritualAdvice": "Acepta el cambio." }, "reversed": { "meaning": "Resistencia al fluir de la vida." } },
-    { "id": "am_11", "name": "La Justicia", "image": "arcanos_mayores_La_Justicia.png", "upright": { "general": "Equilibrio, verdad y justicia.", "love": "Honestidad mutua.", "work": "Tratos justos.", "spiritualAdvice": "Actúa con integridad." }, "reversed": { "meaning": "Injusticias o desequilibrio legal/emocional." } },
-    { "id": "am_12", "name": "El Colgado", "image": "arcanos_mayores_El_Colgado.png", "upright": { "general": "Nueva perspectiva y pausa.", "love": "Sacrificio voluntario.", "work": "Pausa necesaria.", "spiritualAdvice": "Suelta el control." }, "reversed": { "meaning": "Estancamiento o sacrificios inútiles." } },
-    { "id": "am_13", "name": "La Muerte", "image": "arcanos_mayores_La_Muerte.png", "upright": { "general": "Finales que traen renacimiento.", "love": "Cierre de etapa.", "work": "Reinvención.", "spiritualAdvice": "Deja ir lo viejo." }, "reversed": { "meaning": "Miedo a la transformación necesaria." } },
-    { "id": "am_14", "name": "La Templanza", "image": "arcanos_mayores_La_Templanza.png", "upright": { "general": "Moderación, paz y sanación.", "love": "Armonía.", "work": "Paciencia recompensada.", "spiritualAdvice": "Busca el equilibrio." }, "reversed": { "meaning": "Excesos o falta de integración." } },
-    { "id": "am_15", "name": "El Diablo", "image": "arcanos_mayores_El_Diablo..png", "upright": { "general": "Ataduras y deseos materiales.", "love": "Pasión intensa o codependencia.", "work": "Ambición.", "spiritualAdvice": "Libera tus sombras." }, "reversed": { "meaning": "Liberación de cadenas y conciencia." } },
-    { "id": "am_16", "name": "La Torre", "image": "arcanos_mayores_La_Torre.png", "upright": { "general": "Caída de estructuras falsas.", "love": "Ruptura reveladora.", "work": "Cambio súbito.", "spiritualAdvice": "Lo que cae no era sólido." }, "reversed": { "meaning": "Crisis evitada temporalmente o miedo al cambio." } },
-    { "id": "am_17", "name": "La Estrella", "image": "arcanos_mayores_La_Estrella.png", "upright": { "general": "Esperanza y renovación.", "love": "Fe en el amor.", "work": "Inspiración.", "spiritualAdvice": "Confía en tu estrella." }, "reversed": { "meaning": "Pesimismo o desconexión espiritual." } },
-    { "id": "am_18", "name": "La Luna", "image": "arcanos_mayores_La_Luna.png", "upright": { "general": "Intuición y emociones profundas.", "love": "Confusión o sueños.", "work": "Cosas ocultas.", "spiritualAdvice": "Sigue tu instinto." }, "reversed": { "meaning": "Miedos que se aclaran o engaños revelados." } },
-    { "id": "am_19", "name": "El Sol", "image": "arcanos_mayores_El_Sol.png", "upright": { "general": "Éxito, alegría y vitalidad.", "love": "Felicidad plena.", "work": "Claridad y logros.", "spiritualAdvice": "Brilla con fuerza." }, "reversed": { "meaning": "Éxito retrasado o falta de optimismo." } },
-    { "id": "am_20", "name": "El Juicio", "image": "arcanos_mayores_El_Juicio.png", "upright": { "general": "Renacimiento y llamado del alma.", "love": "Nueva oportunidad.", "work": "Evaluación final.", "spiritualAdvice": "Escucha tu llamado." }, "reversed": { "meaning": "Dudas o negación a evolucionar." } },
-    { "id": "am_21", "name": "El Mundo", "image": "arcanos_mayores_El_Mundo.png", "upright": { "general": "Culminación y plenitud.", "love": "Realización.", "work": "Éxito mundial.", "spiritualAdvice": "Celebra tu viaje." }, "reversed": { "meaning": "Falta de cierre o metas incompletas." } }
+    {
+      "id": 1,
+      "name": "El Mago",
+      "keywords": ["inicio", "voluntad", "manifestación"],
+      "significado_general": "El Mago representa el poder de iniciar, crear y manifestar. Señala un momento donde tus capacidades pueden abrir caminos nuevos si actúas con intención clara.",
+      "amor": "Indica comunicación activa y capacidad de iniciar una etapa nueva en la relación.",
+      "trabajo_proposito": "Momento favorable para proyectos nuevos, liderazgo y decisiones creativas.",
+      "consejo_espiritual": "Reconoce tus talentos y actúa con confianza.",
+      "consejo_corazon": "Confía en tu capacidad de transformar tu realidad.",
+      "invertida": "Energía dispersa, manipulación o falta de claridad en las intenciones.",
+      "energia": "activa",
+      "elemento": "aire",
+      "numerologia": 1
+    },
+
+    {
+      "id": 2,
+      "name": "La Sacerdotisa",
+      "keywords": ["intuición", "sabiduría interior"],
+      "significado_general": "La Sacerdotisa representa el mundo interior, la intuición y el conocimiento oculto.",
+      "amor": "Habla de emociones profundas y de escuchar la voz del corazón.",
+      "trabajo_proposito": "Tiempo de observar antes de actuar.",
+      "consejo_espiritual": "Confía en tu intuición.",
+      "consejo_corazon": "Escucha lo que tu interior intenta decirte.",
+      "invertida": "Bloqueo de intuición o confusión emocional.",
+      "energia": "receptiva",
+      "elemento": "agua",
+      "numerologia": 2
+    },
+
+    {
+      "id": 3,
+      "name": "La Emperatriz",
+      "keywords": ["creación", "fertilidad", "expansión"],
+      "significado_general": "La Emperatriz simboliza abundancia, creatividad y crecimiento.",
+      "amor": "Relaciones que florecen desde el afecto y el cuidado.",
+      "trabajo_proposito": "Momento fértil para ideas y proyectos.",
+      "consejo_espiritual": "Permite que tu creatividad fluya.",
+      "consejo_corazon": "Nutre lo que amas.",
+      "invertida": "Bloqueo creativo o exceso de control.",
+      "energia": "expansiva",
+      "elemento": "tierra",
+      "numerologia": 3
+    },
+
+    {
+      "id": 4,
+      "name": "El Emperador",
+      "keywords": ["estructura", "liderazgo"],
+      "significado_general": "El Emperador representa orden, estabilidad y autoridad.",
+      "amor": "Necesidad de seguridad y compromiso.",
+      "trabajo_proposito": "Consolidación y liderazgo.",
+      "consejo_espiritual": "Construye bases firmes.",
+      "consejo_corazon": "La estabilidad también es amor.",
+      "invertida": "Rigidez o necesidad excesiva de control.",
+      "energia": "activa",
+      "elemento": "fuego",
+      "numerologia": 4
+    },
+
+    {
+      "id": 5,
+      "name": "El Hierofante",
+      "keywords": ["tradición", "enseñanza"],
+      "significado_general": "El Hierofante habla de conocimiento espiritual y aprendizaje.",
+      "amor": "Relaciones basadas en valores compartidos.",
+      "trabajo_proposito": "Aprendizaje o guía espiritual.",
+      "consejo_espiritual": "Busca sabiduría en la experiencia.",
+      "consejo_corazon": "Aprende de tu historia.",
+      "invertida": "Rebeldía o rechazo de normas.",
+      "energia": "espiritual",
+      "elemento": "tierra",
+      "numerologia": 5
+    },
+
+    {
+      "id": 6,
+      "name": "Los Enamorados",
+      "keywords": ["elección", "unión"],
+      "significado_general": "Los Enamorados simbolizan decisiones importantes guiadas por el corazón.",
+      "amor": "Conexión profunda o decisiones afectivas.",
+      "trabajo_proposito": "Elegir el camino que resuena contigo.",
+      "consejo_espiritual": "Actúa desde el amor.",
+      "consejo_corazon": "Escucha lo que realmente deseas.",
+      "invertida": "Confusión emocional o decisiones difíciles.",
+      "energia": "emocional",
+      "elemento": "aire",
+      "numerologia": 6
+    },
+
+    {
+      "id": 7,
+      "name": "El Carro",
+      "keywords": ["avance", "determinación"],
+      "significado_general": "El Carro simboliza movimiento, determinación y victoria.",
+      "amor": "Superar obstáculos juntos.",
+      "trabajo_proposito": "Avance decidido hacia metas.",
+      "consejo_espiritual": "Dirige tu energía con propósito.",
+      "consejo_corazon": "No te detengas ahora.",
+      "invertida": "Falta de control o dirección.",
+      "energia": "dinámica",
+      "elemento": "agua",
+      "numerologia": 7
+    },
+
+    {
+      "id": 8,
+      "name": "La Fuerza",
+      "keywords": ["fortaleza interior", "calma"],
+      "significado_general": "La Fuerza habla de poder interior y dominio emocional.",
+      "amor": "Comprensión y paciencia.",
+      "trabajo_proposito": "Resiliencia ante desafíos.",
+      "consejo_espiritual": "La verdadera fuerza es interior.",
+      "consejo_corazon": "Respira y confía.",
+      "invertida": "Inseguridad o pérdida de confianza.",
+      "energia": "equilibrio",
+      "elemento": "fuego",
+      "numerologia": 8
+    },
+
+    {
+      "id": 9,
+      "name": "El Ermitaño",
+      "keywords": ["búsqueda interior"],
+      "significado_general": "El Ermitaño invita a la introspección y sabiduría personal.",
+      "amor": "Tiempo de reflexión emocional.",
+      "trabajo_proposito": "Búsqueda de sentido.",
+      "consejo_espiritual": "Escucha tu voz interior.",
+      "consejo_corazon": "El silencio también enseña.",
+      "invertida": "Aislamiento excesivo.",
+      "energia": "introspectiva",
+      "elemento": "tierra",
+      "numerologia": 9
+    },
+
+    {
+      "id": 10,
+      "name": "La Rueda de la Fortuna",
+      "keywords": ["cambio", "destino"],
+      "significado_general": "La Rueda representa ciclos y cambios inevitables.",
+      "amor": "Cambios inesperados en relaciones.",
+      "trabajo_proposito": "Nuevas oportunidades.",
+      "consejo_espiritual": "Acepta los ciclos.",
+      "consejo_corazon": "Todo evoluciona.",
+      "invertida": "Resistencia al cambio.",
+      "energia": "cíclica",
+      "elemento": "fuego",
+      "numerologia": 10
+    },
+
+    {
+      "id": 11,
+      "name": "La Justicia",
+      "keywords": ["equilibrio", "verdad"],
+      "significado_general": "La Justicia habla de equilibrio y consecuencias.",
+      "amor": "Claridad emocional.",
+      "trabajo_proposito": "Decisiones justas.",
+      "consejo_espiritual": "Actúa con integridad.",
+      "consejo_corazon": "La verdad libera.",
+      "invertida": "Desequilibrio o injusticia.",
+      "energia": "mental",
+      "elemento": "aire",
+      "numerologia": 11
+    },
+
+    {
+      "id": 12,
+      "name": "El Colgado",
+      "keywords": ["rendición", "perspectiva"],
+      "significado_general": "El Colgado invita a ver la vida desde otro ángulo.",
+      "amor": "Tiempo de pausa.",
+      "trabajo_proposito": "Reflexión antes de actuar.",
+      "consejo_espiritual": "Suelta el control.",
+      "consejo_corazon": "A veces detenerse es avanzar.",
+      "invertida": "Resistencia a cambiar perspectiva.",
+      "energia": "suspensión",
+      "elemento": "agua",
+      "numerologia": 12
+    },
+
+    {
+      "id": 13,
+      "name": "La Muerte",
+      "keywords": ["transformación"],
+      "significado_general": "La Muerte representa el cierre de ciclos y transformación profunda.",
+      "amor": "Fin o cambio importante en vínculos.",
+      "trabajo_proposito": "Renovación profesional.",
+      "consejo_espiritual": "Acepta la transformación.",
+      "consejo_corazon": "Cada final abre un nuevo comienzo.",
+      "invertida": "Resistencia al cambio.",
+      "energia": "transformadora",
+      "elemento": "agua",
+      "numerologia": 13
+    },
+
+    {
+      "id": 14,
+      "name": "La Templanza",
+      "keywords": ["armonía", "equilibrio"],
+      "significado_general": "La Templanza simboliza integración y calma.",
+      "amor": "Relación equilibrada.",
+      "trabajo_proposito": "Cooperación y armonía.",
+      "consejo_espiritual": "Busca el punto medio.",
+      "consejo_corazon": "La paciencia trae claridad.",
+      "invertida": "Desequilibrio emocional.",
+      "energia": "armonizadora",
+      "elemento": "fuego",
+      "numerologia": 14
+    },
+
+    {
+      "id": 15,
+      "name": "El Diablo",
+      "keywords": ["apego", "sombra"],
+      "significado_general": "El Diablo señala ataduras emocionales o materiales.",
+      "amor": "Relaciones intensas o dependientes.",
+      "trabajo_proposito": "Ambición excesiva.",
+      "consejo_espiritual": "Reconoce lo que te limita.",
+      "consejo_corazon": "La libertad comienza al ver la verdad.",
+      "invertida": "Liberación de patrones.",
+      "energia": "intensa",
+      "elemento": "tierra",
+      "numerologia": 15
+    },
+
+    {
+      "id": 16,
+      "name": "La Torre",
+      "keywords": ["ruptura", "revelación"],
+      "significado_general": "La Torre representa cambios abruptos que revelan la verdad.",
+      "amor": "Crisis que revela realidades.",
+      "trabajo_proposito": "Transformación radical.",
+      "consejo_espiritual": "Lo que cae abre espacio para lo nuevo.",
+      "consejo_corazon": "Acepta lo que se derrumba.",
+      "invertida": "Resistencia a cambios inevitables.",
+      "energia": "explosiva",
+      "elemento": "fuego",
+      "numerologia": 16
+    },
+
+    {
+      "id": 17,
+      "name": "La Estrella",
+      "keywords": ["esperanza", "sanación"],
+      "significado_general": "La Estrella trae calma, inspiración y esperanza.",
+      "amor": "Relación sanadora.",
+      "trabajo_proposito": "Inspiración creativa.",
+      "consejo_espiritual": "Confía en el universo.",
+      "consejo_corazon": "La esperanza renace.",
+      "invertida": "Pérdida temporal de fe.",
+      "energia": "luminosa",
+      "elemento": "aire",
+      "numerologia": 17
+    },
+
+    {
+      "id": 18,
+      "name": "La Luna",
+      "keywords": ["subconsciente", "misterio"],
+      "significado_general": "La Luna habla de intuición, emociones profundas y sombras internas.",
+      "amor": "Confusión emocional o miedos ocultos.",
+      "trabajo_proposito": "Escuchar la intuición.",
+      "consejo_espiritual": "No todo es lo que parece.",
+      "consejo_corazon": "Escucha tus emociones.",
+      "invertida": "Claridad después de la confusión.",
+      "energia": "intuitiva",
+      "elemento": "agua",
+      "numerologia": 18
+    },
+
+    {
+      "id": 19,
+      "name": "El Sol",
+      "keywords": ["alegría", "claridad"],
+      "significado_general": "El Sol representa éxito, vitalidad y felicidad.",
+      "amor": "Relaciones luminosas.",
+      "trabajo_proposito": "Reconocimiento y éxito.",
+      "consejo_espiritual": "Disfruta la vida.",
+      "consejo_corazon": "La luz siempre vuelve.",
+      "invertida": "Optimismo bloqueado temporalmente.",
+      "energia": "radiante",
+      "elemento": "fuego",
+      "numerologia": 19
+    },
+
+    {
+      "id": 20,
+      "name": "El Juicio",
+      "keywords": ["renacimiento", "despertar"],
+      "significado_general": "El Juicio simboliza despertar espiritual y renovación.",
+      "amor": "Reencuentros o decisiones importantes.",
+      "trabajo_proposito": "Llamado a tu propósito.",
+      "consejo_espiritual": "Escucha el llamado del alma.",
+      "consejo_corazon": "Renace desde tu verdad.",
+      "invertida": "Dudas sobre decisiones importantes.",
+      "energia": "renovadora",
+      "elemento": "agua",
+      "numerologia": 20
+    },
+
+    {
+      "id": 21,
+      "name": "El Mundo",
+      "keywords": ["culminación", "plenitud"],
+      "significado_general": "El Mundo representa realización y cierre de ciclos.",
+      "amor": "Relaciones completas.",
+      "trabajo_proposito": "Logro importante.",
+      "consejo_espiritual": "Celebra el camino recorrido.",
+      "consejo_corazon": "Estás llegando a una etapa de plenitud.",
+      "invertida": "Sensación de ciclo incompleto.",
+      "energia": "integración",
+      "elemento": "tierra",
+      "numerologia": 21
+    },
+
+    {
+      "id": 22,
+      "name": "El Loco",
+      "keywords": ["inicio", "aventura"],
+      "significado_general": "El Loco representa libertad, espontaneidad y nuevos comienzos.",
+      "amor": "Relaciones que comienzan con entusiasmo.",
+      "trabajo_proposito": "Explorar caminos nuevos.",
+      "consejo_espiritual": "Atrévete a comenzar.",
+      "consejo_corazon": "La vida es un viaje.",
+      "invertida": "Impulsividad o falta de dirección.",
+      "energia": "libre",
+      "elemento": "aire",
+      "numerologia": 22
+    }
   ]
 }
