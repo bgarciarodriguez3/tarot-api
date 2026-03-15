@@ -15,13 +15,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-/* ---------------- MIDDLEWARE ---------------- */
-
 app.use(cors())
 app.use("/api/shopify/order-paid", express.raw({ type: "application/json" }))
 app.use(express.json())
-
-/* ---------------- CONFIG ---------------- */
 
 const STORE_URL = process.env.STORE_URL || "https://eltarotdelaruedadelafortuna.com"
 
@@ -32,21 +28,18 @@ const PRODUCTS = {
     spread: 4,
     deckSize: 12
   },
-
   "10495993446737": {
     name: "Camino de la Semilla Estelar",
     deck: "semilla_estelar",
     spread: 5,
     deckSize: 22
   },
-
   "10493383082321": {
     name: "Lectura Profunda: Análisis Completo",
     deck: "arcanos_mayores",
     spread: 12,
     deckSize: 22
   },
-
   "10493369745745": {
     name: "Tres Puertas del Destino",
     deck: "arcanos_mayores",
@@ -55,12 +48,7 @@ const PRODUCTS = {
   }
 }
 
-/* ---------------- ALMACÉN TEMPORAL ---------------- */
-/* NOTA: esto se pierde si Railway reinicia. Luego lo pasamos a Redis. */
-
 const readings = new Map()
-
-/* ---------------- UTILIDADES ---------------- */
 
 function generateKey(orderId, lineItemId, productId) {
   return `${orderId}-${lineItemId}-${productId}`
@@ -268,8 +256,6 @@ async function createReading({ orderId, lineItemId, productId, email }) {
   }
 }
 
-/* ---------------- RUTAS BASE ---------------- */
-
 app.get("/", (req, res) => {
   res.json({
     ok: true,
@@ -282,8 +268,6 @@ app.get("/api/health", (req, res) => {
     ok: true
   })
 })
-
-/* ---------------- SESSION ---------------- */
 
 app.post("/api/session", (req, res) => {
   try {
@@ -312,8 +296,6 @@ app.post("/api/session", (req, res) => {
     })
   }
 })
-
-/* ---------------- CREAR LECTURA MANUAL ---------------- */
 
 app.post("/api/reading/result", async (req, res) => {
   try {
@@ -346,8 +328,6 @@ app.post("/api/reading/result", async (req, res) => {
     })
   }
 })
-
-/* ---------------- RECUPERAR LECTURA POR TOKEN ---------------- */
 
 app.get("/api/reading/result", (req, res) => {
   try {
@@ -382,8 +362,6 @@ app.get("/api/reading/result", (req, res) => {
   }
 })
 
-/* ---------------- ENVIAR EMAIL MANUAL ---------------- */
-
 app.post("/api/reading/email", async (req, res) => {
   try {
     const { key } = req.body
@@ -417,8 +395,6 @@ app.post("/api/reading/email", async (req, res) => {
   }
 })
 
-/* ---------------- WEBHOOK SHOPIFY ---------------- */
-
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     if (!verifyShopify(req)) {
@@ -427,6 +403,21 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
     const order = JSON.parse(req.body.toString("utf8"))
     const email = order.email || order.contact_email || ""
+
+    const financialStatus = String(order.financial_status || "").toLowerCase()
+
+    if (financialStatus !== "paid") {
+      console.log("Pedido recibido pero no pagado todavía:", {
+        orderId: order.id,
+        financialStatus
+      })
+
+      return res.status(200).json({
+        ok: true,
+        skipped: true,
+        reason: "order_not_paid"
+      })
+    }
 
     for (const item of order.line_items || []) {
       const productId = String(item.product_id)
@@ -459,8 +450,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     })
   }
 })
-
-/* ---------------- SERVER ---------------- */
 
 const PORT = Number(process.env.PORT) || 8080
 
