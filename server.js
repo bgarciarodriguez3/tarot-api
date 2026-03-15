@@ -11,14 +11,19 @@ const OpenAI = require("openai")
 const app = express()
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
+/* ---------------- MIDDLEWARE ---------------- */
+
 app.use(cors())
 app.use("/api/shopify/order-paid", express.raw({ type: "application/json" }))
 app.use(express.json())
+
+/* ---------------- CONFIG ---------------- */
+
+const STORE_URL = process.env.STORE_URL || "https://eltarotdelaruedadelafortuna.com"
 
 const PRODUCTS = {
   "10496012616017": {
@@ -50,7 +55,12 @@ const PRODUCTS = {
   }
 }
 
+/* ---------------- ALMACÉN TEMPORAL ---------------- */
+/* NOTA: esto se pierde si Railway reinicia. Luego lo pasamos a Redis. */
+
 const readings = new Map()
+
+/* ---------------- UTILIDADES ---------------- */
 
 function generateKey(orderId, lineItemId, productId) {
   return `${orderId}-${lineItemId}-${productId}`
@@ -100,6 +110,10 @@ function loadDeck(deckName) {
 function getCardsData(deckName, ids) {
   const deck = loadDeck(deckName)
 
+  if (!deck.cards || !Array.isArray(deck.cards)) {
+    throw new Error(`El mazo ${deckName} no tiene cards válido`)
+  }
+
   return ids
     .map(id => deck.cards.find(card => Number(card.id) === Number(id)))
     .filter(Boolean)
@@ -116,30 +130,80 @@ function randomStyle(deck) {
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
+function readingUrl(key) {
+  return `${STORE_URL}/pages/lectura?token=${encodeURIComponent(key)}`
+}
+
+function buildEmailHtml(reading) {
+  const url = readingUrl(reading.key)
+
+  return `
+    <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
+      <h2 style="margin-bottom:8px;">${reading.product}</h2>
+      <p style="margin-top:0;">Tu lectura ya está disponible.</p>
+
+      <p style="margin:24px 0;">
+        <a
+          href="${url}"
+          style="display:inline-block;background:#b08d57;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
+        >
+          Acceder a tu lectura
+        </a>
+      </p>
+
+      <p><strong>Cartas:</strong> ${reading.cards.join(", ")}</p>
+      <hr style="margin:24px 0;border:none;border-top:1px solid #ddd;" />
+      <div style="white-space:pre-line;">${reading.interpretation}</div>
+    </div>
+  `
+}
+
+async function sendReadingEmail(reading) {
+  if (!reading.email) {
+    throw new Error("La lectura no tiene email")
+  }
+
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: reading.email,
+    subject: `Tu lectura está lista: ${reading.product}`,
+    html: buildEmailHtml(reading)
+  })
+
+  reading.sent = true
+  readings.set(reading.key, reading)
+}
+
 async function generateAIReading(productName, deck, spread, cardsData) {
   const style = randomStyle(deck)
 
   const cardsText = cardsData.map(c => `
-Carta: ${c.name}
-Significado: ${c.significado_general || ""}
+Carta: ${c.name || ""}
+Significado general: ${c.significado_general || ""}
 Amor: ${c.amor || ""}
-Trabajo: ${c.trabajo_proposito || ""}
-Consejo: ${c.consejo_espiritual || ""}
+Trabajo o propósito: ${c.trabajo_proposito || ""}
+Consejo espiritual: ${c.consejo_espiritual || ""}
+Invertida: ${c.invertida || ""}
 `).join("\n")
 
   const prompt = `
 Eres una tarotista espiritual profesional.
 
+Debes escribir una interpretación ORIGINAL en español.
+
 Producto: ${productName}
-Cartas: ${spread}
+Cantidad de cartas: ${spread}
 Mazo: ${deck}
 Estilo: ${style}
 
-Cartas obtenidas:
+Información base de las cartas:
 ${cardsText}
 
-Escribe una interpretación espiritual cálida y profunda en español.
+Escribe una lectura espiritual cálida, profunda, humana y bien redactada.
 No uses listas.
+No repitas frases hechas.
+Haz que suene personalizada.
+Incluye una introducción breve, desarrollo y cierre.
 `
 
   const response = await openai.responses.create({
@@ -147,8 +211,64 @@ No uses listas.
     input: prompt
   })
 
-  return response.output_text
+  return (response.output_text || "").trim()
 }
+
+async function createReading({ orderId, lineItemId, productId, email }) {
+  const config = PRODUCTS[String(productId)]
+
+  if (!config) {
+    throw new Error("Producto no configurado")
+  }
+
+  const key = generateKey(orderId, lineItemId, productId)
+
+  if (readings.has(key)) {
+    return {
+      repeated: true,
+      reading: readings.get(key)
+    }
+  }
+
+  const cards = randomCards(config.deckSize, config.spread)
+  const cardsData = getCardsData(config.deck, cards)
+
+  if (cardsData.length !== config.spread) {
+    throw new Error(`No se pudieron cargar todas las cartas del mazo ${config.deck}`)
+  }
+
+  const interpretation = await generateAIReading(
+    config.name,
+    config.deck,
+    config.spread,
+    cardsData
+  )
+
+  const reading = {
+    key,
+    orderId: String(orderId),
+    lineItemId: String(lineItemId),
+    productId: String(productId),
+    product: config.name,
+    deck: config.deck,
+    spread: config.spread,
+    email: email || "",
+    cards,
+    cardsData,
+    interpretation,
+    sent: false,
+    createdAt: new Date().toISOString()
+  }
+
+  readings.set(key, reading)
+
+  return {
+    repeated: false,
+    reading
+  }
+}
+
+/* ---------------- RUTAS BASE ---------------- */
 
 app.get("/", (req, res) => {
   res.json({
@@ -157,116 +277,147 @@ app.get("/", (req, res) => {
   })
 })
 
-app.post("/api/session", (req, res) => {
-  const { productId } = req.body
-  const config = PRODUCTS[String(productId)]
-
-  if (!config) {
-    return res.status(400).json({ ok: false })
-  }
-
+app.get("/api/health", (req, res) => {
   res.json({
-    ok: true,
-    spread: config.spread,
-    deck: config.deck,
-    deckSize: config.deckSize
+    ok: true
   })
 })
 
-app.post("/api/reading/result", async (req, res) => {
+/* ---------------- SESSION ---------------- */
+
+app.post("/api/session", (req, res) => {
   try {
-    const { orderId, lineItemId, productId, email } = req.body
+    const { productId } = req.body
     const config = PRODUCTS[String(productId)]
 
     if (!config) {
-      return res.status(400).json({ ok: false })
-    }
-
-    const key = generateKey(orderId, lineItemId, productId)
-
-    if (readings.has(key)) {
-      return res.json({
-        ok: true,
-        repeated: true,
-        reading: readings.get(key)
+      return res.status(400).json({
+        ok: false,
+        error: "Producto no configurado"
       })
     }
 
-    const cards = randomCards(config.deckSize, config.spread)
-    const cardsData = getCardsData(config.deck, cards)
-
-    const interpretation = await generateAIReading(
-      config.name,
-      config.deck,
-      config.spread,
-      cardsData
-    )
-
-    const reading = {
-      key,
-      email,
-      productId,
-      product: config.name,
-      deck: config.deck,
-      cards,
-      interpretation
-    }
-
-    readings.set(key, reading)
-
-    res.json({
+    return res.json({
       ok: true,
-      reading
+      spread: config.spread,
+      deck: config.deck,
+      deckSize: config.deckSize,
+      productName: config.name
     })
   } catch (error) {
-    console.error(error)
-    res.status(500).json({
+    console.error("SESSION ERROR:", error)
+    return res.status(500).json({
       ok: false,
       error: error.message
     })
   }
 })
 
-app.post("/api/reading/email", async (req, res) => {
-  const { key } = req.body
-  const reading = readings.get(key)
+/* ---------------- CREAR LECTURA MANUAL ---------------- */
 
-  if (!reading) {
-    return res.status(404).json({ ok: false })
+app.post("/api/reading/result", async (req, res) => {
+  try {
+    const { orderId, lineItemId, productId, email } = req.body
+
+    if (!orderId || !lineItemId || !productId) {
+      return res.status(400).json({
+        ok: false,
+        error: "Faltan datos obligatorios"
+      })
+    }
+
+    const result = await createReading({
+      orderId: String(orderId),
+      lineItemId: String(lineItemId),
+      productId: String(productId),
+      email: email || ""
+    })
+
+    return res.json({
+      ok: true,
+      repeated: result.repeated,
+      reading: result.reading
+    })
+  } catch (error) {
+    console.error("READING RESULT ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
   }
-
-  if (reading.sent) {
-    return res.json({ ok: true, already: true })
-  }
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL,
-    to: reading.email,
-    subject: "Tu lectura de tarot",
-    html: `
-      <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
-        <h2>${reading.product}</h2>
-        <p>Tu lectura ya está disponible.</p>
-
-        <p style="margin:24px 0;">
-          <a
-            href="https://eltarotdelaruedadelafortuna.com/pages/lectura?token=${reading.key}"
-            style="display:inline-block;background:#b08d57;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
-          >
-            Acceder a tu lectura
-          </a>
-        </p>
-
-        <p><strong>Cartas:</strong> ${reading.cards.join(", ")}</p>
-        <hr>
-        <p style="white-space:pre-line;">${reading.interpretation}</p>
-      </div>
-    `
-  })
-
-  reading.sent = true
-  res.json({ ok: true })
 })
+
+/* ---------------- RECUPERAR LECTURA POR TOKEN ---------------- */
+
+app.get("/api/reading/result", (req, res) => {
+  try {
+    const { token } = req.query
+
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        error: "Falta token"
+      })
+    }
+
+    const reading = readings.get(String(token))
+
+    if (!reading) {
+      return res.status(404).json({
+        ok: false,
+        error: "Lectura no encontrada"
+      })
+    }
+
+    return res.json({
+      ok: true,
+      reading
+    })
+  } catch (error) {
+    console.error("READING GET ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
+/* ---------------- ENVIAR EMAIL MANUAL ---------------- */
+
+app.post("/api/reading/email", async (req, res) => {
+  try {
+    const { key } = req.body
+    const reading = readings.get(String(key))
+
+    if (!reading) {
+      return res.status(404).json({
+        ok: false,
+        error: "Lectura no encontrada"
+      })
+    }
+
+    if (reading.sent) {
+      return res.json({
+        ok: true,
+        already: true
+      })
+    }
+
+    await sendReadingEmail(reading)
+
+    return res.json({
+      ok: true
+    })
+  } catch (error) {
+    console.error("READING EMAIL ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
+/* ---------------- WEBHOOK SHOPIFY ---------------- */
 
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
@@ -275,7 +426,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     const order = JSON.parse(req.body.toString("utf8"))
-    const email = order.email
+    const email = order.email || order.contact_email || ""
 
     for (const item of order.line_items || []) {
       const productId = String(item.product_id)
@@ -283,70 +434,33 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
       if (!config) continue
 
-      const key = generateKey(order.id, item.id, productId)
-
-      if (readings.has(key)) continue
-
-      const cards = randomCards(config.deckSize, config.spread)
-      const cardsData = getCardsData(config.deck, cards)
-
-      const interpretation = await generateAIReading(
-        config.name,
-        config.deck,
-        config.spread,
-        cardsData
-      )
-
-      const reading = {
-        key,
-        email,
+      const result = await createReading({
+        orderId: String(order.id),
+        lineItemId: String(item.id),
         productId,
-        product: config.name,
-        deck: config.deck,
-        cards,
-        interpretation,
-        sent: false
-      }
+        email
+      })
 
-      readings.set(key, reading)
+      const reading = result.reading
 
-      if (email) {
-        await resend.emails.send({
-          from: process.env.RESEND_FROM_EMAIL,
-          to: email,
-          subject: "Tu lectura de tarot",
-          html: `
-            <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
-              <h2>${config.name}</h2>
-              <p>Tu lectura ya está disponible.</p>
-
-              <p style="margin:24px 0;">
-                <a
-                  href="https://eltarotdelaruedadelafortuna.com/pages/lectura?token=${key}"
-                  style="display:inline-block;background:#b08d57;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
-                >
-                  Acceder a tu lectura
-                </a>
-              </p>
-
-              <p><strong>Cartas:</strong> ${cards.join(", ")}</p>
-              <hr>
-              <p style="white-space:pre-line;">${interpretation}</p>
-            </div>
-          `
-        })
-
-        reading.sent = true
-        readings.set(key, reading)
+      if (!reading.sent && reading.email) {
+        await sendReadingEmail(reading)
       }
     }
 
-    res.json({ ok: true })
+    return res.status(200).json({
+      ok: true
+    })
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ ok: false })
+    console.error("SHOPIFY ORDER PAID ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
   }
 })
+
+/* ---------------- SERVER ---------------- */
 
 const PORT = Number(process.env.PORT) || 8080
 
