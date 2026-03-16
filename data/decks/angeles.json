@@ -3,30 +3,137 @@
   "title": "Mensaje de los Ángeles",
   "total_cards": 12,
   "cards": [
-
-{ "id":1,"name":"Arcángel Gabriel","keywords":["mensaje","claridad"],"significado_general":"Gabriel trae mensajes importantes y claridad espiritual.","amor":"Comunicación sincera.","trabajo_proposito":"Inspiración creativa.","consejo_espiritual":"Escucha los mensajes.","invertida":"Confusión en la comunicación."},
-
-{ "id":2,"name":"Ángel del Nuevo Comienzo","keywords":["inicio","renovación"],"significado_general":"Se abre un nuevo capítulo en tu vida.","amor":"Nueva etapa emocional.","trabajo_proposito":"Comienzo profesional.","consejo_espiritual":"Atrévete a empezar.","invertida":"Miedo a comenzar."},
-
-{ "id":3,"name":"Ángel de los Sueños","keywords":["intuición","visiones"],"significado_general":"Tus sueños contienen mensajes espirituales.","amor":"Emociones profundas.","trabajo_proposito":"Creatividad intuitiva.","consejo_espiritual":"Presta atención a los sueños.","invertida":"Desconexión interior."},
-
-{ "id":4,"name":"Arcángel Miguel","keywords":["protección","valor"],"significado_general":"Miguel protege tu camino y te da fuerza.","amor":"Defender lo que amas.","trabajo_proposito":"Tomar decisiones valientes.","consejo_espiritual":"Confía en tu protección.","invertida":"Duda o inseguridad."},
-
-{ "id":5,"name":"Arcángel Jofiel","keywords":["sabiduría","belleza"],"significado_general":"Jofiel ilumina la mente con sabiduría.","amor":"Relaciones armoniosas.","trabajo_proposito":"Creatividad y claridad.","consejo_espiritual":"Observa la belleza.","invertida":"Pensamientos negativos."},
-
-{ "id":6,"name":"Arcángel Zadkiel","keywords":["transmutación","perdón"],"significado_general":"Energía de liberación y transformación.","amor":"Sanar heridas del pasado.","trabajo_proposito":"Soltar cargas emocionales.","consejo_espiritual":"Perdona y libera.","invertida":"Resistencia al perdón."},
-
-{ "id":7,"name":"Arcángel Rafael","keywords":["sanación","equilibrio"],"significado_general":"Rafael trae sanación física y emocional.","amor":"Relación sanadora.","trabajo_proposito":"Equilibrio laboral.","consejo_espiritual":"Permite que la sanación ocurra.","invertida":"Bloqueo energético."},
-
-{ "id":8,"name":"Ángel de la Abundancia","keywords":["prosperidad","flujo"],"significado_general":"Fluye la abundancia en tu vida.","amor":"Compartir y recibir.","trabajo_proposito":"Prosperidad material.","consejo_espiritual":"Agradece lo que tienes.","invertida":"Miedo a la escasez."},
-
-{ "id":9,"name":"Arcángel Uriel","keywords":["claridad","sabiduría"],"significado_general":"Uriel ilumina decisiones importantes.","amor":"Claridad emocional.","trabajo_proposito":"Solución a problemas.","consejo_espiritual":"Busca la luz de la verdad.","invertida":"Confusión mental."},
-
-{ "id":10,"name":"Ángel del Tiempo","keywords":["paciencia","ciclos"],"significado_general":"Todo ocurre en el momento correcto.","amor":"Tiempo para sanar.","trabajo_proposito":"Procesos lentos pero seguros.","consejo_espiritual":"Respeta los ciclos.","invertida":"Impaciencia."},
-
-{ "id":11,"name":"Arcángel Chamuel","keywords":["amor","armonía"],"significado_general":"Chamuel trae energía de amor universal.","amor":"Relaciones armoniosas.","trabajo_proposito":"Cooperación.","consejo_espiritual":"Actúa con amor.","invertida":"Conflictos emocionales."},
-
-{ "id":12,"name":"Ángel de la Guardia","keywords":["protección","guía"],"significado_general":"Un ángel protector acompaña tu camino.","amor":"Protección en relaciones.","trabajo_proposito":"Guía en decisiones.","consejo_espiritual":"No estás solo.","invertida":"Sentirse desprotegido."}
-
+    {
+      "id": 1,
+      "name": "Arcángel Gabriel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Gabriel.png?v=1766518175",
+      "keywords": ["mensaje", "claridad"],
+      "significado_general": "Gabriel trae mensajes importantes y claridad espiritual.",
+      "amor": "Comunicación sincera.",
+      "trabajo_proposito": "Inspiración creativa.",
+      "consejo_espiritual": "Escucha los mensajes.",
+      "invertida": "Confusión en la comunicación."
+    },
+    {
+      "id": 2,
+      "name": "Ángel del Nuevo Comienzo",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Nuevo_Comienzo.png?v=1766517962",
+      "keywords": ["inicio", "renovación"],
+      "significado_general": "Se abre un nuevo capítulo en tu vida.",
+      "amor": "Nueva etapa emocional.",
+      "trabajo_proposito": "Comienzo profesional.",
+      "consejo_espiritual": "Atrévete a empezar.",
+      "invertida": "Miedo a comenzar."
+    },
+    {
+      "id": 3,
+      "name": "Ángel de los Sueños",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_los_Suenos.png?v=1766518057",
+      "keywords": ["intuición", "visiones"],
+      "significado_general": "Tus sueños contienen mensajes espirituales.",
+      "amor": "Emociones profundas.",
+      "trabajo_proposito": "Creatividad intuitiva.",
+      "consejo_espiritual": "Presta atención a los sueños.",
+      "invertida": "Desconexión interior."
+    },
+    {
+      "id": 4,
+      "name": "Arcángel Miguel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_Arcangel_Miguel.png?v=1766518039",
+      "keywords": ["protección", "valor"],
+      "significado_general": "Miguel protege tu camino y te da fuerza.",
+      "amor": "Defender lo que amas.",
+      "trabajo_proposito": "Tomar decisiones valientes.",
+      "consejo_espiritual": "Confía en tu protección.",
+      "invertida": "Duda o inseguridad."
+    },
+    {
+      "id": 5,
+      "name": "Arcángel Jofiel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Jofiel.png?v=1766518078",
+      "keywords": ["sabiduría", "belleza"],
+      "significado_general": "Jofiel ilumina la mente con sabiduría.",
+      "amor": "Relaciones armoniosas.",
+      "trabajo_proposito": "Creatividad y claridad.",
+      "consejo_espiritual": "Observa la belleza.",
+      "invertida": "Pensamientos negativos."
+    },
+    {
+      "id": 6,
+      "name": "Arcángel Zadkiel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Zadkiel.png?v=1766517937",
+      "keywords": ["transmutación", "perdón"],
+      "significado_general": "Energía de liberación y transformación.",
+      "amor": "Sanar heridas del pasado.",
+      "trabajo_proposito": "Soltar cargas emocionales.",
+      "consejo_espiritual": "Perdona y libera.",
+      "invertida": "Resistencia al perdón."
+    },
+    {
+      "id": 7,
+      "name": "Arcángel Rafael",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Rafael.png?v=1766517900",
+      "keywords": ["sanación", "equilibrio"],
+      "significado_general": "Rafael trae sanación física y emocional.",
+      "amor": "Relación sanadora.",
+      "trabajo_proposito": "Equilibrio laboral.",
+      "consejo_espiritual": "Permite que la sanación ocurra.",
+      "invertida": "Bloqueo energético."
+    },
+    {
+      "id": 8,
+      "name": "Ángel de la Abundancia",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Abundancia.png?v=1766518209",
+      "keywords": ["prosperidad", "flujo"],
+      "significado_general": "Fluye la abundancia en tu vida.",
+      "amor": "Compartir y recibir.",
+      "trabajo_proposito": "Prosperidad material.",
+      "consejo_espiritual": "Agradece lo que tienes.",
+      "invertida": "Miedo a la escasez."
+    },
+    {
+      "id": 9,
+      "name": "Arcángel Uriel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Uriel.png?v=1766518157",
+      "keywords": ["claridad", "sabiduría"],
+      "significado_general": "Uriel ilumina decisiones importantes.",
+      "amor": "Claridad emocional.",
+      "trabajo_proposito": "Solución a problemas.",
+      "consejo_espiritual": "Busca la luz de la verdad.",
+      "invertida": "Confusión mental."
+    },
+    {
+      "id": 10,
+      "name": "Ángel del Tiempo",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_del_Tiempo_Divino.png?v=1766518123",
+      "keywords": ["paciencia", "ciclos"],
+      "significado_general": "Todo ocurre en el momento correcto.",
+      "amor": "Tiempo para sanar.",
+      "trabajo_proposito": "Procesos lentos pero seguros.",
+      "consejo_espiritual": "Respeta los ciclos.",
+      "invertida": "Impaciencia."
+    },
+    {
+      "id": 11,
+      "name": "Arcángel Chamuel",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Arcangel_Chamuel.png?v=1766518190",
+      "keywords": ["amor", "armonía"],
+      "significado_general": "Chamuel trae energía de amor universal.",
+      "amor": "Relaciones armoniosas.",
+      "trabajo_proposito": "Cooperación.",
+      "consejo_espiritual": "Actúa con amor.",
+      "invertida": "Conflictos emocionales."
+    },
+    {
+      "id": 12,
+      "name": "Ángel de la Guardia",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Angel_Angel_de_la_Guarda.png?v=1766518235",
+      "keywords": ["protección", "guía"],
+      "significado_general": "Un ángel protector acompaña tu camino.",
+      "amor": "Protección en relaciones.",
+      "trabajo_proposito": "Guía en decisiones.",
+      "consejo_espiritual": "No estás solo.",
+      "invertida": "Sentirse desprotegido."
+    }
   ]
 }
