@@ -16,12 +16,7 @@ const openai = new OpenAI({
 })
 
 app.use(cors())
-
-// IMPORTANTE:
-// esta ruta necesita raw body para verificar HMAC de Shopify
 app.use("/api/shopify/order-paid", express.raw({ type: "application/json" }))
-
-// el resto de rutas usan JSON normal
 app.use(express.json())
 
 const STORE_URL =
@@ -50,9 +45,6 @@ const PRODUCTS = {
   }
 }
 
-// OJO: esto es memoria temporal.
-// Si Railway reinicia, se pierde.
-// Para pruebas vale, pero luego habrá que moverlo a base de datos.
 const readings = new Map()
 const decksCache = new Map()
 
@@ -102,7 +94,7 @@ function loadDeck(deckName) {
   const raw = fs.readFileSync(filePath, "utf8")
   const parsed = JSON.parse(raw)
 
-  if (!parsed.cards || !Array.isArray(parsed.cards)) {
+  if (!Array.isArray(parsed.cards)) {
     throw new Error(`El mazo ${deckName} no tiene un campo cards válido`)
   }
 
@@ -151,27 +143,21 @@ function readingUrl(key) {
 function buildEmailHtml(reading) {
   const url = readingUrl(reading.key)
 
-  const cardsNames = (reading.cardsData || [])
-    .map(card => card.name || card.nombre || card.id || "Carta")
-    .join(", ")
-
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
       <h2 style="margin-bottom:8px;">${reading.product}</h2>
-      <p style="margin-top:0;">Tu lectura ya está disponible.</p>
+      <p style="margin-top:0;">
+        Tu lectura ya te espera. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
+      </p>
 
       <p style="margin:24px 0;">
         <a
           href="${url}"
-          style="display:inline-block;background:#b08d57;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
+          style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
         >
           Acceder a tu lectura
         </a>
       </p>
-
-      <p><strong>Cartas:</strong> ${cardsNames}</p>
-      <hr style="margin:24px 0;border:none;border-top:1px solid #ddd;" />
-      <div style="white-space:pre-line;">${reading.interpretation}</div>
     </div>
   `
 }
@@ -179,6 +165,10 @@ function buildEmailHtml(reading) {
 async function sendReadingEmail(reading) {
   if (!reading.email) {
     throw new Error("La lectura no tiene email")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
   }
 
   console.log("RESEND: enviando email a", reading.email)
@@ -190,6 +180,11 @@ async function sendReadingEmail(reading) {
     html: buildEmailHtml(reading)
   })
 
+  if (result?.error) {
+    console.error("RESEND ERROR:", result.error)
+    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
+  }
+
   console.log("RESEND OK:", result)
 
   reading.sent = true
@@ -200,7 +195,11 @@ async function sendReadingEmail(reading) {
 
 function getCardField(card, possibleKeys) {
   for (const key of possibleKeys) {
-    if (card[key] !== undefined && card[key] !== null && String(card[key]).trim() !== "") {
+    if (
+      card[key] !== undefined &&
+      card[key] !== null &&
+      String(card[key]).trim() !== ""
+    ) {
       return String(card[key]).trim()
     }
   }
@@ -315,11 +314,6 @@ async function createReading({ orderId, lineItemId, productId, email }) {
   }
 
   const cardsData = pickRandomCards(config.deck, config.spread)
-
-  if (cardsData.length !== config.spread) {
-    throw new Error(`No se pudieron seleccionar todas las cartas del mazo ${config.deck}`)
-  }
-
   const cards = cardsData.map(card => card.id || card.name || card.nombre || "sin_id")
 
   const interpretation = await generateAIReading(
@@ -403,8 +397,6 @@ app.post("/api/session", (req, res) => {
 app.post("/api/reading/result", async (req, res) => {
   try {
     const { orderId, lineItemId, productId, email } = req.body
-
-    console.log("POST /api/reading/result BODY:", req.body)
 
     if (!orderId || !lineItemId || !productId) {
       return res.status(400).json({
@@ -526,11 +518,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     })
 
     if (financialStatus !== "paid") {
-      console.log("Pedido recibido pero no pagado todavía:", {
-        orderId: order.id,
-        financialStatus
-      })
-
       return res.status(200).json({
         ok: true,
         skipped: true,
@@ -579,11 +566,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
       if (!reading.sent && reading.email) {
         await sendReadingEmail(reading)
-      } else {
-        console.log("Email no enviado:", {
-          sent: reading.sent,
-          hasEmail: Boolean(reading.email)
-        })
       }
 
       processedCount += 1
