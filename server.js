@@ -5,6 +5,7 @@ const cors = require("cors")
 const crypto = require("crypto")
 const fs = require("fs")
 const path = require("path")
+const Database = require("better-sqlite3")
 const { Resend } = require("resend")
 const OpenAI = require("openai")
 
@@ -49,9 +50,41 @@ const PRODUCTS = {
   }
 }
 
-const sessions = new Map()
-const processedWebhooks = new Set()
 const decksCache = new Map()
+
+const DB_PATH = path.join(__dirname, "data", "tarot.sqlite")
+fs.mkdirSync(path.dirname(DB_PATH), { recursive: true })
+
+const db = new Database(DB_PATH)
+
+db.pragma("journal_mode = WAL")
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL,
+  line_item_id TEXT NOT NULL,
+  product_id TEXT NOT NULL,
+  product_name TEXT NOT NULL,
+  deck_id TEXT NOT NULL,
+  max_cards INTEGER NOT NULL,
+  deck_size INTEGER NOT NULL,
+  email TEXT,
+  status TEXT NOT NULL,
+  access_email_sent INTEGER NOT NULL DEFAULT 0,
+  selected_card_ids TEXT,
+  selected_cards_json TEXT,
+  interpretation TEXT,
+  reading_json TEXT,
+  created_at TEXT NOT NULL,
+  completed_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS processed_webhooks (
+  webhook_id TEXT PRIMARY KEY,
+  created_at TEXT NOT NULL
+);
+`)
 
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
   return `${orderId}-${lineItemId}-${productId}-${unitIndex}`
@@ -132,7 +165,7 @@ function buildAccessEmailHtml(session) {
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
-      <h2 style="margin-bottom:8px;">${session.productName}</h2>
+      <h2 style="margin-bottom:8px;">${session.product_name}</h2>
       <p style="margin-top:0;">
         Tu lectura ya está disponible. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
       </p>
@@ -147,6 +180,106 @@ function buildAccessEmailHtml(session) {
       </p>
     </div>
   `
+}
+
+function rowToSession(row) {
+  if (!row) return null
+
+  return {
+    token: row.token,
+    orderId: row.order_id,
+    lineItemId: row.line_item_id,
+    productId: row.product_id,
+    productName: row.product_name,
+    deckId: row.deck_id,
+    deck: row.deck_id,
+    pick: Number(row.max_cards),
+    maxCards: Number(row.max_cards),
+    deckSize: Number(row.deck_size),
+    email: row.email || "",
+    status: row.status,
+    accessEmailSent: Boolean(row.access_email_sent),
+    selectedCardIds: row.selected_card_ids ? JSON.parse(row.selected_card_ids) : [],
+    selectedCards: row.selected_cards_json ? JSON.parse(row.selected_cards_json) : [],
+    interpretation: row.interpretation || "",
+    reading: row.reading_json ? JSON.parse(row.reading_json) : null,
+    createdAt: row.created_at,
+    completedAt: row.completed_at || null
+  }
+}
+
+function getSessionByToken(token) {
+  const row = db
+    .prepare("SELECT * FROM sessions WHERE token = ?")
+    .get(String(token))
+
+  return rowToSession(row)
+}
+
+function saveSession(session) {
+  db.prepare(`
+    INSERT INTO sessions (
+      token, order_id, line_item_id, product_id, product_name,
+      deck_id, max_cards, deck_size, email, status,
+      access_email_sent, selected_card_ids, selected_cards_json,
+      interpretation, reading_json, created_at, completed_at
+    ) VALUES (
+      @token, @order_id, @line_item_id, @product_id, @product_name,
+      @deck_id, @max_cards, @deck_size, @email, @status,
+      @access_email_sent, @selected_card_ids, @selected_cards_json,
+      @interpretation, @reading_json, @created_at, @completed_at
+    )
+    ON CONFLICT(token) DO UPDATE SET
+      order_id = excluded.order_id,
+      line_item_id = excluded.line_item_id,
+      product_id = excluded.product_id,
+      product_name = excluded.product_name,
+      deck_id = excluded.deck_id,
+      max_cards = excluded.max_cards,
+      deck_size = excluded.deck_size,
+      email = excluded.email,
+      status = excluded.status,
+      access_email_sent = excluded.access_email_sent,
+      selected_card_ids = excluded.selected_card_ids,
+      selected_cards_json = excluded.selected_cards_json,
+      interpretation = excluded.interpretation,
+      reading_json = excluded.reading_json,
+      created_at = excluded.created_at,
+      completed_at = excluded.completed_at
+  `).run({
+    token: session.token,
+    order_id: session.orderId,
+    line_item_id: session.lineItemId,
+    product_id: session.productId,
+    product_name: session.productName,
+    deck_id: session.deckId,
+    max_cards: Number(session.maxCards || session.pick || 3),
+    deck_size: Number(session.deckSize || 0),
+    email: session.email || "",
+    status: session.status || "pending_selection",
+    access_email_sent: session.accessEmailSent ? 1 : 0,
+    selected_card_ids: JSON.stringify(session.selectedCardIds || []),
+    selected_cards_json: JSON.stringify(session.selectedCards || []),
+    interpretation: session.interpretation || "",
+    reading_json: session.reading ? JSON.stringify(session.reading) : null,
+    created_at: session.createdAt || new Date().toISOString(),
+    completed_at: session.completedAt || null
+  })
+}
+
+function isWebhookProcessed(webhookId) {
+  const row = db
+    .prepare("SELECT webhook_id FROM processed_webhooks WHERE webhook_id = ?")
+    .get(String(webhookId))
+
+  return Boolean(row)
+}
+
+function markWebhookProcessed(webhookId) {
+  db.prepare(`
+    INSERT OR IGNORE INTO processed_webhooks (webhook_id, created_at)
+    VALUES (?, ?)
+  `).run(String(webhookId), new Date().toISOString())
 }
 
 async function sendAccessEmail(session) {
@@ -169,7 +302,10 @@ async function sendAccessEmail(session) {
     from: process.env.RESEND_FROM_EMAIL,
     to: session.email,
     subject: `Tu lectura está lista: ${session.productName}`,
-    html: buildAccessEmailHtml(session)
+    html: buildAccessEmailHtml({
+      token: session.token,
+      product_name: session.productName
+    })
   })
 
   if (result?.error) {
@@ -178,7 +314,7 @@ async function sendAccessEmail(session) {
   }
 
   session.accessEmailSent = true
-  sessions.set(session.token, session)
+  saveSession(session)
 
   console.log("RESEND OK:", result)
   return result
@@ -420,8 +556,6 @@ Reglas:
 - La lectura debe sentirse única y premium.
 `
 
-  console.log("OPENAI: generando lectura para", productName)
-
   const response = await openai.responses.create({
     model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
     input: prompt
@@ -437,7 +571,6 @@ Reglas:
   const normalized = normalizeReadingObject(parsed)
 
   if (normalized) {
-    console.log("OPENAI OK: lectura estructurada generada")
     return {
       reading: normalized,
       interpretation: `
@@ -471,7 +604,6 @@ ${normalized.cierre}
     }
   }
 
-  console.log("OPENAI: respuesta no vino en JSON perfecto, intentando rescatar texto")
   const fallbackReading = sectionsFromPlainText(text, deck)
 
   return {
@@ -503,10 +635,11 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
   }
 
   const token = generateToken(orderId, lineItemId, productId, unitIndex)
+  const existing = getSessionByToken(token)
 
-  if (sessions.has(token)) {
+  if (existing) {
     console.log("SESSION: ya existía", token)
-    return sessions.get(token)
+    return existing
   }
 
   const session = {
@@ -527,19 +660,11 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     selectedCards: [],
     interpretation: "",
     reading: null,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    completedAt: null
   }
 
-  sessions.set(token, session)
-
-  console.log("SESSION OK:", {
-    token,
-    productName: session.productName,
-    deckId: session.deckId,
-    pick: session.pick,
-    email: session.email
-  })
-
+  saveSession(session)
   return session
 }
 
@@ -547,21 +672,13 @@ app.get("/", (req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "session-cards-submit-v2"
+    version: "production-sqlite-v1"
   })
 })
 
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true
-  })
-})
-
-app.get("/api/test-nuevo", (req, res) => {
-  res.json({
-    ok: true,
-    nuevo: true,
-    version: "session-cards-submit-v2"
   })
 })
 
@@ -576,7 +693,7 @@ app.get("/api/session", (req, res) => {
       })
     }
 
-    const session = sessions.get(String(token))
+    const session = getSessionByToken(String(token))
 
     if (!session) {
       return res.status(404).json({
@@ -650,7 +767,7 @@ app.post("/api/submit", async (req, res) => {
       })
     }
 
-    const session = sessions.get(String(token))
+    const session = getSessionByToken(String(token))
 
     if (!session) {
       return res.status(404).json({
@@ -669,15 +786,24 @@ app.post("/api/submit", async (req, res) => {
       })
     }
 
-    const normalizedCardIds = cards.map((c) => {
-      if (typeof c === "string" || typeof c === "number") {
-        return String(c)
-      }
-      if (c && (typeof c.id === "string" || typeof c.id === "number")) {
-        return String(c.id)
-      }
-      return null
-    }).filter(Boolean)
+    if (session.status === "processing") {
+      return res.status(409).json({
+        ok: false,
+        error: "La lectura ya se está procesando"
+      })
+    }
+
+    const normalizedCardIds = cards
+      .map((c) => {
+        if (typeof c === "string" || typeof c === "number") {
+          return String(c)
+        }
+        if (c && (typeof c.id === "string" || typeof c.id === "number")) {
+          return String(c.id)
+        }
+        return null
+      })
+      .filter(Boolean)
 
     const uniqueIds = [...new Set(normalizedCardIds)]
 
@@ -704,7 +830,7 @@ app.post("/api/submit", async (req, res) => {
     session.status = "processing"
     session.selectedCardIds = uniqueIds
     session.selectedCards = selectedCards
-    sessions.set(session.token, session)
+    saveSession(session)
 
     const aiResult = await generateAIReading(
       session.productName,
@@ -716,7 +842,8 @@ app.post("/api/submit", async (req, res) => {
     session.interpretation = aiResult.interpretation
     session.reading = aiResult.reading
     session.status = "completed"
-    sessions.set(session.token, session)
+    session.completedAt = new Date().toISOString()
+    saveSession(session)
 
     return res.json({
       ok: true,
@@ -744,7 +871,7 @@ app.get("/api/reading/result", (req, res) => {
       })
     }
 
-    const session = sessions.get(String(token))
+    const session = getSessionByToken(String(token))
 
     if (!session) {
       return res.status(404).json({
@@ -816,7 +943,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-    if (webhookId && processedWebhooks.has(webhookId)) {
+    if (webhookId && isWebhookProcessed(webhookId)) {
       console.log("WEBHOOK DUPLICADO IGNORADO:", webhookId)
       return res.status(200).json({
         ok: true,
@@ -825,7 +952,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     if (webhookId) {
-      processedWebhooks.add(webhookId)
+      markWebhookProcessed(webhookId)
     }
 
     const order = JSON.parse(req.body.toString("utf8"))
