@@ -208,6 +208,125 @@ function getCardField(card, possibleKeys) {
   return ""
 }
 
+function getSpecialSectionTitle(deck) {
+  if (deck === "angeles") return "CONSEJO ANGELICAL"
+  if (deck === "semilla_estelar") return "CONSEJO ESTELAR"
+  return "CONSEJO DEL CORAZÓN"
+}
+
+function safeJsonParse(text) {
+  try {
+    return JSON.parse(text)
+  } catch (error) {
+    return null
+  }
+}
+
+function normalizeReadingObject(obj) {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+    return null
+  }
+
+  const reading = {
+    introduccion: String(obj.introduccion || "").trim(),
+    significado_general: String(obj.significado_general || "").trim(),
+    amor: String(obj.amor || "").trim(),
+    trabajo_proposito: String(obj.trabajo_proposito || "").trim(),
+    consejo_espiritual: String(obj.consejo_espiritual || "").trim(),
+    consejo_especial: String(obj.consejo_especial || "").trim(),
+    afirmacion: String(obj.afirmacion || "").trim(),
+    ritual: String(obj.ritual || "").trim(),
+    cierre: String(obj.cierre || "").trim()
+  }
+
+  const allFilled = Object.values(reading).every((value) => value.length > 0)
+  return allFilled ? reading : null
+}
+
+function sectionsFromPlainText(text, deck) {
+  const cleaned = String(text || "").trim()
+
+  const titles = [
+    "INTRODUCCIÓN",
+    "SIGNIFICADO GENERAL",
+    "AMOR",
+    "TRABAJO / PROPÓSITO",
+    "CONSEJO ESPIRITUAL",
+    getSpecialSectionTitle(deck),
+    "AFIRMACIÓN",
+    "RITUAL",
+    "CIERRE"
+  ]
+
+  const result = {
+    introduccion: "",
+    significado_general: "",
+    amor: "",
+    trabajo_proposito: "",
+    consejo_espiritual: "",
+    consejo_especial: "",
+    afirmacion: "",
+    ritual: "",
+    cierre: ""
+  }
+
+  const mapping = {
+    "INTRODUCCIÓN": "introduccion",
+    "SIGNIFICADO GENERAL": "significado_general",
+    "AMOR": "amor",
+    "TRABAJO / PROPÓSITO": "trabajo_proposito",
+    "CONSEJO ESPIRITUAL": "consejo_espiritual",
+    [getSpecialSectionTitle(deck)]: "consejo_especial",
+    "AFIRMACIÓN": "afirmacion",
+    "RITUAL": "ritual",
+    "CIERRE": "cierre"
+  }
+
+  const escaped = titles
+    .map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|")
+
+  const regex = new RegExp(`(?:^|\\n)(${escaped})\\s*\\n`, "g")
+  const matches = [...cleaned.matchAll(regex)]
+
+  if (!matches.length) {
+    return {
+      introduccion: cleaned,
+      significado_general: cleaned,
+      amor: cleaned,
+      trabajo_proposito: cleaned,
+      consejo_espiritual: cleaned,
+      consejo_especial: cleaned,
+      afirmacion: "Estoy preparada para recibir con amor la guía que el universo pone en mi camino.",
+      ritual: "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con la mano en el corazón.",
+      cierre: cleaned
+    }
+  }
+
+  for (let i = 0; i < matches.length; i += 1) {
+    const current = matches[i]
+    const title = current[1]
+    const start = current.index + current[0].length
+    const end = i + 1 < matches.length ? matches[i + 1].index : cleaned.length
+    const content = cleaned.slice(start, end).trim()
+    const key = mapping[title]
+
+    if (key) {
+      result[key] = content
+    }
+  }
+
+  if (!result.afirmacion) {
+    result.afirmacion = "Estoy preparada para recibir con amor la guía que el universo pone en mi camino."
+  }
+
+  if (!result.ritual) {
+    result.ritual = "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con la mano en el corazón."
+  }
+
+  return result
+}
+
 async function generateAIReading(productName, deck, pick, cardsData) {
   const style = randomStyle(deck)
 
@@ -217,6 +336,13 @@ async function generateAIReading(productName, deck, pick, cardsData) {
       : deck === "semilla_estelar"
       ? "cósmico, álmico, expansivo, vibracional"
       : "místico, profundo, simbólico, introspectivo"
+
+  const specialSection =
+    deck === "angeles"
+      ? "CONSEJO ANGELICAL"
+      : deck === "semilla_estelar"
+      ? "CONSEJO ESTELAR"
+      : "CONSEJO DEL CORAZÓN"
 
   const cardsText = cardsData
     .map((c, index) => {
@@ -267,44 +393,27 @@ Estilo: ${style}
 Información base de las cartas:
 ${cardsText}
 
-Devuelve la lectura con ESTA ESTRUCTURA EXACTA y en este orden:
+Devuelve EXCLUSIVAMENTE un JSON válido con esta estructura exacta:
 
-INTRODUCCIÓN
-Un párrafo breve y emocional que abra la lectura.
-
-SIGNIFICADO GENERAL
-Un desarrollo amplio conectando todas las cartas entre sí.
-
-AMOR
-Interpretación enfocada al plano amoroso y emocional.
-
-TRABAJO / PROPÓSITO
-Interpretación enfocada al trabajo, misión, vocación o camino vital.
-
-CONSEJO ESPIRITUAL
-Consejo profundo y claro para la persona.
-
-${
-  deck === "angeles"
-    ? "CONSEJO ANGELICAL\nUn mensaje breve, amoroso y elevado de los ángeles."
-    : deck === "semilla_estelar"
-    ? "CONSEJO ESTELAR\nUn mensaje breve, cósmico y álmico."
-    : "CONSEJO DEL CORAZÓN\nUn mensaje íntimo y emocional."
+{
+  "introduccion": "string",
+  "significado_general": "string",
+  "amor": "string",
+  "trabajo_proposito": "string",
+  "consejo_espiritual": "string",
+  "consejo_especial": "string",
+  "afirmacion": "string",
+  "ritual": "string",
+  "cierre": "string"
 }
 
-AFIRMACIÓN
-Una afirmación breve y poderosa en primera persona.
-
-RITUAL
-Un ritual sencillo, bonito y fácil de hacer en casa.
-
-CIERRE
-Un párrafo final inspirador.
-
 Reglas:
+- No devuelvas markdown.
+- No devuelvas texto fuera del JSON.
+- "consejo_especial" corresponde a la sección "${specialSection}".
+- La afirmación debe ir en primera persona.
+- El ritual debe ser sencillo, bonito y fácil de hacer en casa.
 - No uses listas con viñetas.
-- Sí puedes usar títulos de sección en mayúsculas.
-- No repitas frases hechas.
 - No copies literalmente el texto base.
 - Usa el contenido base de las cartas como fundamento.
 - Si un campo no existe en la carta, créalo de forma coherente a partir del significado general.
@@ -314,7 +423,7 @@ Reglas:
   console.log("OPENAI: generando lectura para", productName)
 
   const response = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
     input: prompt
   })
 
@@ -324,9 +433,51 @@ Reglas:
     throw new Error("OpenAI devolvió una respuesta vacía")
   }
 
-  console.log("OPENAI OK: lectura generada")
+  const parsed = safeJsonParse(text)
+  const normalized = normalizeReadingObject(parsed)
 
-  return text
+  if (normalized) {
+    console.log("OPENAI OK: lectura estructurada generada")
+    return {
+      reading: normalized,
+      interpretation: `
+INTRODUCCIÓN
+${normalized.introduccion}
+
+SIGNIFICADO GENERAL
+${normalized.significado_general}
+
+AMOR
+${normalized.amor}
+
+TRABAJO / PROPÓSITO
+${normalized.trabajo_proposito}
+
+CONSEJO ESPIRITUAL
+${normalized.consejo_espiritual}
+
+${specialSection}
+${normalized.consejo_especial}
+
+AFIRMACIÓN
+${normalized.afirmacion}
+
+RITUAL
+${normalized.ritual}
+
+CIERRE
+${normalized.cierre}
+`.trim()
+    }
+  }
+
+  console.log("OPENAI: respuesta no vino en JSON perfecto, intentando rescatar texto")
+  const fallbackReading = sectionsFromPlainText(text, deck)
+
+  return {
+    reading: fallbackReading,
+    interpretation: text
+  }
 }
 
 function findProductConfigFromLineItem(item) {
@@ -365,7 +516,9 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     productId: String(productId),
     productName: config.name,
     deckId: config.deck,
+    deck: config.deck,
     pick: config.pick,
+    maxCards: config.pick,
     deckSize: config.deckSize,
     email: email || "",
     status: "pending_selection",
@@ -373,6 +526,7 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     selectedCardIds: [],
     selectedCards: [],
     interpretation: "",
+    reading: null,
     createdAt: new Date().toISOString()
   }
 
@@ -393,7 +547,7 @@ app.get("/", (req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "session-cards-submit-v1"
+    version: "session-cards-submit-v2"
   })
 })
 
@@ -407,7 +561,7 @@ app.get("/api/test-nuevo", (req, res) => {
   res.json({
     ok: true,
     nuevo: true,
-    version: "session-cards-submit-v1"
+    version: "session-cards-submit-v2"
   })
 })
 
@@ -435,8 +589,10 @@ app.get("/api/session", (req, res) => {
       ok: true,
       token: session.token,
       productName: session.productName,
+      deck: session.deck || session.deckId,
       deckId: session.deckId,
-      pick: session.pick,
+      maxCards: Number(session.maxCards || session.pick || 3),
+      pick: Number(session.pick || session.maxCards || 3),
       deckSize: session.deckSize,
       status: session.status,
       interpretation: session.interpretation || ""
@@ -503,15 +659,29 @@ app.post("/api/submit", async (req, res) => {
       })
     }
 
-    if (session.status === "completed" && session.interpretation) {
+    if (session.status === "completed" && session.reading) {
       return res.json({
         ok: true,
         alreadyCompleted: true,
-        interpretation: session.interpretation
+        reading: session.reading,
+        interpretation: session.interpretation || "",
+        cards: session.selectedCards || []
       })
     }
 
-    if (cards.length !== Number(session.pick)) {
+    const normalizedCardIds = cards.map((c) => {
+      if (typeof c === "string" || typeof c === "number") {
+        return String(c)
+      }
+      if (c && (typeof c.id === "string" || typeof c.id === "number")) {
+        return String(c.id)
+      }
+      return null
+    }).filter(Boolean)
+
+    const uniqueIds = [...new Set(normalizedCardIds)]
+
+    if (uniqueIds.length !== Number(session.pick)) {
       return res.status(400).json({
         ok: false,
         error: `Debes elegir exactamente ${session.pick} cartas`
@@ -520,12 +690,11 @@ app.post("/api/submit", async (req, res) => {
 
     const deck = loadDeck(session.deckId)
 
-    const selectedIds = cards.map((c) => c.id)
-    const selectedCards = selectedIds
+    const selectedCards = uniqueIds
       .map((id) => deck.cards.find((card) => String(card.id) === String(id)))
       .filter(Boolean)
 
-    if (selectedCards.length !== session.pick) {
+    if (selectedCards.length !== Number(session.pick)) {
       return res.status(400).json({
         ok: false,
         error: "No se pudieron resolver todas las cartas elegidas"
@@ -533,24 +702,26 @@ app.post("/api/submit", async (req, res) => {
     }
 
     session.status = "processing"
-    session.selectedCardIds = selectedIds
+    session.selectedCardIds = uniqueIds
     session.selectedCards = selectedCards
     sessions.set(session.token, session)
 
-    const interpretation = await generateAIReading(
+    const aiResult = await generateAIReading(
       session.productName,
       session.deckId,
       session.pick,
       selectedCards
     )
 
-    session.interpretation = interpretation
+    session.interpretation = aiResult.interpretation
+    session.reading = aiResult.reading
     session.status = "completed"
     sessions.set(session.token, session)
 
     return res.json({
       ok: true,
-      interpretation,
+      reading: session.reading,
+      interpretation: session.interpretation,
       cards: selectedCards
     })
   } catch (error) {
@@ -591,11 +762,43 @@ app.get("/api/reading/result", (req, res) => {
         spread: session.pick,
         status: session.status,
         cardsData: session.selectedCards || [],
-        interpretation: session.interpretation || ""
+        interpretation: session.interpretation || "",
+        sections: session.reading || null
       }
     })
   } catch (error) {
     console.error("READING GET ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
+app.post("/api/debug/create-session", (req, res) => {
+  try {
+    const {
+      productId = "10496012616017",
+      email = "",
+      orderId = `debug-order-${Date.now()}`,
+      lineItemId = `debug-line-${Date.now()}`,
+      unitIndex = 0
+    } = req.body || {}
+
+    const session = createSession({
+      orderId: String(orderId),
+      lineItemId: String(lineItemId),
+      productId: String(productId),
+      email,
+      unitIndex: Number(unitIndex || 0)
+    })
+
+    return res.json({
+      ok: true,
+      session
+    })
+  } catch (error) {
+    console.error("DEBUG CREATE SESSION ERROR:", error)
     return res.status(500).json({
       ok: false,
       error: error.message
