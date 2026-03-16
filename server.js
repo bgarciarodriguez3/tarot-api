@@ -49,8 +49,6 @@ const PRODUCTS = {
   }
 }
 
-// MEMORIA TEMPORAL
-// Luego esto debería pasar a BD/Redis
 const sessions = new Map()
 const processedWebhooks = new Set()
 const decksCache = new Map()
@@ -213,9 +211,17 @@ function getCardField(card, possibleKeys) {
 async function generateAIReading(productName, deck, pick, cardsData) {
   const style = randomStyle(deck)
 
+  const deckTone =
+    deck === "angeles"
+      ? "angelical, amoroso, protector, luminoso"
+      : deck === "semilla_estelar"
+      ? "cósmico, álmico, expansivo, vibracional"
+      : "místico, profundo, simbólico, introspectivo"
+
   const cardsText = cardsData
     .map((c, index) => {
       const cardName = getCardField(c, ["name", "nombre", "title", "id"])
+      const keywords = Array.isArray(c.keywords) ? c.keywords.join(", ") : ""
       const general = getCardField(c, [
         "significado_general",
         "meaning_general",
@@ -236,6 +242,7 @@ async function generateAIReading(productName, deck, pick, cardsData) {
 
       return `
 Carta ${index + 1}: ${cardName}
+Palabras clave: ${keywords}
 Significado general: ${general}
 Amor: ${love}
 Trabajo o propósito: ${work}
@@ -249,25 +256,59 @@ Invertida: ${reversed}
   const prompt = `
 Eres una tarotista espiritual profesional.
 
-Debes escribir una interpretación ORIGINAL en español.
+Escribe en español una lectura ceremonial, cálida, profunda y elegante.
 
 Producto: ${productName}
 Cantidad de cartas elegidas: ${pick}
 Mazo: ${deck}
+Tono del mazo: ${deckTone}
 Estilo: ${style}
 
 Información base de las cartas:
 ${cardsText}
 
-Instrucciones:
-- Escribe una lectura espiritual cálida, profunda y humana.
-- No uses listas ni numeración.
+Devuelve la lectura con ESTA ESTRUCTURA EXACTA y en este orden:
+
+INTRODUCCIÓN
+Un párrafo breve y emocional que abra la lectura.
+
+SIGNIFICADO GENERAL
+Un desarrollo amplio conectando todas las cartas entre sí.
+
+AMOR
+Interpretación enfocada al plano amoroso y emocional.
+
+TRABAJO / PROPÓSITO
+Interpretación enfocada al trabajo, misión, vocación o camino vital.
+
+CONSEJO ESPIRITUAL
+Consejo profundo y claro para la persona.
+
+${
+  deck === "angeles"
+    ? "CONSEJO ANGELICAL\nUn mensaje breve, amoroso y elevado de los ángeles."
+    : deck === "semilla_estelar"
+    ? "CONSEJO ESTELAR\nUn mensaje breve, cósmico y álmico."
+    : "CONSEJO DEL CORAZÓN\nUn mensaje íntimo y emocional."
+}
+
+AFIRMACIÓN
+Una afirmación breve y poderosa en primera persona.
+
+RITUAL
+Un ritual sencillo, bonito y fácil de hacer en casa.
+
+CIERRE
+Un párrafo final inspirador.
+
+Reglas:
+- No uses listas con viñetas.
+- Sí puedes usar títulos de sección en mayúsculas.
 - No repitas frases hechas.
-- Haz que suene personalizada.
-- Incluye una introducción breve, desarrollo y cierre.
-- Usa la información base sin copiarla literalmente.
-- No inventes cartas que no estén aquí.
-- La lectura debe sentirse ceremonial y especial.
+- No copies literalmente el texto base.
+- Usa el contenido base de las cartas como fundamento.
+- Si un campo no existe en la carta, créalo de forma coherente a partir del significado general.
+- La lectura debe sentirse única y premium.
 `
 
   console.log("OPENAI: generando lectura para", productName)
