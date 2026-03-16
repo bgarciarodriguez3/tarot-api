@@ -26,30 +26,37 @@ const PRODUCTS = {
   "10496012616017": {
     name: "Mensaje de los Ángeles",
     deck: "angeles",
-    spread: 4
+    pick: 4,
+    deckSize: 12
   },
   "10495993446737": {
     name: "Camino de la Semilla Estelar",
     deck: "semilla_estelar",
-    spread: 5
+    pick: 5,
+    deckSize: 22
   },
   "10493383082321": {
     name: "Lectura Profunda: Análisis Completo",
     deck: "arcanos_mayores",
-    spread: 12
+    pick: 12,
+    deckSize: 22
   },
   "10493369745745": {
     name: "Tres Puertas del Destino",
     deck: "arcanos_mayores",
-    spread: 3
+    pick: 3,
+    deckSize: 22
   }
 }
 
-const readings = new Map()
+// MEMORIA TEMPORAL
+// Más adelante esto debe ir a BD/Redis.
+const sessions = new Map()
+const processedWebhooks = new Set()
 const decksCache = new Map()
 
-function generateKey(orderId, lineItemId, productId) {
-  return `${orderId}-${lineItemId}-${productId}`
+function generateKey(orderId, lineItemId, productId, unitIndex = 0) {
+  return `${orderId}-${lineItemId}-${productId}-${unitIndex}`
 }
 
 function verifyShopify(req) {
@@ -102,50 +109,32 @@ function loadDeck(deckName) {
   return parsed
 }
 
-function shuffleArray(array) {
-  const arr = [...array]
-
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-
-  return arr
-}
-
-function pickRandomCards(deckName, spread) {
+function getPublicDeck(deckName) {
   const deck = loadDeck(deckName)
 
-  if (deck.cards.length < spread) {
-    throw new Error(
-      `El mazo ${deckName} no tiene suficientes cartas. Tiene ${deck.cards.length} y necesitas ${spread}`
-    )
+  return {
+    deck: deck.deck,
+    title: deck.title,
+    total_cards: deck.total_cards,
+    color: deck.color || "#b08d57",
+    cards: deck.cards.map((card) => ({
+      id: card.id,
+      name: card.name,
+      image: card.image || ""
+    }))
   }
-
-  return shuffleArray(deck.cards).slice(0, spread)
 }
 
-function randomStyle(deck) {
-  const styles = {
-    arcanos_mayores: ["místico", "profundo", "espiritual", "simbólico"],
-    semilla_estelar: ["cósmico", "luminoso", "estelar", "expansivo"],
-    angeles: ["amoroso", "sanador", "angelical", "suave"]
-  }
-
-  const arr = styles[deck] || ["espiritual"]
-  return arr[Math.floor(Math.random() * arr.length)]
+function readingUrl(token) {
+  return `${STORE_URL}/pages/lectura?token=${encodeURIComponent(token)}`
 }
 
-function readingUrl(key) {
-  return `${STORE_URL}/pages/lectura?token=${encodeURIComponent(key)}`
-}
-
-function buildEmailHtml(reading) {
-  const url = readingUrl(reading.key)
+function buildAccessEmailHtml(session) {
+  const url = readingUrl(session.token)
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
-      <h2 style="margin-bottom:8px;">${reading.product}</h2>
+      <h2 style="margin-bottom:8px;">${session.productName}</h2>
       <p style="margin-top:0;">
         Tu lectura ya te espera. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
       </p>
@@ -162,22 +151,27 @@ function buildEmailHtml(reading) {
   `
 }
 
-async function sendReadingEmail(reading) {
-  if (!reading.email) {
-    throw new Error("La lectura no tiene email")
+async function sendAccessEmail(session) {
+  if (!session.email) {
+    throw new Error("La sesión no tiene email")
   }
 
   if (!process.env.RESEND_FROM_EMAIL) {
     throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
   }
 
-  console.log("RESEND: enviando email a", reading.email)
+  if (session.accessEmailSent) {
+    console.log("EMAIL: ya enviado para token", session.token)
+    return { already: true }
+  }
+
+  console.log("RESEND: enviando email de acceso a", session.email)
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
-    to: reading.email,
-    subject: `Tu lectura está lista: ${reading.product}`,
-    html: buildEmailHtml(reading)
+    to: session.email,
+    subject: `Tu lectura está lista: ${session.productName}`,
+    html: buildAccessEmailHtml(session)
   })
 
   if (result?.error) {
@@ -185,12 +179,22 @@ async function sendReadingEmail(reading) {
     throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
   }
 
+  session.accessEmailSent = true
+  sessions.set(session.token, session)
+
   console.log("RESEND OK:", result)
-
-  reading.sent = true
-  readings.set(reading.key, reading)
-
   return result
+}
+
+function randomStyle(deck) {
+  const styles = {
+    arcanos_mayores: ["místico", "profundo", "espiritual", "simbólico"],
+    semilla_estelar: ["cósmico", "luminoso", "estelar", "expansivo"],
+    angeles: ["amoroso", "sanador", "angelical", "suave"]
+  }
+
+  const arr = styles[deck] || ["espiritual"]
+  return arr[Math.floor(Math.random() * arr.length)]
 }
 
 function getCardField(card, possibleKeys) {
@@ -206,7 +210,7 @@ function getCardField(card, possibleKeys) {
   return ""
 }
 
-async function generateAIReading(productName, deck, spread, cardsData) {
+async function generateAIReading(productName, deck, pick, cardsData) {
   const style = randomStyle(deck)
 
   const cardsText = cardsData
@@ -227,6 +231,7 @@ async function generateAIReading(productName, deck, spread, cardsData) {
         "consejo",
         "advice"
       ])
+      const heart = getCardField(c, ["consejo_corazon"])
       const reversed = getCardField(c, ["invertida", "reversed"])
 
       return `
@@ -235,6 +240,7 @@ Significado general: ${general}
 Amor: ${love}
 Trabajo o propósito: ${work}
 Consejo espiritual: ${advice}
+Consejo del corazón: ${heart}
 Invertida: ${reversed}
 `
     })
@@ -246,7 +252,7 @@ Eres una tarotista espiritual profesional.
 Debes escribir una interpretación ORIGINAL en español.
 
 Producto: ${productName}
-Cantidad de cartas: ${spread}
+Cantidad de cartas elegidas: ${pick}
 Mazo: ${deck}
 Estilo: ${style}
 
@@ -261,6 +267,7 @@ Instrucciones:
 - Incluye una introducción breve, desarrollo y cierre.
 - Usa la información base sin copiarla literalmente.
 - No inventes cartas que no estén aquí.
+- La lectura debe sentirse ceremonial y especial.
 `
 
   console.log("OPENAI: generando lectura para", productName)
@@ -296,62 +303,49 @@ function findProductConfigFromLineItem(item) {
   return null
 }
 
-async function createReading({ orderId, lineItemId, productId, email }) {
+function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 }) {
   const config = PRODUCTS[String(productId)]
 
   if (!config) {
     throw new Error(`Producto no configurado: ${productId}`)
   }
 
-  const key = generateKey(orderId, lineItemId, productId)
+  const token = generateKey(orderId, lineItemId, productId, unitIndex)
 
-  if (readings.has(key)) {
-    console.log("READING: ya existía", key)
-    return {
-      repeated: true,
-      reading: readings.get(key)
-    }
+  if (sessions.has(token)) {
+    console.log("SESSION: ya existía", token)
+    return sessions.get(token)
   }
 
-  const cardsData = pickRandomCards(config.deck, config.spread)
-  const cards = cardsData.map(card => card.id || card.name || card.nombre || "sin_id")
-
-  const interpretation = await generateAIReading(
-    config.name,
-    config.deck,
-    config.spread,
-    cardsData
-  )
-
-  const reading = {
-    key,
+  const session = {
+    token,
     orderId: String(orderId),
     lineItemId: String(lineItemId),
     productId: String(productId),
-    product: config.name,
-    deck: config.deck,
-    spread: config.spread,
+    productName: config.name,
+    deckId: config.deck,
+    pick: config.pick,
+    deckSize: config.deckSize,
     email: email || "",
-    cards,
-    cardsData,
-    interpretation,
-    sent: false,
+    status: "pending_selection",
+    accessEmailSent: false,
+    selectedCardIds: [],
+    selectedCards: [],
+    interpretation: "",
     createdAt: new Date().toISOString()
   }
 
-  readings.set(key, reading)
+  sessions.set(token, session)
 
-  console.log("READING OK:", {
-    key,
-    product: reading.product,
-    email: reading.email,
-    cards: reading.cards
+  console.log("SESSION OK:", {
+    token,
+    productName: session.productName,
+    deckId: session.deckId,
+    pick: session.pick,
+    email: session.email
   })
 
-  return {
-    repeated: false,
-    reading
-  }
+  return session
 }
 
 app.get("/", (req, res) => {
@@ -367,26 +361,39 @@ app.get("/api/health", (req, res) => {
   })
 })
 
-app.post("/api/session", (req, res) => {
+// Devuelve la sesión para el tapete
+app.get("/api/session", (req, res) => {
   try {
-    const { productId } = req.body
-    const config = PRODUCTS[String(productId)]
+    const { token } = req.query
 
-    if (!config) {
+    if (!token) {
       return res.status(400).json({
         ok: false,
-        error: "Producto no configurado"
+        error: "Falta token"
+      })
+    }
+
+    const session = sessions.get(String(token))
+
+    if (!session) {
+      return res.status(404).json({
+        ok: false,
+        error: "Sesión no encontrada"
       })
     }
 
     return res.json({
       ok: true,
-      spread: config.spread,
-      deck: config.deck,
-      productName: config.name
+      token: session.token,
+      productName: session.productName,
+      deckId: session.deckId,
+      pick: session.pick,
+      deckSize: session.deckSize,
+      status: session.status,
+      interpretation: session.interpretation || ""
     })
   } catch (error) {
-    console.error("SESSION ERROR:", error)
+    console.error("SESSION GET ERROR:", error)
     return res.status(500).json({
       ok: false,
       error: error.message
@@ -394,31 +401,26 @@ app.post("/api/session", (req, res) => {
   }
 })
 
-app.post("/api/reading/result", async (req, res) => {
+// Devuelve el mazo completo para pintar el tapete entero
+app.get("/api/cards/:deckId", (req, res) => {
   try {
-    const { orderId, lineItemId, productId, email } = req.body
+    const deckId = String(req.params.deckId || "")
 
-    if (!orderId || !lineItemId || !productId) {
+    if (!deckId) {
       return res.status(400).json({
         ok: false,
-        error: "Faltan datos obligatorios"
+        error: "Falta deckId"
       })
     }
 
-    const result = await createReading({
-      orderId: String(orderId),
-      lineItemId: String(lineItemId),
-      productId: String(productId),
-      email: email || ""
-    })
+    const deck = getPublicDeck(deckId)
 
     return res.json({
       ok: true,
-      repeated: result.repeated,
-      reading: result.reading
+      ...deck
     })
   } catch (error) {
-    console.error("READING RESULT ERROR:", error)
+    console.error("CARDS GET ERROR:", error)
     return res.status(500).json({
       ok: false,
       error: error.message
@@ -426,6 +428,94 @@ app.post("/api/reading/result", async (req, res) => {
   }
 })
 
+// Cliente elige cartas y aquí sí se genera la lectura
+app.post("/api/submit", async (req, res) => {
+  try {
+    const { token, cards } = req.body
+
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        error: "Falta token"
+      })
+    }
+
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return res.status(400).json({
+        ok: false,
+        error: "Faltan cartas seleccionadas"
+      })
+    }
+
+    const session = sessions.get(String(token))
+
+    if (!session) {
+      return res.status(404).json({
+        ok: false,
+        error: "Sesión no encontrada"
+      })
+    }
+
+    if (session.status === "completed" && session.interpretation) {
+      return res.json({
+        ok: true,
+        alreadyCompleted: true,
+        interpretation: session.interpretation
+      })
+    }
+
+    if (cards.length !== Number(session.pick)) {
+      return res.status(400).json({
+        ok: false,
+        error: `Debes elegir exactamente ${session.pick} cartas`
+      })
+    }
+
+    const deck = loadDeck(session.deckId)
+
+    const selectedIds = cards.map((c) => c.id)
+    const selectedCards = selectedIds
+      .map((id) => deck.cards.find((card) => String(card.id) === String(id)))
+      .filter(Boolean)
+
+    if (selectedCards.length !== session.pick) {
+      return res.status(400).json({
+        ok: false,
+        error: "No se pudieron resolver todas las cartas elegidas"
+      })
+    }
+
+    session.status = "processing"
+    session.selectedCardIds = selectedIds
+    session.selectedCards = selectedCards
+    sessions.set(session.token, session)
+
+    const interpretation = await generateAIReading(
+      session.productName,
+      session.deckId,
+      session.pick,
+      selectedCards
+    )
+
+    session.interpretation = interpretation
+    session.status = "completed"
+    sessions.set(session.token, session)
+
+    return res.json({
+      ok: true,
+      interpretation,
+      cards: selectedCards
+    })
+  } catch (error) {
+    console.error("SUBMIT ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+})
+
+// opcional: seguir devolviendo resultado completo si ya está completado
 app.get("/api/reading/result", (req, res) => {
   try {
     const { token } = req.query
@@ -437,9 +527,9 @@ app.get("/api/reading/result", (req, res) => {
       })
     }
 
-    const reading = readings.get(String(token))
+    const session = sessions.get(String(token))
 
-    if (!reading) {
+    if (!session) {
       return res.status(404).json({
         ok: false,
         error: "Lectura no encontrada"
@@ -448,7 +538,15 @@ app.get("/api/reading/result", (req, res) => {
 
     return res.json({
       ok: true,
-      reading
+      reading: {
+        token: session.token,
+        product: session.productName,
+        deck: session.deckId,
+        spread: session.pick,
+        status: session.status,
+        cardsData: session.selectedCards || [],
+        interpretation: session.interpretation || ""
+      }
     })
   } catch (error) {
     console.error("READING GET ERROR:", error)
@@ -459,39 +557,7 @@ app.get("/api/reading/result", (req, res) => {
   }
 })
 
-app.post("/api/reading/email", async (req, res) => {
-  try {
-    const { key } = req.body
-    const reading = readings.get(String(key))
-
-    if (!reading) {
-      return res.status(404).json({
-        ok: false,
-        error: "Lectura no encontrada"
-      })
-    }
-
-    if (reading.sent) {
-      return res.json({
-        ok: true,
-        already: true
-      })
-    }
-
-    await sendReadingEmail(reading)
-
-    return res.json({
-      ok: true
-    })
-  } catch (error) {
-    console.error("READING EMAIL ERROR:", error)
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
+// Webhook Shopify: solo crea sesión y manda UN email
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
@@ -502,8 +568,20 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       return res.status(401).send("invalid")
     }
 
-    const order = JSON.parse(req.body.toString("utf8"))
+    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+    if (webhookId && processedWebhooks.has(webhookId)) {
+      console.log("WEBHOOK DUPLICADO IGNORADO:", webhookId)
+      return res.status(200).json({
+        ok: true,
+        duplicate: true
+      })
+    }
 
+    if (webhookId) {
+      processedWebhooks.add(webhookId)
+    }
+
+    const order = JSON.parse(req.body.toString("utf8"))
     console.log("Body del pedido:", JSON.stringify(order, null, 2))
 
     const email = order.email || order.contact_email || ""
@@ -549,26 +627,23 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         continue
       }
 
-      console.log("Producto detectado:", {
-        matchedBy: found.matchedBy,
-        productId: found.productId,
-        productName: found.config.name
-      })
+      const quantity = Number(item.quantity || 1)
 
-      const result = await createReading({
-        orderId: String(order.id),
-        lineItemId: String(item.id),
-        productId: found.productId,
-        email
-      })
+      for (let i = 0; i < quantity; i += 1) {
+        const session = createSession({
+          orderId: String(order.id),
+          lineItemId: String(item.id),
+          productId: found.productId,
+          email,
+          unitIndex: i
+        })
 
-      const reading = result.reading
+        if (!session.accessEmailSent && session.email) {
+          await sendAccessEmail(session)
+        }
 
-      if (!reading.sent && reading.email) {
-        await sendReadingEmail(reading)
+        processedCount += 1
       }
-
-      processedCount += 1
     }
 
     console.log("WEBHOOK SHOPIFY OK:", {
