@@ -50,12 +50,12 @@ const PRODUCTS = {
 }
 
 // MEMORIA TEMPORAL
-// Más adelante esto debe ir a BD/Redis.
+// Luego esto debería pasar a BD/Redis
 const sessions = new Map()
 const processedWebhooks = new Set()
 const decksCache = new Map()
 
-function generateKey(orderId, lineItemId, productId, unitIndex = 0) {
+function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
   return `${orderId}-${lineItemId}-${productId}-${unitIndex}`
 }
 
@@ -136,7 +136,7 @@ function buildAccessEmailHtml(session) {
     <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
       <h2 style="margin-bottom:8px;">${session.productName}</h2>
       <p style="margin-top:0;">
-        Tu lectura ya te espera. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
+        Tu lectura ya está disponible. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
       </p>
 
       <p style="margin:24px 0;">
@@ -310,7 +310,7 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     throw new Error(`Producto no configurado: ${productId}`)
   }
 
-  const token = generateKey(orderId, lineItemId, productId, unitIndex)
+  const token = generateToken(orderId, lineItemId, productId, unitIndex)
 
   if (sessions.has(token)) {
     console.log("SESSION: ya existía", token)
@@ -351,7 +351,8 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
 app.get("/", (req, res) => {
   res.json({
     ok: true,
-    service: "tarot-api"
+    service: "tarot-api",
+    version: "session-cards-submit-v1"
   })
 })
 
@@ -361,7 +362,14 @@ app.get("/api/health", (req, res) => {
   })
 })
 
-// Devuelve la sesión para el tapete
+app.get("/api/test-nuevo", (req, res) => {
+  res.json({
+    ok: true,
+    nuevo: true,
+    version: "session-cards-submit-v1"
+  })
+})
+
 app.get("/api/session", (req, res) => {
   try {
     const { token } = req.query
@@ -401,7 +409,6 @@ app.get("/api/session", (req, res) => {
   }
 })
 
-// Devuelve el mazo completo para pintar el tapete entero
 app.get("/api/cards/:deckId", (req, res) => {
   try {
     const deckId = String(req.params.deckId || "")
@@ -428,7 +435,6 @@ app.get("/api/cards/:deckId", (req, res) => {
   }
 })
 
-// Cliente elige cartas y aquí sí se genera la lectura
 app.post("/api/submit", async (req, res) => {
   try {
     const { token, cards } = req.body
@@ -515,7 +521,6 @@ app.post("/api/submit", async (req, res) => {
   }
 })
 
-// opcional: seguir devolviendo resultado completo si ya está completado
 app.get("/api/reading/result", (req, res) => {
   try {
     const { token } = req.query
@@ -557,11 +562,9 @@ app.get("/api/reading/result", (req, res) => {
   }
 })
 
-// Webhook Shopify: solo crea sesión y manda UN email
 app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
-    console.log("Headers Shopify:", req.headers)
 
     if (!verifyShopify(req)) {
       console.error("SHOPIFY WEBHOOK INVALID HMAC")
@@ -582,7 +585,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     }
 
     const order = JSON.parse(req.body.toString("utf8"))
-    console.log("Body del pedido:", JSON.stringify(order, null, 2))
 
     const email = order.email || order.contact_email || ""
     const financialStatus = String(order.financial_status || "").toLowerCase()
@@ -606,23 +608,13 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     let processedCount = 0
 
     for (const item of order.line_items || []) {
-      console.log("LINE ITEM:", {
-        id: item.id,
-        title: item.title,
-        product_id: item.product_id,
-        variant_id: item.variant_id,
-        sku: item.sku,
-        quantity: item.quantity
-      })
-
       const found = findProductConfigFromLineItem(item)
 
       if (!found) {
-        console.log("Producto no configurado para este item:", {
+        console.log("Producto no configurado:", {
           title: item.title,
           product_id: item.product_id,
-          variant_id: item.variant_id,
-          configuredProductKeys: Object.keys(PRODUCTS)
+          variant_id: item.variant_id
         })
         continue
       }
@@ -645,11 +637,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         processedCount += 1
       }
     }
-
-    console.log("WEBHOOK SHOPIFY OK:", {
-      orderId: order.id,
-      processedCount
-    })
 
     return res.status(200).json({
       ok: true,
