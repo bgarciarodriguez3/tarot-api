@@ -6,6 +6,7 @@
     {
       "id": 1,
       "name": "El Mago",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Mago.png?v=1766517836",
       "keywords": ["inicio", "voluntad", "manifestación"],
       "significado_general": "El Mago representa el poder de iniciar, crear y manifestar. Señala un momento donde tus capacidades pueden abrir caminos nuevos si actúas con intención clara.",
       "amor": "Indica comunicación activa y capacidad de iniciar una etapa nueva en la relación.",
@@ -17,10 +18,10 @@
       "elemento": "aire",
       "numerologia": 1
     },
-
     {
       "id": 2,
       "name": "La Sacerdotisa",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Sacerdotisa.png?v=1766517834",
       "keywords": ["intuición", "sabiduría interior"],
       "significado_general": "La Sacerdotisa representa el mundo interior, la intuición y el conocimiento oculto.",
       "amor": "Habla de emociones profundas y de escuchar la voz del corazón.",
@@ -32,10 +33,10 @@
       "elemento": "agua",
       "numerologia": 2
     },
-
     {
       "id": 3,
       "name": "La Emperatriz",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Emperatriz.png?v=1766517835",
       "keywords": ["creación", "fertilidad", "expansión"],
       "significado_general": "La Emperatriz simboliza abundancia, creatividad y crecimiento.",
       "amor": "Relaciones que florecen desde el afecto y el cuidado.",
@@ -47,10 +48,10 @@
       "elemento": "tierra",
       "numerologia": 3
     },
-
     {
       "id": 4,
       "name": "El Emperador",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Emperador.png?v=1766517835",
       "keywords": ["estructura", "liderazgo"],
       "significado_general": "El Emperador representa orden, estabilidad y autoridad.",
       "amor": "Necesidad de seguridad y compromiso.",
@@ -62,10 +63,10 @@
       "elemento": "fuego",
       "numerologia": 4
     },
-
     {
       "id": 5,
       "name": "El Hierofante",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Sumo_Sacerdote.png?v=1766517835",
       "keywords": ["tradición", "enseñanza"],
       "significado_general": "El Hierofante habla de conocimiento espiritual y aprendizaje.",
       "amor": "Relaciones basadas en valores compartidos.",
@@ -77,10 +78,10 @@
       "elemento": "tierra",
       "numerologia": 5
     },
-
     {
       "id": 6,
       "name": "Los Enamorados",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_Los_Enamorados.png?v=1766517834",
       "keywords": ["elección", "unión"],
       "significado_general": "Los Enamorados simbolizan decisiones importantes guiadas por el corazón.",
       "amor": "Conexión profunda o decisiones afectivas.",
@@ -92,10 +93,10 @@
       "elemento": "aire",
       "numerologia": 6
     },
-
     {
       "id": 7,
       "name": "El Carro",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Carro.png?v=1766517835",
       "keywords": ["avance", "determinación"],
       "significado_general": "El Carro simboliza movimiento, determinación y victoria.",
       "amor": "Superar obstáculos juntos.",
@@ -107,10 +108,10 @@
       "elemento": "agua",
       "numerologia": 7
     },
-
     {
       "id": 8,
       "name": "La Fuerza",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_fuerza.png?v=1766517836",
       "keywords": ["fortaleza interior", "calma"],
       "significado_general": "La Fuerza habla de poder interior y dominio emocional.",
       "amor": "Comprensión y paciencia.",
@@ -122,10 +123,10 @@
       "elemento": "fuego",
       "numerologia": 8
     },
-
     {
       "id": 9,
       "name": "El Ermitaño",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Ermitano.png?v=1766517834",
       "keywords": ["búsqueda interior"],
       "significado_general": "El Ermitaño invita a la introspección y sabiduría personal.",
       "amor": "Tiempo de reflexión emocional.",
@@ -137,10 +138,10 @@
       "elemento": "tierra",
       "numerologia": 9
     },
-
     {
       "id": 10,
       "name": "La Rueda de la Fortuna",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Rueda_De_La_Fortuna.png?v=1766517836",
       "keywords": ["cambio", "destino"],
       "significado_general": "La Rueda representa ciclos y cambios inevitables.",
       "amor": "Cambios inesperados en relaciones.",
@@ -152,10 +153,10 @@
       "elemento": "fuego",
       "numerologia": 10
     },
-
     {
       "id": 11,
       "name": "La Justicia",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Justicia.png?v=1766517835",
       "keywords": ["equilibrio", "verdad"],
       "significado_general": "La Justicia habla de equilibrio y consecuencias.",
       "amor": "Claridad emocional.",
@@ -167,10 +168,10 @@
       "elemento": "aire",
       "numerologia": 11
     },
-
     {
       "id": 12,
       "name": "El Colgado",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Colgado.png?v=1766517834",
       "keywords": ["rendición", "perspectiva"],
       "significado_general": "El Colgado invita a ver la vida desde otro ángulo.",
       "amor": "Tiempo de pausa.",
@@ -182,10 +183,10 @@
       "elemento": "agua",
       "numerologia": 12
     },
-
     {
       "id": 13,
       "name": "La Muerte",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Muerte.png?v=1766517834",
       "keywords": ["transformación"],
       "significado_general": "La Muerte representa el cierre de ciclos y transformación profunda.",
       "amor": "Fin o cambio importante en vínculos.",
@@ -197,10 +198,10 @@
       "elemento": "agua",
       "numerologia": 13
     },
-
     {
       "id": 14,
       "name": "La Templanza",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Templanza.png?v=1766517835",
       "keywords": ["armonía", "equilibrio"],
       "significado_general": "La Templanza simboliza integración y calma.",
       "amor": "Relación equilibrada.",
@@ -212,10 +213,10 @@
       "elemento": "fuego",
       "numerologia": 14
     },
-
     {
       "id": 15,
       "name": "El Diablo",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Diablo.png?v=1766517837",
       "keywords": ["apego", "sombra"],
       "significado_general": "El Diablo señala ataduras emocionales o materiales.",
       "amor": "Relaciones intensas o dependientes.",
@@ -227,10 +228,10 @@
       "elemento": "tierra",
       "numerologia": 15
     },
-
     {
       "id": 16,
       "name": "La Torre",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Torre.png?v=1766517835",
       "keywords": ["ruptura", "revelación"],
       "significado_general": "La Torre representa cambios abruptos que revelan la verdad.",
       "amor": "Crisis que revela realidades.",
@@ -242,10 +243,10 @@
       "elemento": "fuego",
       "numerologia": 16
     },
-
     {
       "id": 17,
       "name": "La Estrella",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Estrella.png?v=1766517835",
       "keywords": ["esperanza", "sanación"],
       "significado_general": "La Estrella trae calma, inspiración y esperanza.",
       "amor": "Relación sanadora.",
@@ -257,10 +258,10 @@
       "elemento": "aire",
       "numerologia": 17
     },
-
     {
       "id": 18,
       "name": "La Luna",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_La_Luna.png?v=1766517834",
       "keywords": ["subconsciente", "misterio"],
       "significado_general": "La Luna habla de intuición, emociones profundas y sombras internas.",
       "amor": "Confusión emocional o miedos ocultos.",
@@ -272,10 +273,10 @@
       "elemento": "agua",
       "numerologia": 18
     },
-
     {
       "id": 19,
       "name": "El Sol",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Sol.png?v=1766517835",
       "keywords": ["alegría", "claridad"],
       "significado_general": "El Sol representa éxito, vitalidad y felicidad.",
       "amor": "Relaciones luminosas.",
@@ -287,10 +288,10 @@
       "elemento": "fuego",
       "numerologia": 19
     },
-
     {
       "id": 20,
       "name": "El Juicio",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_Juicio.png?v=1766517835",
       "keywords": ["renacimiento", "despertar"],
       "significado_general": "El Juicio simboliza despertar espiritual y renovación.",
       "amor": "Reencuentros o decisiones importantes.",
@@ -302,10 +303,10 @@
       "elemento": "agua",
       "numerologia": 20
     },
-
     {
       "id": 21,
       "name": "El Mundo",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_mundo.png?v=1766517835",
       "keywords": ["culminación", "plenitud"],
       "significado_general": "El Mundo representa realización y cierre de ciclos.",
       "amor": "Relaciones completas.",
@@ -317,10 +318,10 @@
       "elemento": "tierra",
       "numerologia": 21
     },
-
     {
       "id": 22,
       "name": "El Loco",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/arcanos_mayores_El_loco.png?v=1766517836",
       "keywords": ["inicio", "aventura"],
       "significado_general": "El Loco representa libertad, espontaneidad y nuevos comienzos.",
       "amor": "Relaciones que comienzan con entusiasmo.",
