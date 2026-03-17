@@ -665,6 +665,13 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
   }
 
   saveSession(session)
+  console.log("SESSION: creada", {
+    token: session.token,
+    orderId: session.orderId,
+    lineItemId: session.lineItemId,
+    productId: session.productId,
+    email: session.email
+  })
   return session
 }
 
@@ -937,22 +944,25 @@ app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
 
+    const topic = String(req.get("X-Shopify-Topic") || "")
+    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+
+    console.log("WEBHOOK META:", {
+      topic,
+      webhookId
+    })
+
     if (!verifyShopify(req)) {
       console.error("SHOPIFY WEBHOOK INVALID HMAC")
       return res.status(401).send("invalid")
     }
 
-    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
     if (webhookId && isWebhookProcessed(webhookId)) {
       console.log("WEBHOOK DUPLICADO IGNORADO:", webhookId)
       return res.status(200).json({
         ok: true,
         duplicate: true
       })
-    }
-
-    if (webhookId) {
-      markWebhookProcessed(webhookId)
     }
 
     const order = JSON.parse(req.body.toString("utf8"))
@@ -965,24 +975,45 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       orderName: order.name,
       email,
       financialStatus,
+      fulfillmentStatus: order.fulfillment_status || null,
+      cancelReason: order.cancel_reason || null,
+      cancelledAt: order.cancelled_at || null,
       itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
     })
 
     if (financialStatus !== "paid") {
+      console.log("⛔ PEDIDO IGNORADO POR financial_status:", financialStatus)
+
+      if (webhookId) {
+        markWebhookProcessed(webhookId)
+        console.log("WEBHOOK MARCADO COMO PROCESADO:", webhookId)
+      }
+
       return res.status(200).json({
         ok: true,
         skipped: true,
-        reason: "order_not_paid"
+        reason: "order_not_paid",
+        financialStatus
       })
     }
+
+    console.log("✅ PEDIDO PAGADO, INICIO PROCESAMIENTO")
 
     let processedCount = 0
 
     for (const item of order.line_items || []) {
+      console.log("LINE ITEM:", {
+        title: item.title,
+        itemId: item.id,
+        product_id: item.product_id,
+        variant_id: item.variant_id,
+        quantity: item.quantity
+      })
+
       const found = findProductConfigFromLineItem(item)
 
       if (!found) {
-        console.log("Producto no configurado:", {
+        console.log("⛔ Producto no configurado:", {
           title: item.title,
           product_id: item.product_id,
           variant_id: item.variant_id
@@ -990,9 +1021,17 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         continue
       }
 
+      console.log("✅ Producto configurado encontrado:", {
+        matchedBy: found.matchedBy,
+        productId: found.productId,
+        configName: found.config.name
+      })
+
       const quantity = Number(item.quantity || 1)
 
       for (let i = 0; i < quantity; i += 1) {
+        console.log(`➡️ Creando/procesando sesión ${i + 1}/${quantity} para line item ${item.id}`)
+
         const session = createSession({
           orderId: String(order.id),
           lineItemId: String(item.id),
@@ -1002,12 +1041,29 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         })
 
         if (!session.accessEmailSent && session.email) {
+          console.log("📧 Enviando email para token:", session.token)
           await sendAccessEmail(session)
+        } else {
+          console.log("📭 Email no enviado:", {
+            token: session.token,
+            accessEmailSent: session.accessEmailSent,
+            email: session.email
+          })
         }
 
         processedCount += 1
       }
     }
+
+    if (webhookId) {
+      markWebhookProcessed(webhookId)
+      console.log("WEBHOOK MARCADO COMO PROCESADO:", webhookId)
+    }
+
+    console.log("🎉 WEBHOOK PROCESADO OK:", {
+      orderId: order.id,
+      processedCount
+    })
 
     return res.status(200).json({
       ok: true,
