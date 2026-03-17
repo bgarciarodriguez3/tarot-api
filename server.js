@@ -28,27 +28,36 @@ const PRODUCTS = {
     name: "Mensaje de los Ángeles",
     deck: "angeles",
     pick: 4,
-    deckSize: 12
+    deckSize: 12,
+    pagePath: "/pages/tapete-angeles"
   },
   "10495993446737": {
     name: "Camino de la Semilla Estelar",
     deck: "semilla_estelar",
     pick: 5,
-    deckSize: 22
+    deckSize: 22,
+    pagePath: "/pages/tapete-semilla-estelar"
   },
   "10493383082321": {
     name: "Lectura Profunda: Análisis Completo",
     deck: "arcanos_mayores",
     pick: 12,
-    deckSize: 22
+    deckSize: 22,
+    pagePath: "/pages/tapete-arcanos"
   },
   "10493369745745": {
     name: "Tres Puertas del Destino",
     deck: "arcanos_mayores",
     pick: 3,
-    deckSize: 22
+    deckSize: 22,
+    pagePath: "/pages/tapete-arcanos"
   }
 }
+
+// premium fuera del flujo automático por ahora
+const PREMIUM_PRODUCTS = new Set([
+  // añade aquí luego ids premium si quieres detectarlos explícitamente
+])
 
 const decksCache = new Map()
 
@@ -56,7 +65,6 @@ const DB_PATH = path.join(__dirname, "data", "tarot.sqlite")
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true })
 
 const db = new Database(DB_PATH)
-
 db.pragma("journal_mode = WAL")
 
 db.exec(`
@@ -69,9 +77,11 @@ CREATE TABLE IF NOT EXISTS sessions (
   deck_id TEXT NOT NULL,
   max_cards INTEGER NOT NULL,
   deck_size INTEGER NOT NULL,
+  page_path TEXT,
   email TEXT,
   status TEXT NOT NULL,
   access_email_sent INTEGER NOT NULL DEFAULT 0,
+  result_email_sent INTEGER NOT NULL DEFAULT 0,
   selected_card_ids TEXT,
   selected_cards_json TEXT,
   interpretation TEXT,
@@ -87,7 +97,9 @@ CREATE TABLE IF NOT EXISTS processed_webhooks (
 `)
 
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
-  return `${orderId}-${lineItemId}-${productId}-${unitIndex}`
+  const seed = `${orderId}:${lineItemId}:${productId}:${unitIndex}:${Date.now()}`
+  const hash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 24)
+  return hash
 }
 
 function verifyShopify(req) {
@@ -156,16 +168,17 @@ function getPublicDeck(deckName) {
   }
 }
 
-function readingUrl(token) {
-  return `${STORE_URL}/pages/lectura?token=${encodeURIComponent(token)}`
+function readingUrl(session) {
+  const pagePath = session.pagePath || "/pages/lectura"
+  return `${STORE_URL}${pagePath}?token=${encodeURIComponent(session.token)}`
 }
 
 function buildAccessEmailHtml(session) {
-  const url = readingUrl(session.token)
+  const url = readingUrl(session)
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
-      <h2 style="margin-bottom:8px;">${session.product_name}</h2>
+      <h2 style="margin-bottom:8px;">${session.productName}</h2>
       <p style="margin-top:0;">
         Tu lectura ya está disponible. Entra desde el botón de abajo para acceder a tu tapete y descubrir tu mensaje.
       </p>
@@ -175,7 +188,78 @@ function buildAccessEmailHtml(session) {
           href="${url}"
           style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
         >
-          Acceder a tu lectura
+          Accede a tu destino
+        </a>
+      </p>
+
+      <p style="font-size:12px;color:#666;">
+        Si no puedes pulsar el botón, copia y pega este enlace en tu navegador:<br>
+        ${url}
+      </p>
+    </div>
+  `
+}
+
+function buildResultEmailText(session) {
+  const reading = session.reading || {}
+  const sections = [
+    reading.introduccion,
+    reading.significado_general,
+    reading.amor ? `AMOR\n${reading.amor}` : "",
+    reading.trabajo_proposito ? `PROPÓSITO\n${reading.trabajo_proposito}` : "",
+    reading.consejo_espiritual ? `CONSEJO ESPIRITUAL\n${reading.consejo_espiritual}` : "",
+    reading.consejo_especial ? `CONSEJO ESPECIAL\n${reading.consejo_especial}` : "",
+    reading.afirmacion ? `AFIRMACIÓN\n${reading.afirmacion}` : "",
+    reading.ritual ? `RITUAL\n${reading.ritual}` : "",
+    reading.cierre ? `CIERRE\n${reading.cierre}` : ""
+  ].filter(Boolean)
+
+  return [
+    session.productName,
+    "",
+    ...sections,
+    "",
+    "Gracias por confiar en esta lectura."
+  ].join("\n\n")
+}
+
+function buildResultEmailHtml(session) {
+  const reading = session.reading || {}
+  const url = readingUrl(session)
+
+  const blocks = [
+    reading.introduccion,
+    reading.significado_general,
+    reading.amor ? `<strong>Amor</strong><br>${reading.amor}` : "",
+    reading.trabajo_proposito ? `<strong>Propósito</strong><br>${reading.trabajo_proposito}` : "",
+    reading.consejo_espiritual ? `<strong>Consejo espiritual</strong><br>${reading.consejo_espiritual}` : "",
+    reading.consejo_especial ? `<strong>Consejo especial</strong><br>${reading.consejo_especial}` : "",
+    reading.afirmacion ? `<strong>Afirmación</strong><br>${reading.afirmacion}` : "",
+    reading.ritual ? `<strong>Ritual</strong><br>${reading.ritual}` : "",
+    reading.cierre ? `<strong>Cierre</strong><br>${reading.cierre}` : ""
+  ].filter(Boolean)
+
+  return `
+    <div style="font-family:Arial,sans-serif;line-height:1.7;color:#222;max-width:700px;margin:0 auto;padding:24px;">
+      <h2 style="margin-bottom:8px;">Tu lectura está lista</h2>
+      <p style="margin-top:0;"><strong>${session.productName}</strong></p>
+
+      ${blocks
+        .map(
+          (block) => `
+        <div style="margin:14px 0;padding:14px 16px;border:1px solid rgba(0,0,0,.08);border-radius:14px;background:#fff;">
+          ${block}
+        </div>
+      `
+        )
+        .join("")}
+
+      <p style="margin:24px 0;">
+        <a
+          href="${url}"
+          style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:14px 22px;border-radius:8px;font-weight:bold;"
+        >
+          Volver a ver tu lectura
         </a>
       </p>
     </div>
@@ -193,18 +277,21 @@ function rowToSession(row) {
     productName: row.product_name,
     deckId: row.deck_id,
     deck: row.deck_id,
+    pagePath: row.page_path || "",
     pick: Number(row.max_cards),
     maxCards: Number(row.max_cards),
     deckSize: Number(row.deck_size),
     email: row.email || "",
     status: row.status,
     accessEmailSent: Boolean(row.access_email_sent),
+    resultEmailSent: Boolean(row.result_email_sent),
     selectedCardIds: row.selected_card_ids ? JSON.parse(row.selected_card_ids) : [],
     selectedCards: row.selected_cards_json ? JSON.parse(row.selected_cards_json) : [],
     interpretation: row.interpretation || "",
     reading: row.reading_json ? JSON.parse(row.reading_json) : null,
     createdAt: row.created_at,
-    completedAt: row.completed_at || null
+    completedAt: row.completed_at || null,
+    readingDone: row.status === "completed"
   }
 }
 
@@ -220,13 +307,13 @@ function saveSession(session) {
   db.prepare(`
     INSERT INTO sessions (
       token, order_id, line_item_id, product_id, product_name,
-      deck_id, max_cards, deck_size, email, status,
-      access_email_sent, selected_card_ids, selected_cards_json,
+      deck_id, max_cards, deck_size, page_path, email, status,
+      access_email_sent, result_email_sent, selected_card_ids, selected_cards_json,
       interpretation, reading_json, created_at, completed_at
     ) VALUES (
       @token, @order_id, @line_item_id, @product_id, @product_name,
-      @deck_id, @max_cards, @deck_size, @email, @status,
-      @access_email_sent, @selected_card_ids, @selected_cards_json,
+      @deck_id, @max_cards, @deck_size, @page_path, @email, @status,
+      @access_email_sent, @result_email_sent, @selected_card_ids, @selected_cards_json,
       @interpretation, @reading_json, @created_at, @completed_at
     )
     ON CONFLICT(token) DO UPDATE SET
@@ -237,9 +324,11 @@ function saveSession(session) {
       deck_id = excluded.deck_id,
       max_cards = excluded.max_cards,
       deck_size = excluded.deck_size,
+      page_path = excluded.page_path,
       email = excluded.email,
       status = excluded.status,
       access_email_sent = excluded.access_email_sent,
+      result_email_sent = excluded.result_email_sent,
       selected_card_ids = excluded.selected_card_ids,
       selected_cards_json = excluded.selected_cards_json,
       interpretation = excluded.interpretation,
@@ -255,9 +344,11 @@ function saveSession(session) {
     deck_id: session.deckId,
     max_cards: Number(session.maxCards || session.pick || 3),
     deck_size: Number(session.deckSize || 0),
+    page_path: session.pagePath || "",
     email: session.email || "",
     status: session.status || "pending_selection",
     access_email_sent: session.accessEmailSent ? 1 : 0,
+    result_email_sent: session.resultEmailSent ? 1 : 0,
     selected_card_ids: JSON.stringify(session.selectedCardIds || []),
     selected_cards_json: JSON.stringify(session.selectedCards || []),
     interpretation: session.interpretation || "",
@@ -292,39 +383,72 @@ async function sendAccessEmail(session) {
   }
 
   if (session.accessEmailSent) {
-    console.log("EMAIL: ya enviado para token", session.token)
+    console.log("EMAIL ACCESO: ya enviado para token", session.token)
     return { already: true }
   }
-
-  console.log("RESEND: enviando email de acceso a", session.email)
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
     to: session.email,
-    subject: `Tu lectura está lista: ${session.productName}`,
-    html: buildAccessEmailHtml({
-      token: session.token,
-      product_name: session.productName
-    })
+    subject: `Accede a tu destino: ${session.productName}`,
+    html: buildAccessEmailHtml(session)
   })
 
   if (result?.error) {
-    console.error("RESEND ERROR:", result.error)
+    console.error("RESEND ACCESS ERROR:", result.error)
     throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
   }
 
   session.accessEmailSent = true
   saveSession(session)
 
-  console.log("RESEND OK:", result)
+  console.log("RESEND ACCESS OK:", result)
+  return result
+}
+
+async function sendResultEmail(session) {
+  if (!session.email) {
+    throw new Error("La sesión no tiene email")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+  }
+
+  if (!session.reading) {
+    throw new Error("No hay lectura generada")
+  }
+
+  if (session.resultEmailSent) {
+    console.log("EMAIL RESULTADO: ya enviado para token", session.token)
+    return { already: true }
+  }
+
+  const result = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: session.email,
+    subject: `Tu lectura está lista: ${session.productName}`,
+    text: buildResultEmailText(session),
+    html: buildResultEmailHtml(session)
+  })
+
+  if (result?.error) {
+    console.error("RESEND RESULT ERROR:", result.error)
+    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
+  }
+
+  session.resultEmailSent = true
+  saveSession(session)
+
+  console.log("RESEND RESULT OK:", result)
   return result
 }
 
 function randomStyle(deck) {
   const styles = {
-    arcanos_mayores: ["místico", "profundo", "espiritual", "simbólico"],
-    semilla_estelar: ["cósmico", "luminoso", "estelar", "expansivo"],
-    angeles: ["amoroso", "sanador", "angelical", "suave"]
+    arcanos_mayores: ["místico", "profundo", "espiritual", "simbólico", "ceremonial"],
+    semilla_estelar: ["cósmico", "luminoso", "estelar", "expansivo", "vibracional"],
+    angeles: ["amoroso", "sanador", "angelical", "suave", "protector"]
   }
 
   const arr = styles[deck] || ["espiritual"]
@@ -353,7 +477,7 @@ function getSpecialSectionTitle(deck) {
 function safeJsonParse(text) {
   try {
     return JSON.parse(text)
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }
@@ -379,88 +503,20 @@ function normalizeReadingObject(obj) {
   return allFilled ? reading : null
 }
 
-function sectionsFromPlainText(text, deck) {
+function sectionsFromPlainText(text) {
   const cleaned = String(text || "").trim()
 
-  const titles = [
-    "INTRODUCCIÓN",
-    "SIGNIFICADO GENERAL",
-    "AMOR",
-    "TRABAJO / PROPÓSITO",
-    "CONSEJO ESPIRITUAL",
-    getSpecialSectionTitle(deck),
-    "AFIRMACIÓN",
-    "RITUAL",
-    "CIERRE"
-  ]
-
-  const result = {
-    introduccion: "",
-    significado_general: "",
-    amor: "",
-    trabajo_proposito: "",
-    consejo_espiritual: "",
-    consejo_especial: "",
-    afirmacion: "",
-    ritual: "",
-    cierre: ""
+  return {
+    introduccion: cleaned,
+    significado_general: cleaned,
+    amor: cleaned,
+    trabajo_proposito: cleaned,
+    consejo_espiritual: cleaned,
+    consejo_especial: cleaned,
+    afirmacion: "Estoy preparada para recibir con amor la guía que el universo pone en mi camino.",
+    ritual: "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con la mano en el corazón.",
+    cierre: cleaned
   }
-
-  const mapping = {
-    "INTRODUCCIÓN": "introduccion",
-    "SIGNIFICADO GENERAL": "significado_general",
-    "AMOR": "amor",
-    "TRABAJO / PROPÓSITO": "trabajo_proposito",
-    "CONSEJO ESPIRITUAL": "consejo_espiritual",
-    [getSpecialSectionTitle(deck)]: "consejo_especial",
-    "AFIRMACIÓN": "afirmacion",
-    "RITUAL": "ritual",
-    "CIERRE": "cierre"
-  }
-
-  const escaped = titles
-    .map((title) => title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-    .join("|")
-
-  const regex = new RegExp(`(?:^|\\n)(${escaped})\\s*\\n`, "g")
-  const matches = [...cleaned.matchAll(regex)]
-
-  if (!matches.length) {
-    return {
-      introduccion: cleaned,
-      significado_general: cleaned,
-      amor: cleaned,
-      trabajo_proposito: cleaned,
-      consejo_espiritual: cleaned,
-      consejo_especial: cleaned,
-      afirmacion: "Estoy preparada para recibir con amor la guía que el universo pone en mi camino.",
-      ritual: "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con la mano en el corazón.",
-      cierre: cleaned
-    }
-  }
-
-  for (let i = 0; i < matches.length; i += 1) {
-    const current = matches[i]
-    const title = current[1]
-    const start = current.index + current[0].length
-    const end = i + 1 < matches.length ? matches[i + 1].index : cleaned.length
-    const content = cleaned.slice(start, end).trim()
-    const key = mapping[title]
-
-    if (key) {
-      result[key] = content
-    }
-  }
-
-  if (!result.afirmacion) {
-    result.afirmacion = "Estoy preparada para recibir con amor la guía que el universo pone en mi camino."
-  }
-
-  if (!result.ritual) {
-    result.ritual = "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con la mano en el corazón."
-  }
-
-  return result
 }
 
 async function generateAIReading(productName, deck, pick, cardsData) {
@@ -499,7 +555,12 @@ async function generateAIReading(productName, deck, pick, cardsData) {
         "consejo",
         "advice"
       ])
-      const heart = getCardField(c, ["consejo_corazon"])
+      const special = getCardField(c, [
+        "consejo_corazon",
+        "consejo_angelical",
+        "consejo_estelar",
+        "special_advice"
+      ])
       const reversed = getCardField(c, ["invertida", "reversed"])
 
       return `
@@ -509,7 +570,7 @@ Significado general: ${general}
 Amor: ${love}
 Trabajo o propósito: ${work}
 Consejo espiritual: ${advice}
-Consejo del corazón: ${heart}
+Consejo especial: ${special}
 Invertida: ${reversed}
 `
     })
@@ -552,6 +613,7 @@ Reglas:
 - No uses listas con viñetas.
 - No copies literalmente el texto base.
 - Usa el contenido base de las cartas como fundamento.
+- Cambia el estilo de redacción en cada lectura para evitar repeticiones entre compras distintas.
 - Si un campo no existe en la carta, créalo de forma coherente a partir del significado general.
 - La lectura debe sentirse única y premium.
 `
@@ -604,7 +666,7 @@ ${normalized.cierre}
     }
   }
 
-  const fallbackReading = sectionsFromPlainText(text, deck)
+  const fallbackReading = sectionsFromPlainText(text)
 
   return {
     reading: fallbackReading,
@@ -624,6 +686,14 @@ function findProductConfigFromLineItem(item) {
     return { productId: variantId, config: PRODUCTS[variantId], matchedBy: "variant_id" }
   }
 
+  if (productId && PREMIUM_PRODUCTS.has(productId)) {
+    return { productId, config: null, matchedBy: "premium_product_id" }
+  }
+
+  if (variantId && PREMIUM_PRODUCTS.has(variantId)) {
+    return { productId: variantId, config: null, matchedBy: "premium_variant_id" }
+  }
+
   return null
 }
 
@@ -635,12 +705,6 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
   }
 
   const token = generateToken(orderId, lineItemId, productId, unitIndex)
-  const existing = getSessionByToken(token)
-
-  if (existing) {
-    console.log("SESSION: ya existía", token)
-    return existing
-  }
 
   const session = {
     token,
@@ -650,12 +714,14 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     productName: config.name,
     deckId: config.deck,
     deck: config.deck,
+    pagePath: config.pagePath || "/pages/lectura",
     pick: config.pick,
     maxCards: config.pick,
     deckSize: config.deckSize,
     email: email || "",
     status: "pending_selection",
     accessEmailSent: false,
+    resultEmailSent: false,
     selectedCardIds: [],
     selectedCards: [],
     interpretation: "",
@@ -665,25 +731,18 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
   }
 
   saveSession(session)
-  console.log("SESSION: creada", {
-    token: session.token,
-    orderId: session.orderId,
-    lineItemId: session.lineItemId,
-    productId: session.productId,
-    email: session.email
-  })
   return session
 }
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v1"
+    version: "production-sqlite-v2"
   })
 })
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({
     ok: true
   })
@@ -718,8 +777,13 @@ app.get("/api/session", (req, res) => {
       maxCards: Number(session.maxCards || session.pick || 3),
       pick: Number(session.pick || session.maxCards || 3),
       deckSize: session.deckSize,
+      pagePath: session.pagePath || "",
+      email: session.email || "",
       status: session.status,
-      interpretation: session.interpretation || ""
+      selectedCards: session.selectedCards || [],
+      interpretation: session.interpretation || "",
+      reading: session.reading || null,
+      readingDone: session.status === "completed"
     })
   } catch (error) {
     console.error("SESSION GET ERROR:", error)
@@ -852,6 +916,14 @@ app.post("/api/submit", async (req, res) => {
     session.completedAt = new Date().toISOString()
     saveSession(session)
 
+    if (session.email) {
+      try {
+        await sendResultEmail(session)
+      } catch (emailError) {
+        console.error("RESULT EMAIL ERROR:", emailError)
+      }
+    }
+
     return res.json({
       ok: true,
       reading: session.reading,
@@ -944,25 +1016,22 @@ app.post("/api/shopify/order-paid", async (req, res) => {
   try {
     console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
 
-    const topic = String(req.get("X-Shopify-Topic") || "")
-    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-
-    console.log("WEBHOOK META:", {
-      topic,
-      webhookId
-    })
-
     if (!verifyShopify(req)) {
       console.error("SHOPIFY WEBHOOK INVALID HMAC")
       return res.status(401).send("invalid")
     }
 
+    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
     if (webhookId && isWebhookProcessed(webhookId)) {
       console.log("WEBHOOK DUPLICADO IGNORADO:", webhookId)
       return res.status(200).json({
         ok: true,
         duplicate: true
       })
+    }
+
+    if (webhookId) {
+      markWebhookProcessed(webhookId)
     }
 
     const order = JSON.parse(req.body.toString("utf8"))
@@ -975,45 +1044,26 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       orderName: order.name,
       email,
       financialStatus,
-      fulfillmentStatus: order.fulfillment_status || null,
-      cancelReason: order.cancel_reason || null,
-      cancelledAt: order.cancelled_at || null,
       itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
     })
 
     if (financialStatus !== "paid") {
-      console.log("⛔ PEDIDO IGNORADO POR financial_status:", financialStatus)
-
-      if (webhookId) {
-        markWebhookProcessed(webhookId)
-        console.log("WEBHOOK MARCADO COMO PROCESADO:", webhookId)
-      }
-
+      console.log("⛔ Pedido ignorado por financial_status:", financialStatus)
       return res.status(200).json({
         ok: true,
         skipped: true,
-        reason: "order_not_paid",
-        financialStatus
+        reason: "order_not_paid"
       })
     }
 
-    console.log("✅ PEDIDO PAGADO, INICIO PROCESAMIENTO")
-
     let processedCount = 0
+    let skippedPremium = 0
 
     for (const item of order.line_items || []) {
-      console.log("LINE ITEM:", {
-        title: item.title,
-        itemId: item.id,
-        product_id: item.product_id,
-        variant_id: item.variant_id,
-        quantity: item.quantity
-      })
-
       const found = findProductConfigFromLineItem(item)
 
       if (!found) {
-        console.log("⛔ Producto no configurado:", {
+        console.log("Producto no configurado:", {
           title: item.title,
           product_id: item.product_id,
           variant_id: item.variant_id
@@ -1021,17 +1071,19 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         continue
       }
 
-      console.log("✅ Producto configurado encontrado:", {
-        matchedBy: found.matchedBy,
-        productId: found.productId,
-        configName: found.config.name
-      })
+      if (!found.config) {
+        skippedPremium += Number(item.quantity || 1)
+        console.log("Producto premium detectado, fuera de flujo automático:", {
+          title: item.title,
+          product_id: item.product_id,
+          variant_id: item.variant_id
+        })
+        continue
+      }
 
       const quantity = Number(item.quantity || 1)
 
       for (let i = 0; i < quantity; i += 1) {
-        console.log(`➡️ Creando/procesando sesión ${i + 1}/${quantity} para line item ${item.id}`)
-
         const session = createSession({
           orderId: String(order.id),
           lineItemId: String(item.id),
@@ -1041,33 +1093,21 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         })
 
         if (!session.accessEmailSent && session.email) {
-          console.log("📧 Enviando email para token:", session.token)
-          await sendAccessEmail(session)
-        } else {
-          console.log("📭 Email no enviado:", {
-            token: session.token,
-            accessEmailSent: session.accessEmailSent,
-            email: session.email
-          })
+          try {
+            await sendAccessEmail(session)
+          } catch (emailError) {
+            console.error("ACCESS EMAIL ERROR:", emailError)
+          }
         }
 
         processedCount += 1
       }
     }
 
-    if (webhookId) {
-      markWebhookProcessed(webhookId)
-      console.log("WEBHOOK MARCADO COMO PROCESADO:", webhookId)
-    }
-
-    console.log("🎉 WEBHOOK PROCESADO OK:", {
-      orderId: order.id,
-      processedCount
-    })
-
     return res.status(200).json({
       ok: true,
-      processedCount
+      processedCount,
+      skippedPremium
     })
   } catch (error) {
     console.error("SHOPIFY ORDER PAID ERROR:", error)
