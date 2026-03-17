@@ -38,20 +38,20 @@ const PRODUCTS = {
     deckSize: 22,
     pagePath: "/pages/tapete-semilla-estelar"
   },
-  "10493383082321": {
-    name: "Lectura Profunda: Análisis Completo",
-    deck: "arcanos_mayores",
-    pick: 12,
-    deckSize: 22,
-    pagePath: "/pages/tapete-arcanos"
-  },
-  "10493369745745": {
-    name: "Tres Puertas del Destino",
-    deck: "arcanos_mayores",
-    pick: 3,
-    deckSize: 22,
-    pagePath: "/pages/tapete-arcanos"
-  }
+"10493383082321": {
+  name: "Lectura Profunda: Análisis Completo",
+  deck: "arcanos_mayores",
+  pick: 12,
+  deckSize: 22,
+  pagePath: "/pages/arcanos-mayores-tirada-personalizada"
+},
+"10493369745745": {
+  name: "Tres Puertas del Destino",
+  deck: "arcanos_mayores",
+  pick: 3,
+  deckSize: 22,
+  pagePath: "/pages/arcanos-mayores-tirada-personalizada"
+}
 }
 
 // premium fuera del flujo automático por ahora
