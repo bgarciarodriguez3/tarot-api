@@ -38,20 +38,20 @@ const PRODUCTS = {
     deckSize: 22,
     pagePath: "/pages/tapete-semilla-estelar"
   },
-"10493383082321": {
-  name: "Lectura Profunda: Análisis Completo",
-  deck: "arcanos_mayores",
-  pick: 12,
-  deckSize: 22,
-  pagePath: "/pages/arcanos-mayores-tirada-personalizada"
-},
-"10493369745745": {
-  name: "Tres Puertas del Destino",
-  deck: "arcanos_mayores",
-  pick: 3,
-  deckSize: 22,
-  pagePath: "/pages/arcanos-mayores-tirada-personalizada"
-}
+  "10493383082321": {
+    name: "Lectura Profunda: Análisis Completo",
+    deck: "arcanos_mayores",
+    pick: 12,
+    deckSize: 22,
+    pagePath: "/pages/arcanos-mayores-tirada-personalizada"
+  },
+  "10493369745745": {
+    name: "Tres Puertas del Destino",
+    deck: "arcanos_mayores",
+    pick: 3,
+    deckSize: 22,
+    pagePath: "/pages/arcanos-mayores-tirada-personalizada"
+  }
 }
 
 // premium fuera del flujo automático por ahora
@@ -96,10 +96,41 @@ CREATE TABLE IF NOT EXISTS processed_webhooks (
 );
 `)
 
+/**
+ * TOKEN ESTABLE:
+ * antes usaba hash + Date.now() y nunca coincidía con enlaces reproducibles.
+ * ahora usamos un token determinista y legible:
+ *   orderId-lineItemId-productId-unitIndex
+ */
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
-  const seed = `${orderId}:${lineItemId}:${productId}:${unitIndex}:${Date.now()}`
-  const hash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 24)
-  return hash
+  return [
+    String(orderId || "").trim(),
+    String(lineItemId || "").trim(),
+    String(productId || "").trim(),
+    String(unitIndex || 0).trim()
+  ].join("-")
+}
+
+function parseCompositeToken(token) {
+  const raw = String(token || "").trim()
+  const parts = raw.split("-")
+
+  if (parts.length < 4) return null
+
+  const unitIndex = parts[parts.length - 1]
+  const productId = parts[parts.length - 2]
+  const lineItemId = parts[parts.length - 3]
+  const orderId = parts.slice(0, parts.length - 3).join("-")
+
+  if (!orderId || !lineItemId || !productId) return null
+  if (!/^\d+$/.test(String(unitIndex))) return null
+
+  return {
+    orderId: String(orderId),
+    lineItemId: String(lineItemId),
+    productId: String(productId),
+    unitIndex: Number(unitIndex || 0)
+  }
 }
 
 function verifyShopify(req) {
@@ -296,11 +327,41 @@ function rowToSession(row) {
 }
 
 function getSessionByToken(token) {
-  const row = db
-    .prepare("SELECT * FROM sessions WHERE token = ?")
-    .get(String(token))
+  const tokenStr = String(token || "").trim()
 
-  return rowToSession(row)
+  if (!tokenStr) return null
+
+  // 1) búsqueda directa por token guardado
+  const directRow = db
+    .prepare("SELECT * FROM sessions WHERE token = ?")
+    .get(tokenStr)
+
+  if (directRow) {
+    return rowToSession(directRow)
+  }
+
+  // 2) compatibilidad con enlaces compuestos antiguos:
+  //    orderId-lineItemId-productId-unitIndex
+  const composite = parseCompositeToken(tokenStr)
+
+  if (composite) {
+    const fallbackRow = db
+      .prepare(`
+        SELECT *
+        FROM sessions
+        WHERE order_id = ?
+          AND line_item_id = ?
+          AND product_id = ?
+        ORDER BY created_at ASC
+      `)
+      .get(composite.orderId, composite.lineItemId, composite.productId)
+
+    if (fallbackRow) {
+      return rowToSession(fallbackRow)
+    }
+  }
+
+  return null
 }
 
 function saveSession(session) {
@@ -529,12 +590,7 @@ async function generateAIReading(productName, deck, pick, cardsData) {
       ? "cósmico, álmico, expansivo, vibracional"
       : "místico, profundo, simbólico, introspectivo"
 
-  const specialSection =
-    deck === "angeles"
-      ? "CONSEJO ANGELICAL"
-      : deck === "semilla_estelar"
-      ? "CONSEJO ESTELAR"
-      : "CONSEJO DEL CORAZÓN"
+  const specialSection = getSpecialSectionTitle(deck)
 
   const cardsText = cardsData
     .map((c, index) => {
@@ -705,6 +761,15 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
   }
 
   const token = generateToken(orderId, lineItemId, productId, unitIndex)
+  const existing = getSessionByToken(token)
+
+  if (existing) {
+    if (email && !existing.email) {
+      existing.email = email
+      saveSession(existing)
+    }
+    return existing
+  }
 
   const session = {
     token,
@@ -738,7 +803,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v2"
+    version: "production-sqlite-v3-stable-token"
   })
 })
 
@@ -1001,7 +1066,8 @@ app.post("/api/debug/create-session", (req, res) => {
 
     return res.json({
       ok: true,
-      session
+      session,
+      url: readingUrl(session)
     })
   } catch (error) {
     console.error("DEBUG CREATE SESSION ERROR:", error)
@@ -1058,6 +1124,7 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 
     let processedCount = 0
     let skippedPremium = 0
+    const created = []
 
     for (const item of order.line_items || []) {
       const found = findProductConfigFromLineItem(item)
@@ -1100,6 +1167,13 @@ app.post("/api/shopify/order-paid", async (req, res) => {
           }
         }
 
+        created.push({
+          token: session.token,
+          url: readingUrl(session),
+          productId: session.productId,
+          productName: session.productName
+        })
+
         processedCount += 1
       }
     }
@@ -1107,7 +1181,8 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     return res.status(200).json({
       ok: true,
       processedCount,
-      skippedPremium
+      skippedPremium,
+      created
     })
   } catch (error) {
     console.error("SHOPIFY ORDER PAID ERROR:", error)
