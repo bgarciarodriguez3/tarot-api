@@ -54,9 +54,7 @@ const PRODUCTS = {
   }
 }
 
-const PREMIUM_PRODUCTS = new Set([
-  // añade aquí ids premium si quieres
-])
+const PREMIUM_PRODUCTS = new Set([])
 
 const decksCache = new Map()
 
@@ -174,6 +172,63 @@ function loadDeck(deckName) {
 
   decksCache.set(deckName, parsed)
   return parsed
+}
+
+function normalizeCardValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+}
+
+function getImageFilename(url) {
+  const raw = String(url || "").trim()
+  if (!raw) return ""
+  try {
+    const clean = raw.split("?")[0]
+    const parts = clean.split("/")
+    return parts[parts.length - 1] || ""
+  } catch (_error) {
+    return ""
+  }
+}
+
+function resolveCardFromDeck(deck, inputCard) {
+  if (!deck || !Array.isArray(deck.cards)) return null
+
+  const rawId =
+    inputCard && typeof inputCard === "object"
+      ? String(inputCard.id || "").trim()
+      : String(inputCard || "").trim()
+
+  const rawName =
+    inputCard && typeof inputCard === "object"
+      ? String(inputCard.name || "").trim()
+      : ""
+
+  const rawImage =
+    inputCard && typeof inputCard === "object"
+      ? String(inputCard.image || inputCard.url || "").trim()
+      : ""
+
+  const idNorm = normalizeCardValue(rawId)
+  const nameNorm = normalizeCardValue(rawName)
+  const imageNorm = normalizeCardValue(rawImage)
+  const imageFileNorm = normalizeCardValue(getImageFilename(rawImage))
+
+  return (
+    deck.cards.find((card) => String(card.id || "").trim() === rawId) ||
+    deck.cards.find((card) => normalizeCardValue(card.id) === idNorm) ||
+    deck.cards.find((card) => normalizeCardValue(card.name) === nameNorm) ||
+    deck.cards.find((card) => normalizeCardValue(card.title) === nameNorm) ||
+    deck.cards.find((card) => String(card.image || "").trim() === rawImage) ||
+    deck.cards.find((card) => normalizeCardValue(card.image) === imageNorm) ||
+    deck.cards.find((card) => normalizeCardValue(getImageFilename(card.image)) === imageFileNorm) ||
+    null
+  )
 }
 
 function getPublicDeck(deckName) {
@@ -794,7 +849,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v3-stable-token"
+    version: "production-sqlite-v4-card-resolution"
   })
 })
 
@@ -920,21 +975,36 @@ app.post("/api/submit", async (req, res) => {
       })
     }
 
-    const normalizedCardIds = cards
+    const normalizedInputs = cards
       .map((c) => {
         if (typeof c === "string" || typeof c === "number") {
-          return String(c)
+          return { id: String(c).trim(), name: "", image: "" }
         }
-        if (c && (typeof c.id === "string" || typeof c.id === "number")) {
-          return String(c.id)
+
+        if (c && typeof c === "object") {
+          return {
+            id: String(c.id || "").trim(),
+            name: String(c.name || "").trim(),
+            image: String(c.image || c.url || "").trim()
+          }
         }
+
         return null
       })
       .filter(Boolean)
 
-    const uniqueIds = [...new Set(normalizedCardIds)]
+    const uniqueInputs = []
+    const seen = new Set()
 
-    if (uniqueIds.length !== Number(session.pick)) {
+    for (const item of normalizedInputs) {
+      const key = JSON.stringify(item)
+      if (!seen.has(key)) {
+        seen.add(key)
+        uniqueInputs.push(item)
+      }
+    }
+
+    if (uniqueInputs.length !== Number(session.pick)) {
       return res.status(400).json({
         ok: false,
         error: `Debes elegir exactamente ${session.pick} cartas`
@@ -943,11 +1013,23 @@ app.post("/api/submit", async (req, res) => {
 
     const deck = loadDeck(session.deckId)
 
-    const selectedCards = uniqueIds
-      .map((id) => deck.cards.find((card) => String(card.id) === String(id)))
+    const selectedCards = uniqueInputs
+      .map((item) => resolveCardFromDeck(deck, item))
       .filter(Boolean)
 
     if (selectedCards.length !== Number(session.pick)) {
+      console.error("CARD RESOLUTION ERROR:", {
+        deckId: session.deckId,
+        expectedPick: session.pick,
+        received: uniqueInputs,
+        resolvedCount: selectedCards.length,
+        availableCards: deck.cards.map((card) => ({
+          id: card.id,
+          name: card.name || card.title || "",
+          image: card.image || ""
+        }))
+      })
+
       return res.status(400).json({
         ok: false,
         error: "No se pudieron resolver todas las cartas elegidas"
@@ -955,7 +1037,7 @@ app.post("/api/submit", async (req, res) => {
     }
 
     session.status = "processing"
-    session.selectedCardIds = uniqueIds
+    session.selectedCardIds = selectedCards.map((card) => String(card.id))
     session.selectedCards = selectedCards
     saveSession(session)
 
