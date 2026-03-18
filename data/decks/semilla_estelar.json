@@ -1,250 +1,37 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
-  "deck": "semilla_estelar",
-  "title": "Camino de la Semilla Estelar",
-  "total_cards": 22,
-  "color": "#b08d57",
-  "cards": [
-    {
-      "id": 1,
-      "name": "Alianza con la Tierra",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Alianza_con_la_Tierra.png?v=1768485044",
-      "keywords": ["conexión", "arraigo"],
-      "significado_general": "Te recuerda tu conexión con la Tierra y tu misión aquí.",
-      "amor": "Relaciones que ayudan a enraizar tu energía.",
-      "trabajo_proposito": "Tu camino se fortalece al conectar con lo real.",
-      "consejo_espiritual": "Enraíza tu energía.",
-      "invertida": "Desconexión con la realidad."
-    },
-    {
-      "id": 2,
-      "name": "Códigos de Luz",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Codigos_de_Luz.png?v=1766519042",
-      "keywords": ["despertar", "activación"],
-      "significado_general": "Indica activación de nuevas energías espirituales.",
-      "amor": "Relación que despierta conciencia.",
-      "trabajo_proposito": "Ideas nuevas llegan a tu mente.",
-      "consejo_espiritual": "Permite que la luz te transforme.",
-      "invertida": "Bloqueo en la expansión."
-    },
-    {
-      "id": 3,
-      "name": "Consejo de Guías",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Consejo_de_Guias.png?v=1766519042",
-      "keywords": ["guía", "protección"],
-      "significado_general": "Tus guías espirituales están cerca.",
-      "amor": "Consejos intuitivos sobre relaciones.",
-      "trabajo_proposito": "Escucha señales sutiles.",
-      "consejo_espiritual": "Pide guía interior.",
-      "invertida": "Ignorar la intuición."
-    },
-    {
-      "id": 4,
-      "name": "Contrato Álmico",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Contrato_Almico.png?v=1766519042",
-      "keywords": ["destino", "aprendizaje"],
-      "significado_general": "Situación pactada por tu alma.",
-      "amor": "Relación kármica importante.",
-      "trabajo_proposito": "Experiencia que trae aprendizaje.",
-      "consejo_espiritual": "Acepta el proceso.",
-      "invertida": "Resistencia al aprendizaje."
-    },
-    {
-      "id": 5,
-      "name": "Destino Cuántico",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Destino_Cuantico.png?v=1766519042",
-      "keywords": ["posibilidades", "cambio"],
-      "significado_general": "Muchas posibilidades se abren.",
-      "amor": "Encuentros inesperados.",
-      "trabajo_proposito": "Nuevos caminos profesionales.",
-      "consejo_espiritual": "Explora lo nuevo.",
-      "invertida": "Miedo al cambio."
-    },
-    {
-      "id": 6,
-      "name": "El Llamado de la Noche",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_El_Llamado_de_la_Noche.png?v=1766519041",
-      "keywords": ["intuición", "sueños"],
-      "significado_general": "Los mensajes llegan en silencio.",
-      "amor": "Escucha emociones profundas.",
-      "trabajo_proposito": "Ideas nacen en momentos de calma.",
-      "consejo_espiritual": "Observa tus sueños.",
-      "invertida": "Confusión emocional."
-    },
-    {
-      "id": 7,
-      "name": "Guardianes del Umbral",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Guardianes_del_Umbral.png?v=1766519043",
-      "keywords": ["protección", "transición"],
-      "significado_general": "Estás ante una puerta importante.",
-      "amor": "Relación que marca transición.",
-      "trabajo_proposito": "Cambio de etapa.",
-      "consejo_espiritual": "Avanza con respeto.",
-      "invertida": "Miedo a cruzar el umbral."
-    },
-    {
-      "id": 8,
-      "name": "Hogar en la Estrella",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Hogar_en_la_Estrella.png?v=1766519042",
-      "keywords": ["origen", "memoria"],
-      "significado_general": "Recuerdos de tu origen espiritual.",
-      "amor": "Conexión profunda con alguien.",
-      "trabajo_proposito": "Talentos antiguos resurgen.",
-      "consejo_espiritual": "Recuerda quién eres.",
-      "invertida": "Desconexión interior."
-    },
-    {
-      "id": 9,
-      "name": "Llamado Estelar",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Llamado_Estelar.png?v=1766519042",
-      "keywords": ["misión", "despertar"],
-      "significado_general": "Tu alma llama a expandirse.",
-      "amor": "Relación que despierta propósito.",
-      "trabajo_proposito": "Seguir vocación interior.",
-      "consejo_espiritual": "Escucha el llamado.",
-      "invertida": "Evitar tu misión."
-    },
-    {
-      "id": 10,
-      "name": "Luz en la Sombra",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Luz_en_la_Sombra.png?v=1766519042",
-      "keywords": ["integración", "sanación"],
-      "significado_general": "Reconocer sombras trae sanación.",
-      "amor": "Aceptar emociones difíciles.",
-      "trabajo_proposito": "Transformación personal.",
-      "consejo_espiritual": "Integra lo oculto.",
-      "invertida": "Negación emocional."
-    },
-    {
-      "id": 11,
-      "name": "Memorias de Otras Vidas",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Memorias_de_Otras_Vidas.png?v=1766519041",
-      "keywords": ["karma", "recuerdo"],
-      "significado_general": "Recuerdos energéticos resurgen.",
-      "amor": "Relación con historia pasada.",
-      "trabajo_proposito": "Habilidades heredadas.",
-      "consejo_espiritual": "Honra lo aprendido.",
-      "invertida": "Confusión de identidad."
-    },
-    {
-      "id": 12,
-      "name": "Misión de Alma",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Mision_de_Alma.png?v=1766519041",
-      "keywords": ["propósito", "destino"],
-      "significado_general": "Tu propósito se vuelve claro.",
-      "amor": "Relaciones alineadas con misión.",
-      "trabajo_proposito": "Camino vocacional.",
-      "consejo_espiritual": "Sigue tu verdad.",
-      "invertida": "Duda sobre el propósito."
-    },
-    {
-      "id": 13,
-      "name": "Origen Galáctico",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Origen_Galactico.png?v=1766519042",
-      "keywords": ["identidad", "expansión"],
-      "significado_general": "Reconocer tu esencia cósmica.",
-      "amor": "Conexión profunda de alma.",
-      "trabajo_proposito": "Creatividad elevada.",
-      "consejo_espiritual": "Expande tu conciencia.",
-      "invertida": "Sentirse fuera de lugar."
-    },
-    {
-      "id": 14,
-      "name": "Portal de la Encarnación",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Portal_de_Encarnacion.png?v=1766519042",
-      "keywords": ["nacimiento", "inicio"],
-      "significado_general": "Inicio de ciclo importante.",
-      "amor": "Relación que marca comienzo.",
-      "trabajo_proposito": "Nuevo camino vital.",
-      "consejo_espiritual": "Atrévete a comenzar.",
-      "invertida": "Miedo al cambio."
-    },
-    {
-      "id": 15,
-      "name": "Puente entre Mundos",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Puente_entre_Mundos.png?v=1766519042",
-      "keywords": ["equilibrio", "conexión"],
-      "significado_general": "Conectar lo espiritual y lo material.",
-      "amor": "Relación que equilibra energías.",
-      "trabajo_proposito": "Integrar intuición y acción.",
-      "consejo_espiritual": "Une ambos mundos.",
-      "invertida": "Desequilibrio energético."
-    },
-    {
-      "id": 16,
-      "name": "Rayo Dorado",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Rayo_Dorado.png?v=1766519042",
-      "keywords": ["sabiduría", "claridad"],
-      "significado_general": "Energía de iluminación interior.",
-      "amor": "Claridad emocional.",
-      "trabajo_proposito": "Ideas brillantes.",
-      "consejo_espiritual": "Deja que la luz te guíe.",
-      "invertida": "Falta de claridad."
-    },
-    {
-      "id": 17,
-      "name": "Reconexión con el Corazón",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Reconexion_con_el_Corazon.png?v=1766519042",
-      "keywords": ["amor", "apertura"],
-      "significado_general": "Abrir el corazón sana el camino.",
-      "amor": "Conexión profunda.",
-      "trabajo_proposito": "Trabajar desde el amor.",
-      "consejo_espiritual": "Escucha tu corazón.",
-      "invertida": "Bloqueo emocional."
-    },
-    {
-      "id": 18,
-      "name": "Renacimiento Estelar",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Renacimiento_Estelar.png?v=1766519043",
-      "keywords": ["transformación", "renacer"],
-      "significado_general": "Nueva etapa espiritual.",
-      "amor": "Relación que renace.",
-      "trabajo_proposito": "Transformación profesional.",
-      "consejo_espiritual": "Abraza el cambio.",
-      "invertida": "Resistencia al renacimiento."
-    },
-    {
-      "id": 19,
-      "name": "Santuario Interior",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Santuario_Interior.png?v=1766519042",
-      "keywords": ["calma", "introspección"],
-      "significado_general": "Tu paz está dentro de ti.",
-      "amor": "Necesidad de espacio emocional.",
-      "trabajo_proposito": "Tiempo de reflexión.",
-      "consejo_espiritual": "Encuentra silencio interior.",
-      "invertida": "Agitación emocional."
-    },
-    {
-      "id": 20,
-      "name": "Semilla del Coraje",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Semilla_del_Coraje.png?v=1766519042",
-      "keywords": ["valentía", "determinación"],
-      "significado_general": "Activar tu fuerza interior.",
-      "amor": "Valor para abrir el corazón.",
-      "trabajo_proposito": "Tomar decisiones valientes.",
-      "consejo_espiritual": "Confía en tu fuerza.",
-      "invertida": "Miedo o inseguridad."
-    },
-    {
-      "id": 21,
-      "name": "Sincronías del Universo",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Sincronias_del_Universo.png?v=1766519042",
-      "keywords": ["señales", "destino"],
-      "significado_general": "El universo te muestra señales.",
-      "amor": "Encuentro significativo.",
-      "trabajo_proposito": "Oportunidad inesperada.",
-      "consejo_espiritual": "Observa las coincidencias.",
-      "invertida": "Ignorar señales."
-    },
-    {
-      "id": 22,
-      "name": "Tribu del Alma",
-      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Tribu_del_Alma.png?v=1768334143",
-      "keywords": ["pertenencia", "comunidad"],
-      "significado_general": "Encontrar personas afines.",
-      "amor": "Conexión de almas.",
-      "trabajo_proposito": "Colaboración significativa.",
-      "consejo_espiritual": "Rodéate de tu tribu.",
-      "invertida": "Sentirse aislado."
+  "sections": {
+    "main": {
+      "type": "tapete-semilla-estelar",
+      "settings": {
+        "heading": "Camino de la Semilla Estelar — Tirada de 5 cartas",
+        "texto": "<p>Respira, conecta con tu energía y elige <strong>5 cartas</strong>.</p>",
+        "cards_list": "13|Origen Galáctico|Semilla_estelar_Origen_Galactico.png\n14|Portal de la Encarnación|Semilla_estelar_Portal_de_Encarnacion.png\n17|Reconexión con el Corazón|Semilla_estelar_Reconexion_con_el_Corazon.png\n2|Códigos de Luz|Semilla_estelar_Codigos_de_Luz.png\n16|Rayo Dorado|Semilla_estelar_Rayo_Dorado.png\n11|Memorias de Otras Vidas|Semilla_estelar_Memorias_de_Otras_Vidas.png\n12|Misión de Alma|Semilla_estelar_Mision_de_Alma.png\n6|El Llamado de la Noche|Semilla_estelar_El_Llamado_de_la_Noche.png\n15|Puente entre Mundos|Semilla_estelar_Puente_entre_Mundos.png\n7|Guardianes del Umbral|Semilla_estelar_Guardianes_del_Umbral.png\n4|Contrato Álmico|Semilla_estelar_Contrato_Almico.png\n19|Santuario Interior|Semilla_estelar_Santuario_Interior.png\n8|Hogar en la Estrella|Semilla_estelar_Hogar_en_la_Estrella.png\n10|Luz en la Sombra|Semilla_estelar_Luz_en_la_Sombra.png\n20|Semilla del Coraje|Semilla_estelar_Semilla_del_Coraje.png\n3|Consejo de Guías|Semilla_estelar_Consejo_de_Guias.png\n1|Alianza con la Tierra|Semilla_estelar_Alianza_con_la_Tierra.png\n22|Tribu del Alma|https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Tribu_del_Alma.png?v=1768334143\n9|Llamado Estelar|Semilla_estelar_Llamado_Estelar.png\n5|Destino Cuántico|Semilla_estelar_Destino_Cuantico.png\n18|Renacimiento Estelar|Semilla_estelar_Renacimiento_Estelar.png\n21|Sincronías del Universo|Semilla_estelar_Sincronias_del_Universo.png",
+        "button_reading_label": "Ver mi lectura",
+        "show_email_send": true,
+        "email_placeholder": "Email para enviar la lectura",
+        "button_email_label": "Enviar por email",
+        "api_base": "https://tarot-api-production-5670.up.railway.app",
+        "reading_api_path": "/api/reading/result",
+        "email_api_path": "/api/reading/email",
+        "access_api_base": "https://tarot-api-production-5670.up.railway.app",
+        "session_api_path": "/api/session",
+        "allow_without_token": false,
+        "locked_message": "Acceso restringido. Usa el enlace seguro que recibiste por email.",
+        "product_handle_default": "camino-de-la-semilla-estelar",
+        "deck_key": "semilla_estelar"
+      }
     }
+  },
+  "order": [
+    "main"
   ]
 }
