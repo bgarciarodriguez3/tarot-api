@@ -54,9 +54,8 @@ const PRODUCTS = {
   }
 }
 
-// premium fuera del flujo automático por ahora
 const PREMIUM_PRODUCTS = new Set([
-  // añade aquí luego ids premium si quieres detectarlos explícitamente
+  // añade aquí ids premium si quieres
 ])
 
 const decksCache = new Map()
@@ -336,7 +335,7 @@ function getSessionByToken(token) {
   const composite = parseCompositeToken(tokenStr)
 
   if (composite) {
-    const fallbackRow = db
+    const fallbackRows = db
       .prepare(`
         SELECT *
         FROM sessions
@@ -345,10 +344,11 @@ function getSessionByToken(token) {
           AND product_id = ?
         ORDER BY created_at ASC
       `)
-      .get(composite.orderId, composite.lineItemId, composite.productId)
+      .all(composite.orderId, composite.lineItemId, composite.productId)
 
-    if (fallbackRow) {
-      return rowToSession(fallbackRow)
+    if (fallbackRows && fallbackRows.length) {
+      const row = fallbackRows[composite.unitIndex] || fallbackRows[0]
+      return rowToSession(row)
     }
   }
 
