@@ -152,6 +152,27 @@ function verifyShopify(req) {
   }
 }
 
+function safeDbJsonParse(value, fallback) {
+  if (value === null || value === undefined) return fallback
+
+  if (typeof value !== "string") {
+    return value
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) return fallback
+
+  try {
+    return JSON.parse(trimmed)
+  } catch (error) {
+    console.error("DB JSON PARSE ERROR:", {
+      value: trimmed.slice(0, 200),
+      error: error.message
+    })
+    return fallback
+  }
+}
+
 function loadDeck(deckName) {
   if (decksCache.has(deckName)) {
     return decksCache.get(deckName)
@@ -164,7 +185,19 @@ function loadDeck(deckName) {
   }
 
   const raw = fs.readFileSync(filePath, "utf8")
-  const parsed = JSON.parse(raw)
+
+  let parsed
+  try {
+    parsed = JSON.parse(raw)
+  } catch (error) {
+    console.error("DECK JSON PARSE ERROR:", {
+      deckName,
+      filePath,
+      firstChars: raw.slice(0, 200),
+      error: error.message
+    })
+    throw error
+  }
 
   if (!Array.isArray(parsed.cards)) {
     throw new Error(`El mazo ${deckName} no tiene un campo cards válido`)
@@ -208,7 +241,8 @@ function sanitizeIncomingCard(inputCard) {
       id: String(inputCard).trim(),
       name: "",
       image: "",
-      reversed: false
+      reversed: false,
+      position: 0
     }
   }
 
@@ -427,10 +461,10 @@ function rowToSession(row) {
     status: row.status,
     accessEmailSent: Boolean(row.access_email_sent),
     resultEmailSent: Boolean(row.result_email_sent),
-    selectedCardIds: row.selected_card_ids ? JSON.parse(row.selected_card_ids) : [],
-    selectedCards: row.selected_cards_json ? JSON.parse(row.selected_cards_json) : [],
+    selectedCardIds: safeDbJsonParse(row.selected_card_ids, []),
+    selectedCards: safeDbJsonParse(row.selected_cards_json, []),
     interpretation: row.interpretation || "",
-    reading: row.reading_json ? JSON.parse(row.reading_json) : null,
+    reading: safeDbJsonParse(row.reading_json, null),
     createdAt: row.created_at,
     completedAt: row.completed_at || null,
     readingDone: row.status === "completed"
@@ -912,7 +946,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v4-card-resolution-patched"
+    version: "production-sqlite-v4-card-resolution-patched-jsonsafe-v2"
   })
 })
 
@@ -1023,6 +1057,10 @@ app.post("/api/submit", async (req, res) => {
         error: "Sesión no encontrada"
       })
     }
+
+    if (!Array.isArray(session.selectedCardIds)) session.selectedCardIds = []
+    if (!Array.isArray(session.selectedCards)) session.selectedCards = []
+    if (session.reading && typeof session.reading !== "object") session.reading = null
 
     if (session.status === "completed" && session.reading) {
       return res.json({
