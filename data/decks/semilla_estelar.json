@@ -1,37 +1,118 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
-  "sections": {
-    "main": {
-      "type": "tapete-semilla-estelar",
-      "settings": {
-        "heading": "Camino de la Semilla Estelar — Tirada de 5 cartas",
-        "texto": "<p>Respira, conecta con tu energía y elige <strong>5 cartas</strong>.</p>",
-        "cards_list": "13|Origen Galáctico|Semilla_estelar_Origen_Galactico.png\n14|Portal de la Encarnación|Semilla_estelar_Portal_de_Encarnacion.png\n17|Reconexión con el Corazón|Semilla_estelar_Reconexion_con_el_Corazon.png\n2|Códigos de Luz|Semilla_estelar_Codigos_de_Luz.png\n16|Rayo Dorado|Semilla_estelar_Rayo_Dorado.png\n11|Memorias de Otras Vidas|Semilla_estelar_Memorias_de_Otras_Vidas.png\n12|Misión de Alma|Semilla_estelar_Mision_de_Alma.png\n6|El Llamado de la Noche|Semilla_estelar_El_Llamado_de_la_Noche.png\n15|Puente entre Mundos|Semilla_estelar_Puente_entre_Mundos.png\n7|Guardianes del Umbral|Semilla_estelar_Guardianes_del_Umbral.png\n4|Contrato Álmico|Semilla_estelar_Contrato_Almico.png\n19|Santuario Interior|Semilla_estelar_Santuario_Interior.png\n8|Hogar en la Estrella|Semilla_estelar_Hogar_en_la_Estrella.png\n10|Luz en la Sombra|Semilla_estelar_Luz_en_la_Sombra.png\n20|Semilla del Coraje|Semilla_estelar_Semilla_del_Coraje.png\n3|Consejo de Guías|Semilla_estelar_Consejo_de_Guias.png\n1|Alianza con la Tierra|Semilla_estelar_Alianza_con_la_Tierra.png\n22|Tribu del Alma|https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Tribu_del_Alma.png?v=1768334143\n9|Llamado Estelar|Semilla_estelar_Llamado_Estelar.png\n5|Destino Cuántico|Semilla_estelar_Destino_Cuantico.png\n18|Renacimiento Estelar|Semilla_estelar_Renacimiento_Estelar.png\n21|Sincronías del Universo|Semilla_estelar_Sincronias_del_Universo.png",
-        "button_reading_label": "Ver mi lectura",
-        "show_email_send": true,
-        "email_placeholder": "Email para enviar la lectura",
-        "button_email_label": "Enviar por email",
-        "api_base": "https://tarot-api-production-5670.up.railway.app",
-        "reading_api_path": "/api/reading/result",
-        "email_api_path": "/api/reading/email",
-        "access_api_base": "https://tarot-api-production-5670.up.railway.app",
-        "session_api_path": "/api/session",
-        "allow_without_token": false,
-        "locked_message": "Acceso restringido. Usa el enlace seguro que recibiste por email.",
-        "product_handle_default": "camino-de-la-semilla-estelar",
-        "deck_key": "semilla_estelar"
-      }
+  "deck": "semilla_estelar",
+  "title": "Camino de la Semilla Estelar",
+  "total_cards": 22,
+  "color": "#7c3aed",
+  "cards": [
+    {
+      "id": "1",
+      "name": "Alianza con la Tierra",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Alianza_con_la_Tierra.png?v=1768485044"
+    },
+    {
+      "id": "2",
+      "name": "Códigos de Luz",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Codigos_de_Luz.png?v=1766519042"
+    },
+    {
+      "id": "3",
+      "name": "Consejo de Guías",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Consejo_de_Guias.png?v=1766519042"
+    },
+    {
+      "id": "4",
+      "name": "Contrato Álmico",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Contrato_Almico.png?v=1766519042"
+    },
+    {
+      "id": "5",
+      "name": "Destino Cuántico",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Destino_Cuantico.png?v=1766519042"
+    },
+    {
+      "id": "6",
+      "name": "El Llamado de la Noche",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_El_Llamado_de_la_Noche.png?v=1766519041"
+    },
+    {
+      "id": "7",
+      "name": "Guardianes del Umbral",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Guardianes_del_Umbral.png?v=1766519043"
+    },
+    {
+      "id": "8",
+      "name": "Hogar en la Estrella",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Hogar_en_la_Estrella.png?v=1766519042"
+    },
+    {
+      "id": "9",
+      "name": "Llamado Estelar",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Llamado_Estelar.png?v=1766519042"
+    },
+    {
+      "id": "10",
+      "name": "Luz en la Sombra",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Luz_en_la_Sombra.png?v=1766519042"
+    },
+    {
+      "id": "11",
+      "name": "Memorias de Otras Vidas",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Memorias_de_Otras_Vidas.png?v=1766519041"
+    },
+    {
+      "id": "12",
+      "name": "Misión de Alma",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Mision_de_Alma.png?v=1766519041"
+    },
+    {
+      "id": "13",
+      "name": "Origen Galáctico",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Origen_Galactico.png?v=1766519042"
+    },
+    {
+      "id": "14",
+      "name": "Portal de la Encarnación",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Portal_de_Encarnacion.png?v=1766519042"
+    },
+    {
+      "id": "15",
+      "name": "Puente entre Mundos",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Puente_entre_Mundos.png?v=1766519042"
+    },
+    {
+      "id": "16",
+      "name": "Rayo Dorado",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Rayo_Dorado.png?v=1766519042"
+    },
+    {
+      "id": "17",
+      "name": "Reconexión con el Corazón",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Reconexion_con_el_Corazon.png?v=1766519042"
+    },
+    {
+      "id": "18",
+      "name": "Renacimiento Estelar",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Renacimiento_Estelar.png?v=1766519043"
+    },
+    {
+      "id": "19",
+      "name": "Santuario Interior",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Santuario_Interior.png?v=1766519042"
+    },
+    {
+      "id": "20",
+      "name": "Semilla del Coraje",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Semilla_del_Coraje.png?v=1766519042"
+    },
+    {
+      "id": "21",
+      "name": "Sincronías del Universo",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Sincronias_del_Universo.png?v=1766519042"
+    },
+    {
+      "id": "22",
+      "name": "Tribu del Alma",
+      "image": "https://cdn.shopify.com/s/files/1/0989/4694/1265/files/Semilla_estelar_Tribu_del_Alma.png?v=1768334143"
     }
-  },
-  "order": [
-    "main"
   ]
 }
