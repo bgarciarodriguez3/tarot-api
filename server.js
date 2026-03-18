@@ -1,4 +1,4 @@
-async function sendResultEmail(session) {
+async function sendAccessEmail(session) {
   if (!session.email) {
     throw new Error("La sesión no tiene email");
   }
@@ -7,49 +7,20 @@ async function sendResultEmail(session) {
     throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno");
   }
 
-  if (!session.reading) {
-    throw new Error("No hay lectura generada");
-  }
-
-  if (session.resultEmailSent) {
-    console.log("EMAIL RESULTADO: ya enviado para token", session.token);
+  if (session.accessEmailSent) {
+    console.log("EMAIL ACCESO: ya enviado para token", session.token);
     return { already: true };
   }
 
-  const reading = [
-    session.reading.introduccion || "",
-    session.reading.significado_general || "",
-    session.reading.amor ? "💗 Amor\n" + session.reading.amor : "",
-    session.reading.trabajo_proposito ? "💫 Propósito\n" + session.reading.trabajo_proposito : "",
-    session.reading.consejo_espiritual ? "🕊 Consejo espiritual\n" + session.reading.consejo_espiritual : "",
-    session.reading.consejo_especial ? "✨ Consejo estelar\n" + session.reading.consejo_especial : "",
-    session.reading.afirmacion ? "🌞 Afirmación\n" + session.reading.afirmacion : "",
-    session.reading.ritual ? "🕯 Ritual\n" + session.reading.ritual : "",
-    session.reading.cierre ? "🌟 Cierre\n" + session.reading.cierre : ""
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const url = readingUrl(session);
 
   const text = [
     "Querida alma,",
     "",
-    "Tu lectura ya ha llegado a ti.",
+    "Tu acceso a la lectura ya está listo.",
     "",
-    "No es casualidad que este mensaje haya encontrado tu camino.",
-    "Las cartas elegidas han respondido a tu energía en este momento exacto.",
-    "",
-    "Respira.",
-    "Lee despacio.",
-    "Permite que cada palabra encuentre su lugar en ti.",
-    "",
-    "✨",
-    "",
-    reading,
-    "",
-    "✨",
-    "",
-    "Confía en lo que sientes al leerlo.",
-    "Ahí está la verdadera respuesta.",
+    "Pulsa este enlace para entrar en tu tapete:",
+    url,
     "",
     "Con luz,",
     "El Tarot de la Rueda de la Fortuna"
@@ -58,129 +29,58 @@ async function sendResultEmail(session) {
   const html = `
     <div style="margin:0;padding:0;background:#f6f1e7;">
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
-        <div style="
-          background:linear-gradient(180deg,#1a1330 0%,#241845 100%);
-          border-radius:28px;
-          padding:1px;
-          box-shadow:0 20px 60px rgba(0,0,0,0.18);
-        ">
-          <div style="
-            background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);
-            border-radius:27px;
-            padding:36px 28px;
-            color:#2b2238;
-            font-family:Georgia, 'Times New Roman', serif;
-          ">
+        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+          <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
 
             <div style="text-align:center;margin-bottom:22px;">
-              <div style="
-                display:inline-block;
-                font-size:12px;
-                letter-spacing:3px;
-                text-transform:uppercase;
-                color:#8b6b2f;
-                border:1px solid rgba(139,107,47,0.28);
-                border-radius:999px;
-                padding:8px 14px;
-                background:rgba(255,255,255,0.55);
-              ">
-                Mensaje ritualizado para ti
+              <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
+                Tu acceso ya está listo
               </div>
             </div>
 
             <div style="text-align:center;margin-bottom:20px;">
               <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
-              <h1 style="
-                margin:10px 0 8px;
-                font-size:30px;
-                line-height:1.2;
-                font-weight:normal;
-                color:#241845;
-              ">
-                Tu lectura ya ha llegado
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
+                Accede a tu destino
               </h1>
-              <p style="
-                margin:0;
-                font-size:15px;
-                color:#6d5a7b;
-                line-height:1.7;
-              ">
-                Un mensaje revelado para este momento de tu camino
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
+                Tu lectura te está esperando
               </p>
             </div>
 
-            <div style="
-              width:72px;
-              height:1px;
-              background:linear-gradient(90deg,transparent,#c6a45a,transparent);
-              margin:22px auto 28px;
-            "></div>
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
 
-            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
-              Querida alma,
-            </p>
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">Querida alma,</p>
 
             <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-              Tu lectura ya ha llegado a ti.
+              Tu acceso a la lectura ya está preparado.
             </p>
 
-            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-              No es casualidad que este mensaje haya encontrado tu camino.<br>
-              Las cartas elegidas han respondido a tu energía en este momento exacto.
+            <p style="margin:0 0 22px;font-size:16px;line-height:1.85;">
+              Cuando estés lista, entra en tu tapete y deja que el mensaje se revele.
             </p>
 
-            <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
-              Respira.<br>
-              Lee despacio.<br>
-              Permite que cada palabra encuentre su lugar en ti.
-            </p>
-
-            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:18px 0 20px;">
-              ✨
+            <div style="text-align:center;margin:28px 0;">
+              <a
+                href="${url}"
+                style="display:inline-block;background:#241845;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:999px;font-weight:bold;"
+              >
+                Accede a tu destino
+              </a>
             </div>
 
-            <!-- SIN RECUADRO / SIN CAJA -->
-            <div style="
-              white-space:pre-line;
-              font-size:16px;
-              line-height:1.9;
-              color:#2f243c;
-              margin:0 0 20px;
-            ">${reading}</div>
-
-            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">
-              ✨
-            </div>
-
-            <p style="margin:0 0 12px;font-size:16px;line-height:1.85;">
-              Confía en lo que sientes al leerlo.<br>
-              Ahí está la verdadera respuesta.
+            <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:#6d5a7b;text-align:center;">
+              Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+              <span style="word-break:break-all;">${url}</span>
             </p>
 
-            <div style="
-              width:72px;
-              height:1px;
-              background:linear-gradient(90deg,transparent,#c6a45a,transparent);
-              margin:28px auto 24px;
-            "></div>
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
 
-            <p style="
-              margin:0;
-              text-align:center;
-              font-size:16px;
-              line-height:1.8;
-              color:#5a4968;
-            ">
+            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
               Con luz,
             </p>
 
-            <p style="
-              margin:6px 0 0;
-              text-align:center;
-              font-size:18px;
-              line-height:1.6;
-              color:#241845;
-            ">
+            <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
               <strong>El Tarot de la Rueda de la Fortuna</strong>
             </p>
 
@@ -193,19 +93,19 @@ async function sendResultEmail(session) {
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
     to: session.email,
-    subject: "✨ Tu lectura ya te estaba esperando…",
+    subject: "✨ Accede a tu destino",
     text,
     html
   });
 
   if (result && result.error) {
-    console.error("RESEND RESULT ERROR:", result.error);
+    console.error("RESEND ACCESS ERROR:", result.error);
     throw new Error(`Resend error: ${result.error.message || "error desconocido"}`);
   }
 
-  session.resultEmailSent = true;
+  session.accessEmailSent = true;
   saveSession(session);
 
-  console.log("RESEND RESULT OK:", result);
+  console.log("RESEND ACCESS OK:", result);
   return result;
 }
