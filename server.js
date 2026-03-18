@@ -29,14 +29,14 @@ const PRODUCTS = {
     deck: "angeles",
     pick: 4,
     deckSize: 12,
-    pagePath: "/pages/tapete-angeles"
+    pagePath: "/pages/mensaje-de-los-angeles-tirada-de-4-cartas"
   },
   "10495993446737": {
     name: "Camino de la Semilla Estelar",
     deck: "semilla_estelar",
     pick: 5,
     deckSize: 22,
-    pagePath: "/pages/tapete-semilla-estelar"
+    pagePath: "/pages/camino-de-la-semilla-estelar-tirada-de-5-cartas"
   },
   "10493383082321": {
     name: "Lectura Profunda: Análisis Completo",
@@ -96,12 +96,6 @@ CREATE TABLE IF NOT EXISTS processed_webhooks (
 );
 `)
 
-/**
- * TOKEN ESTABLE:
- * antes usaba hash + Date.now() y nunca coincidía con enlaces reproducibles.
- * ahora usamos un token determinista y legible:
- *   orderId-lineItemId-productId-unitIndex
- */
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
   return [
     String(orderId || "").trim(),
@@ -331,7 +325,6 @@ function getSessionByToken(token) {
 
   if (!tokenStr) return null
 
-  // 1) búsqueda directa por token guardado
   const directRow = db
     .prepare("SELECT * FROM sessions WHERE token = ?")
     .get(tokenStr)
@@ -340,8 +333,6 @@ function getSessionByToken(token) {
     return rowToSession(directRow)
   }
 
-  // 2) compatibilidad con enlaces compuestos antiguos:
-  //    orderId-lineItemId-productId-unitIndex
   const composite = parseCompositeToken(tokenStr)
 
   if (composite) {
