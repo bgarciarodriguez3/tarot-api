@@ -35,16 +35,12 @@ async function sendResultEmail(session) {
     "",
     "Tu lectura ya ha llegado a ti.",
     "",
-    "No es casualidad que estés aquí ahora.",
-    "Las cartas que elegiste han respondido a tu energía en este momento exacto.",
+    "No es casualidad que este mensaje haya encontrado tu camino.",
+    "Las cartas elegidas han respondido a tu energía en este momento exacto.",
     "",
-    "Este mensaje no es genérico.",
-    "Es un reflejo de lo que se está moviendo dentro de ti.",
-    "",
-    "Tómate un instante.",
     "Respira.",
-    "",
-    "Y permite que cada palabra encuentre su lugar en ti.",
+    "Lee despacio.",
+    "Permite que cada palabra encuentre su lugar en ti.",
     "",
     "✨",
     "",
@@ -60,50 +56,144 @@ async function sendResultEmail(session) {
   ].join("\n")
 
   const html = `
-    <div style="font-family: Georgia, serif; line-height:1.7; color:#222; max-width:600px; margin:0 auto; padding:24px;">
-      <p>Querida alma,</p>
+    <div style="margin:0;padding:0;background:#f6f1e7;">
+      <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
+        <div style="
+          background:linear-gradient(180deg,#1a1330 0%,#241845 100%);
+          border-radius:28px;
+          padding:1px;
+          box-shadow:0 20px 60px rgba(0,0,0,0.18);
+        ">
+          <div style="
+            background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);
+            border-radius:27px;
+            padding:36px 28px;
+            color:#2b2238;
+            font-family:Georgia, 'Times New Roman', serif;
+          ">
 
-      <p>Tu lectura ya ha llegado a ti.</p>
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="
+                display:inline-block;
+                font-size:12px;
+                letter-spacing:3px;
+                text-transform:uppercase;
+                color:#8b6b2f;
+                border:1px solid rgba(139,107,47,0.28);
+                border-radius:999px;
+                padding:8px 14px;
+                background:rgba(255,255,255,0.55);
+              ">
+                Mensaje ritualizado para ti
+              </div>
+            </div>
 
-      <p>
-        No es casualidad que estés aquí ahora.<br>
-        Las cartas que elegiste han respondido a tu energía en este momento exacto.
-      </p>
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <h1 style="
+                margin:10px 0 8px;
+                font-size:30px;
+                line-height:1.2;
+                font-weight:normal;
+                color:#241845;
+              ">
+                Tu lectura ya ha llegado
+              </h1>
+              <p style="
+                margin:0;
+                font-size:15px;
+                color:#6d5a7b;
+                line-height:1.7;
+              ">
+                Un mensaje revelado para este momento de tu camino
+              </p>
+            </div>
 
-      <p>
-        Este mensaje no es genérico.<br>
-        Es un reflejo de lo que se está moviendo dentro de ti.
-      </p>
+            <div style="
+              width:72px;
+              height:1px;
+              background:linear-gradient(90deg,transparent,#c6a45a,transparent);
+              margin:22px auto 28px;
+            "></div>
 
-      <p>
-        Tómate un instante.<br>
-        Respira.
-      </p>
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
+              Querida alma,
+            </p>
 
-      <p>Y permite que cada palabra encuentre su lugar en ti.</p>
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Tu lectura ya ha llegado a ti.
+            </p>
 
-      <p style="text-align:center; font-size:18px;">✨</p>
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              No es casualidad que este mensaje haya encontrado tu camino.<br>
+              Las cartas elegidas han respondido a tu energía en este momento exacto.
+            </p>
 
-      <div style="
-        background:#fafafa;
-        padding:18px;
-        border-radius:14px;
-        border:1px solid rgba(0,0,0,0.06);
-        white-space:pre-line;
-        font-size:15px;
-      ">${reading}</div>
+            <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
+              Respira.<br>
+              Lee despacio.<br>
+              Permite que cada palabra encuentre su lugar en ti.
+            </p>
 
-      <p style="text-align:center; font-size:18px;">✨</p>
+            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:18px 0 20px;">
+              ✨
+            </div>
 
-      <p>
-        Confía en lo que sientes al leerlo.<br>
-        Ahí está la verdadera respuesta.
-      </p>
+            <div style="
+              margin:0 0 20px;
+              padding:24px 20px;
+              background:rgba(255,255,255,0.62);
+              border:1px solid rgba(139,107,47,0.22);
+              border-radius:22px;
+              box-shadow:inset 0 1px 0 rgba(255,255,255,0.65);
+            ">
+              <div style="
+                white-space:pre-line;
+                font-size:16px;
+                line-height:1.9;
+                color:#2f243c;
+              ">${reading}</div>
+            </div>
 
-      <p style="margin-top:24px;">
-        Con luz,<br>
-        <strong>El Tarot de la Rueda de la Fortuna</strong>
-      </p>
+            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">
+              ✨
+            </div>
+
+            <p style="margin:0 0 12px;font-size:16px;line-height:1.85;">
+              Confía en lo que sientes al leerlo.<br>
+              Ahí está la verdadera respuesta.
+            </p>
+
+            <div style="
+              width:72px;
+              height:1px;
+              background:linear-gradient(90deg,transparent,#c6a45a,transparent);
+              margin:28px auto 24px;
+            "></div>
+
+            <p style="
+              margin:0;
+              text-align:center;
+              font-size:16px;
+              line-height:1.8;
+              color:#5a4968;
+            ">
+              Con luz,
+            </p>
+
+            <p style="
+              margin:6px 0 0;
+              text-align:center;
+              font-size:18px;
+              line-height:1.6;
+              color:#241845;
+            ">
+              <strong>El Tarot de la Rueda de la Fortuna</strong>
+            </p>
+
+          </div>
+        </div>
+      </div>
     </div>
   `
 
