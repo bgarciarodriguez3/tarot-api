@@ -1,19 +1,19 @@
 async function sendResultEmail(session) {
   if (!session.email) {
-    throw new Error("La sesión no tiene email")
+    throw new Error("La sesión no tiene email");
   }
 
   if (!process.env.RESEND_FROM_EMAIL) {
-    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno");
   }
 
   if (!session.reading) {
-    throw new Error("No hay lectura generada")
+    throw new Error("No hay lectura generada");
   }
 
   if (session.resultEmailSent) {
-    console.log("EMAIL RESULTADO: ya enviado para token", session.token)
-    return { already: true }
+    console.log("EMAIL RESULTADO: ya enviado para token", session.token);
+    return { already: true };
   }
 
   const reading = [
@@ -28,7 +28,7 @@ async function sendResultEmail(session) {
     session.reading.cierre ? "🌟 Cierre\n" + session.reading.cierre : ""
   ]
     .filter(Boolean)
-    .join("\n\n")
+    .join("\n\n");
 
   const text = [
     "Querida alma,",
@@ -53,7 +53,7 @@ async function sendResultEmail(session) {
     "",
     "Con luz,",
     "El Tarot de la Rueda de la Fortuna"
-  ].join("\n")
+  ].join("\n");
 
   const html = `
     <div style="margin:0;padding:0;background:#f6f1e7;">
@@ -139,21 +139,14 @@ async function sendResultEmail(session) {
               ✨
             </div>
 
+            <!-- SIN RECUADRO / SIN CAJA -->
             <div style="
+              white-space:pre-line;
+              font-size:16px;
+              line-height:1.9;
+              color:#2f243c;
               margin:0 0 20px;
-              padding:24px 20px;
-              background:rgba(255,255,255,0.62);
-              border:1px solid rgba(139,107,47,0.22);
-              border-radius:22px;
-              box-shadow:inset 0 1px 0 rgba(255,255,255,0.65);
-            ">
-              <div style="
-                white-space:pre-line;
-                font-size:16px;
-                line-height:1.9;
-                color:#2f243c;
-              ">${reading}</div>
-            </div>
+            ">${reading}</div>
 
             <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">
               ✨
@@ -195,7 +188,7 @@ async function sendResultEmail(session) {
         </div>
       </div>
     </div>
-  `
+  `;
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
@@ -203,16 +196,16 @@ async function sendResultEmail(session) {
     subject: "✨ Tu lectura ya te estaba esperando…",
     text,
     html
-  })
+  });
 
-  if (result?.error) {
-    console.error("RESEND RESULT ERROR:", result.error)
-    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
+  if (result && result.error) {
+    console.error("RESEND RESULT ERROR:", result.error);
+    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`);
   }
 
-  session.resultEmailSent = true
-  saveSession(session)
+  session.resultEmailSent = true;
+  saveSession(session);
 
-  console.log("RESEND RESULT OK:", result)
-  return result
+  console.log("RESEND RESULT OK:", result);
+  return result;
 }
