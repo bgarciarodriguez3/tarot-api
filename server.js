@@ -152,6 +152,27 @@ function verifyShopify(req) {
   }
 }
 
+function safeDbJsonParse(value, fallback) {
+  if (value === null || value === undefined) return fallback
+
+  if (typeof value !== "string") {
+    return value
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) return fallback
+
+  try {
+    return JSON.parse(trimmed)
+  } catch (error) {
+    console.error("DB JSON PARSE ERROR:", {
+      value: trimmed.slice(0, 200),
+      error: error.message
+    })
+    return fallback
+  }
+}
+
 function loadDeck(deckName) {
   if (decksCache.has(deckName)) {
     return decksCache.get(deckName)
@@ -164,7 +185,19 @@ function loadDeck(deckName) {
   }
 
   const raw = fs.readFileSync(filePath, "utf8")
-  const parsed = JSON.parse(raw)
+
+  let parsed
+  try {
+    parsed = JSON.parse(raw)
+  } catch (error) {
+    console.error("DECK JSON PARSE ERROR:", {
+      deckName,
+      filePath,
+      firstChars: raw.slice(0, 200),
+      error: error.message
+    })
+    throw error
+  }
 
   if (!Array.isArray(parsed.cards)) {
     throw new Error(`El mazo ${deckName} no tiene un campo cards válido`)
@@ -196,39 +229,101 @@ function getImageFilename(url) {
   }
 }
 
+function parseBooleanLike(value) {
+  if (typeof value === "boolean") return value
+  const normalized = String(value || "").trim().toLowerCase()
+  return ["1", "true", "si", "sí", "yes", "invertida", "reversed"].includes(normalized)
+}
+
+function sanitizeIncomingCard(inputCard) {
+  if (typeof inputCard === "string" || typeof inputCard === "number") {
+    return {
+      id: String(inputCard).trim(),
+      name: "",
+      image: "",
+      reversed: false,
+      position: 0
+    }
+  }
+
+  if (inputCard && typeof inputCard === "object") {
+    return {
+      id: String(
+        inputCard.id ||
+        inputCard.cardId ||
+        inputCard.slug ||
+        ""
+      ).trim(),
+      name: String(
+        inputCard.name ||
+        inputCard.title ||
+        inputCard.cardName ||
+        ""
+      ).trim(),
+      image: String(
+        inputCard.image ||
+        inputCard.url ||
+        inputCard.src ||
+        ""
+      ).trim(),
+      reversed: parseBooleanLike(
+        inputCard.reversed ??
+        inputCard.invertida ??
+        inputCard.isReversed
+      ),
+      position: Number(inputCard.position || inputCard.index || 0) || 0
+    }
+  }
+
+  return null
+}
+
+function cardCandidateKeys(card) {
+  return [
+    card?.id,
+    card?.slug,
+    card?.name,
+    card?.title,
+    card?.arcano,
+    card?.image,
+    getImageFilename(card?.image || "")
+  ]
+    .filter(Boolean)
+    .map(normalizeCardValue)
+    .filter(Boolean)
+}
+
 function resolveCardFromDeck(deck, inputCard) {
   if (!deck || !Array.isArray(deck.cards)) return null
 
-  const rawId =
-    inputCard && typeof inputCard === "object"
-      ? String(inputCard.id || "").trim()
-      : String(inputCard || "").trim()
+  const sanitized = sanitizeIncomingCard(inputCard)
+  if (!sanitized) return null
 
-  const rawName =
-    inputCard && typeof inputCard === "object"
-      ? String(inputCard.name || "").trim()
-      : ""
+  const inputKeys = [
+    sanitized.id,
+    sanitized.name,
+    sanitized.image,
+    getImageFilename(sanitized.image)
+  ]
+    .filter(Boolean)
+    .map(normalizeCardValue)
+    .filter(Boolean)
 
-  const rawImage =
-    inputCard && typeof inputCard === "object"
-      ? String(inputCard.image || inputCard.url || "").trim()
-      : ""
+  if (!inputKeys.length) return null
 
-  const idNorm = normalizeCardValue(rawId)
-  const nameNorm = normalizeCardValue(rawName)
-  const imageNorm = normalizeCardValue(rawImage)
-  const imageFileNorm = normalizeCardValue(getImageFilename(rawImage))
+  const found = deck.cards.find((card) => {
+    const deckKeys = cardCandidateKeys(card)
+    return inputKeys.some((key) => deckKeys.includes(key))
+  })
 
-  return (
-    deck.cards.find((card) => String(card.id || "").trim() === rawId) ||
-    deck.cards.find((card) => normalizeCardValue(card.id) === idNorm) ||
-    deck.cards.find((card) => normalizeCardValue(card.name) === nameNorm) ||
-    deck.cards.find((card) => normalizeCardValue(card.title) === nameNorm) ||
-    deck.cards.find((card) => String(card.image || "").trim() === rawImage) ||
-    deck.cards.find((card) => normalizeCardValue(card.image) === imageNorm) ||
-    deck.cards.find((card) => normalizeCardValue(getImageFilename(card.image)) === imageFileNorm) ||
-    null
-  )
+  if (!found) return null
+
+  return {
+    ...found,
+    reversed: Boolean(sanitized.reversed),
+    invertida: Boolean(sanitized.reversed),
+    position: sanitized.position || 0
+  }
 }
 
 function getPublicDeck(deckName) {
@@ -241,7 +336,9 @@ function getPublicDeck(deckName) {
     color: deck.color || "#b08d57",
     cards: deck.cards.map((card) => ({
       id: card.id,
-      name: card.name,
+      slug: card.slug || card.id,
+      name: card.name || card.title || card.id,
+      title: card.title || card.name || card.id,
       image: card.image || ""
     }))
   }
@@ -364,10 +461,10 @@ function rowToSession(row) {
     status: row.status,
     accessEmailSent: Boolean(row.access_email_sent),
     resultEmailSent: Boolean(row.result_email_sent),
-    selectedCardIds: row.selected_card_ids ? JSON.parse(row.selected_card_ids) : [],
-    selectedCards: row.selected_cards_json ? JSON.parse(row.selected_cards_json) : [],
+    selectedCardIds: safeDbJsonParse(row.selected_card_ids, []),
+    selectedCards: safeDbJsonParse(row.selected_cards_json, []),
     interpretation: row.interpretation || "",
-    reading: row.reading_json ? JSON.parse(row.reading_json) : null,
+    reading: safeDbJsonParse(row.reading_json, null),
     createdAt: row.created_at,
     completedAt: row.completed_at || null,
     readingDone: row.status === "completed"
@@ -849,7 +946,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v4-card-resolution"
+    version: "production-sqlite-v4-card-resolution-patched-jsonsafe-v2"
   })
 })
 
@@ -935,6 +1032,9 @@ app.post("/api/submit", async (req, res) => {
   try {
     const { token, cards } = req.body
 
+    console.log("=== SUBMIT REQUEST ===")
+    console.log("BODY:", JSON.stringify(req.body, null, 2))
+
     if (!token) {
       return res.status(400).json({
         ok: false,
@@ -958,6 +1058,10 @@ app.post("/api/submit", async (req, res) => {
       })
     }
 
+    if (!Array.isArray(session.selectedCardIds)) session.selectedCardIds = []
+    if (!Array.isArray(session.selectedCards)) session.selectedCards = []
+    if (session.reading && typeof session.reading !== "object") session.reading = null
+
     if (session.status === "completed" && session.reading) {
       return res.json({
         ok: true,
@@ -976,30 +1080,22 @@ app.post("/api/submit", async (req, res) => {
     }
 
     const normalizedInputs = cards
-      .map((c) => {
-        if (typeof c === "string" || typeof c === "number") {
-          return { id: String(c).trim(), name: "", image: "" }
-        }
-
-        if (c && typeof c === "object") {
-          return {
-            id: String(c.id || "").trim(),
-            name: String(c.name || "").trim(),
-            image: String(c.image || c.url || "").trim()
-          }
-        }
-
-        return null
-      })
+      .map((c) => sanitizeIncomingCard(c))
       .filter(Boolean)
 
     const uniqueInputs = []
     const seen = new Set()
 
     for (const item of normalizedInputs) {
-      const key = JSON.stringify(item)
-      if (!seen.has(key)) {
-        seen.add(key)
+      const identityKey = [
+        normalizeCardValue(item.id),
+        normalizeCardValue(item.name),
+        normalizeCardValue(getImageFilename(item.image)),
+        item.reversed ? "rev" : "upright"
+      ].join("|")
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey)
         uniqueInputs.push(item)
       }
     }
@@ -1013,18 +1109,39 @@ app.post("/api/submit", async (req, res) => {
 
     const deck = loadDeck(session.deckId)
 
-    const selectedCards = uniqueInputs
-      .map((item) => resolveCardFromDeck(deck, item))
-      .filter(Boolean)
+    const resolutionDebug = []
+    const selectedCards = []
+
+    for (const item of uniqueInputs) {
+      const resolved = resolveCardFromDeck(deck, item)
+
+      resolutionDebug.push({
+        incoming: item,
+        resolved: resolved
+          ? {
+              id: resolved.id,
+              name: resolved.name || resolved.title || "",
+              image: resolved.image || "",
+              reversed: Boolean(resolved.reversed)
+            }
+          : null
+      })
+
+      if (resolved) {
+        selectedCards.push(resolved)
+      }
+    }
 
     if (selectedCards.length !== Number(session.pick)) {
       console.error("CARD RESOLUTION ERROR:", {
         deckId: session.deckId,
         expectedPick: session.pick,
         received: uniqueInputs,
+        resolutionDebug,
         resolvedCount: selectedCards.length,
         availableCards: deck.cards.map((card) => ({
           id: card.id,
+          slug: card.slug || "",
           name: card.name || card.title || "",
           image: card.image || ""
         }))
