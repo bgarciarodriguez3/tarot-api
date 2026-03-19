@@ -357,10 +357,10 @@ function buildAccessEmailText(session) {
     "",
     "Tu acceso a la lectura ya está preparado.",
     "",
-    "Pulsa este enlace para entrar en tu tapete:",
+    "Pulsa este enlace para entrar en tu camino:",
     url,
     "",
-    "Con luz,",
+    "Con mucha luz, Un abrazo enorme",
     "El Tarot de la Rueda de la Fortuna"
   ].join("\n")
 }
