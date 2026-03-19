@@ -726,7 +726,7 @@ async function sendAccessEmail(session) {
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
     to: session.email,
-    subject: `✨ Accede a tu destino`,
+    subject: "✨ Accede a tu destino",
     text: buildAccessEmailText(session),
     html: buildAccessEmailHtml(session)
   })
@@ -1236,7 +1236,7 @@ app.post("/api/submit", async (req, res) => {
     if (uniqueInputs.length !== Number(session.pick)) {
       return res.status(400).json({
         ok: false,
-        error: \`Debes elegir exactamente \${session.pick} cartas\`
+        error: `Debes elegir exactamente ${session.pick} cartas`
       })
     }
 
@@ -1374,8 +1374,8 @@ app.post("/api/debug/create-session", (req, res) => {
     const {
       productId = "10496012616017",
       email = "",
-      orderId = \`debug-order-\${Date.now()}\`,
-      lineItemId = \`debug-line-\${Date.now()}\`,
+      orderId = `debug-order-${Date.now()}`,
+      lineItemId = `debug-line-${Date.now()}`,
       unitIndex = 0
     } = req.body || {}
 
@@ -1519,5 +1519,5 @@ app.post("/api/shopify/order-paid", async (req, res) => {
 const PORT = Number(process.env.PORT) || 8080
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(\`server running on port \${PORT}\`)
+  console.log(`server running on port ${PORT}`)
 })
