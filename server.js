@@ -43,7 +43,7 @@ const PRODUCTS = {
     deck: "arcanos_mayores",
     pick: 12,
     deckSize: 22,
-    pagePath: "/pages/arcanos-mayores-tirada-personalizada"
+    pagePath: "/pages/lectura-profunda-12-cartas"
   },
   "10493369745745": {
     name: "Tres Puertas del Destino",
@@ -360,7 +360,7 @@ function buildAccessEmailText(session) {
     "Pulsa este enlace para entrar en tu camino:",
     url,
     "",
-    "Un abrazo de luz enorme",
+    "Con mucha luz, Un abrazo enorme",
     "El Tarot de la Rueda de la Fortuna"
   ].join("\n")
 }
@@ -399,7 +399,7 @@ function buildAccessEmailHtml(session) {
             </p>
 
             <p style="margin:0 0 22px;font-size:16px;line-height:1.85;">
-              Cuando estés list@, entra en tu Universo y deja que el mensaje se revele.
+              Cuando estés lista, entra en tu tapete y deja que el mensaje se revele.
             </p>
 
             <div style="text-align:center;margin:28px 0;">
@@ -471,7 +471,7 @@ function buildResultEmailText(session) {
     "Confía en lo que sientes al leerlo.",
     "Ahí está la verdadera respuesta.",
     "",
-    "Con ❤️ Amor,",
+    "Con Amor,",
     "El Tarot de la Rueda de la Fortuna"
   ].join("\n")
 }
@@ -496,110 +496,111 @@ function buildResultEmailHtml(session) {
   return `
     <div style="margin:0;padding:0;background:#f6f1e7;">
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
-        <div style="background:#fcf7ef;border:1px solid #e7dccb;border-radius:24px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;box-shadow:0 12px 30px rgba(0,0,0,0.08);">
+        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+          <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
 
-          <div style="text-align:center;margin-bottom:22px;">
-            <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:#fffaf2;">
-              Mensaje ritualizado para ti
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
+                Mensaje ritualizado para ti
+              </div>
             </div>
-          </div>
 
-          <div style="text-align:center;margin-bottom:20px;">
-            <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
-            <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
-              Tu consulta ya ha llegado
-            </h1>
-            <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
-              Un mensaje revelado para este momento de tu camino
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
+                Tu lectura ya ha llegado
+              </h1>
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
+                Un mensaje revelado para este momento de tu camino
+              </p>
+            </div>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
+
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
+              Querida alma,
             </p>
+
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Tu lectura ya ha llegado a ti.
+            </p>
+
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              No es casualidad que este mensaje haya encontrado tu camino.<br>
+              Las cartas elegidas han respondido a tu energía en este momento exacto.
+            </p>
+
+            <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
+              Respira.<br>
+              Lee despacio.<br>
+              Permite que cada palabra encuentre su lugar en ti.
+            </p>
+
+            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:18px 0 20px;">
+              ✨
+            </div>
+
+            <div style="
+              white-space:pre-line;
+              font-size:16px;
+              line-height:1.9;
+              color:#2f243c;
+              margin:0 0 20px;
+            ">${content}</div>
+
+            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">
+              ✨
+            </div>
+
+            <p style="margin:0 0 12px;font-size:16px;line-height:1.85;">
+              Confía en lo que sientes al leerlo.<br>
+              Ahí está la verdadera respuesta.
+            </p>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
+
+            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
+              Con Amor,
+            </p>
+
+            <p style="margin:6px 0 0 8px;text-align:center;font-size:18px;line-height:1.7;color:#241845;">
+              El equipo de Expertos Premium del Tarot de la Rueda de la Fortuna
+            </p>
+
+            <div style="text-align:center;margin:16px 0 10px;">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
+                alt="La Rueda de la Fortuna"
+                style="max-width:220px;width:100%;height:auto;display:inline-block;"
+              >
+            </div>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#d8c29a,transparent);margin:20px auto 18px;"></div>
+
+            <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a78;">
+              Guarda este email para volver a entrar cuando quieras.
+            </p>
+
+            <p style="margin:0 0 10px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a78;">
+              Aviso legal:
+            </p>
+
+            <p style="margin:0;text-align:center;font-size:12px;line-height:1.75;color:#8a7d87;">
+              Este servicio corresponde a un producto digital personalizado. De acuerdo con el artículo 103 del
+              Real Decreto Legislativo 1/2007, al tratarse de contenido digital y servicios personalizados, no es
+              posible ejercer el derecho de desistimiento una vez iniciado el proceso.
+              <br><br>
+              El servicio está destinado exclusivamente a personas mayores de 18 años.
+              <br><br>
+              Las interpretaciones de tarot se ofrecen con fines de orientación personal y entretenimiento y no
+              sustituyen asesoramiento profesional médico, legal, psicológico o financiero.
+              <br><br>
+              Al completar el formulario y utilizar el servicio aceptas estas condiciones.
+              <br><br>
+              Este correo es informativo y no admite respuesta.
+            </p>
+
           </div>
-
-          <div style="width:72px;height:1px;background:#c6a45a;margin:22px auto 28px;"></div>
-
-          <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
-            Querida alma,
-          </p>
-
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-            Tu lectura ya ha llegado a ti.
-          </p>
-
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-            No es casualidad que este mensaje haya encontrado tu camino.<br>
-            Las cartas elegidas han respondido a tu energía en este momento exacto.
-          </p>
-
-          <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
-            Respira.<br>
-            Lee despacio.<br>
-            Permite que cada palabra encuentre su lugar en ti.
-          </p>
-
-          <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:18px 0 20px;">
-            ✨
-          </div>
-
-          <div style="white-space:pre-line;font-size:16px;line-height:1.9;color:#2f243c;margin:0 0 20px;">
-${content}
-          </div>
-
-          <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">
-            ✨
-          </div>
-
-          <p style="margin:0 0 12px;font-size:16px;line-height:1.85;">
-            Confía en lo que sientes al leerlo.<br>
-            Ahí está la verdadera respuesta.
-          </p>
-
-          <div style="width:72px;height:1px;background:#c6a45a;margin:28px auto 24px;"></div>
-
-          <p style="margin:0 0 8px;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
-            Un fuerte abrazo,
-          </p>
-
-          <p style="margin:0;text-align:center;font-size:18px;line-height:1.7;color:#241845;">
-            El equipo de Expertos del Tarot de la Rueda de la Fortuna
-          </p>
-
-          <div style="text-align:center;margin:18px 0 26px;">
-            <img
-              src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
-              alt="Firma Tarot de la Rueda de la Fortuna"
-              style="display:block;margin:0 auto;max-width:220px;width:100%;height:auto;border:0;"
-            >
-          </div>
-
-          <div style="height:1px;background:#e6dccd;margin:0 auto 20px;max-width:470px;"></div>
-
-          <p style="margin:0 0 18px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a5f;">
-            Guarda este email para volver a entrar cuando quieras.
-          </p>
-
-          <p style="margin:0 0 12px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a5f;">
-            Aviso legal:
-          </p>
-
-          <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.75;color:#7a6a5f;">
-            Este servicio corresponde a un producto digital personalizado. De acuerdo con el artículo 103 del Real Decreto Legislativo 1/2007, al tratarse de contenido digital y servicios personalizados, no es posible ejercer el derecho de desistimiento una vez iniciado el proceso.
-          </p>
-
-          <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.75;color:#7a6a5f;">
-            El servicio está destinado exclusivamente a personas mayores de 18 años.
-          </p>
-
-          <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.75;color:#7a6a5f;">
-            Las interpretaciones de tarot se ofrecen con fines de orientación personal y entretenimiento y no sustituyen asesoramiento profesional médico, legal, psicológico o financiero.
-          </p>
-
-          <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.75;color:#7a6a5f;">
-            Al completar el formulario y utilizar el servicio aceptas estas condiciones.
-          </p>
-
-          <p style="margin:0;text-align:center;font-size:13px;line-height:1.75;color:#7a6a5f;">
-            Este correo es informativo y no admite respuesta.
-          </p>
-
         </div>
       </div>
     </div>
@@ -1111,7 +1112,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v4-card-resolution-patched-jsonsafe-v2"
+    version: "production-sqlite-v5-split-arcanos-pages"
   })
 })
 
@@ -1451,6 +1452,10 @@ app.post("/api/shopify/order-paid", async (req, res) => {
       })
     }
 
+    if (webhookId) {
+      markWebhookProcessed(webhookId)
+    }
+
     const order = JSON.parse(req.body.toString("utf8"))
 
     const email = order.email || order.contact_email || ""
@@ -1476,7 +1481,6 @@ app.post("/api/shopify/order-paid", async (req, res) => {
     let processedCount = 0
     let skippedPremium = 0
     const created = []
-    const sessionsToEmail = []
 
     for (const item of order.line_items || []) {
       const found = findProductConfigFromLineItem(item)
@@ -1511,6 +1515,14 @@ app.post("/api/shopify/order-paid", async (req, res) => {
           unitIndex: i
         })
 
+        if (!session.accessEmailSent && session.email) {
+          try {
+            await sendAccessEmail(session)
+          } catch (emailError) {
+            console.error("ACCESS EMAIL ERROR:", emailError)
+          }
+        }
+
         created.push({
           token: session.token,
           url: readingUrl(session),
@@ -1518,55 +1530,15 @@ app.post("/api/shopify/order-paid", async (req, res) => {
           productName: session.productName
         })
 
-        if (!session.accessEmailSent && session.email) {
-          sessionsToEmail.push(session.token)
-        }
-
         processedCount += 1
       }
     }
 
-    if (webhookId) {
-      markWebhookProcessed(webhookId)
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       ok: true,
       processedCount,
       skippedPremium,
       created
-    })
-
-    setImmediate(async () => {
-      for (const token of sessionsToEmail) {
-        try {
-          const freshSession = getSessionByToken(token)
-
-          if (!freshSession) {
-            console.error("ACCESS EMAIL SKIPPED: sesión no encontrada", token)
-            continue
-          }
-
-          if (freshSession.accessEmailSent) {
-            console.log("ACCESS EMAIL SKIPPED: ya enviado", token)
-            continue
-          }
-
-          if (!freshSession.email) {
-            console.error("ACCESS EMAIL SKIPPED: sesión sin email", token)
-            continue
-          }
-
-          console.log("ENVIANDO ACCESS EMAIL:", {
-            token: freshSession.token,
-            email: freshSession.email
-          })
-
-          await sendAccessEmail(freshSession)
-        } catch (emailError) {
-          console.error("ACCESS EMAIL ERROR:", emailError)
-        }
-      }
     })
   } catch (error) {
     console.error("SHOPIFY ORDER PAID ERROR:", error)
