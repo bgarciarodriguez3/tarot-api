@@ -93,6 +93,86 @@ CREATE TABLE IF NOT EXISTS processed_webhooks (
 );
 `)
 
+const READING_STYLE_GUIDE = `
+Escribe siempre en español.
+
+Tu voz debe sentirse íntima, humana, cálida, profunda y transformadora.
+La lectura debe parecer premium, emocional y personalizada, nunca genérica.
+
+OBJETIVO:
+La persona debe sentir:
+- "esto habla de mí"
+- "esto tiene profundidad real"
+- "esto vale más de lo que esperaba"
+
+REGLAS DE ESTILO:
+- No escribas frases vacías ni genéricas.
+- No repitas la misma idea con palabras distintas.
+- No uses tono técnico.
+- No uses tono frío.
+- No uses un tono artificialmente grandilocuente.
+- No uses listas ni viñetas.
+- Redacta como una interpretación fluida y envolvente.
+- Haz que cada lectura tenga ritmo, tensión emocional y una sensación de verdad.
+- Integra profundidad psicológica y espiritual al mismo tiempo.
+- Usa imágenes emocionales suaves y elegantes, no exageradas.
+- Debe sentirse ceremonial, delicada y potente.
+
+SOBRE LA PASIÓN:
+- La pasión debe aparecer cuando tenga sentido como fuerza interna, deseo verdadero, intensidad emocional, fuego del corazón, impulso del alma o energía de transformación.
+- No repitas siempre la palabra "pasión"; alterna con expresiones como deseo, fuego interno, intensidad, verdad del corazón, impulso vital o atracción profunda.
+- La pasión no debe sonar banal ni superficial.
+- Debe sentirse como algo que mueve a la persona, la confronta o la despierta por dentro.
+
+ESTRUCTURA INTERNA DE CADA LECTURA:
+1. Apertura emocional conectada con el momento vital de la persona.
+2. Interpretación clara de la energía o situación.
+3. Conflicto, bloqueo o tensión principal.
+4. Revelación o verdad central.
+5. Consejo útil, cálido y accionable.
+6. Cierre con fuerza emocional y sensación de guía.
+
+RESULTADO DESEADO:
+- Más profundidad
+- Más emoción
+- Más valor percibido
+- Más sensación de lectura única
+`
+
+const PRODUCT_READING_TONES = {
+  angeles: `
+En lecturas de Ángeles:
+- El tono debe sentirse amoroso, protector, luminoso y reconfortante.
+- Hay guía espiritual, pero también verdad emocional.
+- La pasión debe aparecer como verdad del corazón, llamada interior o impulso del alma.
+- Nunca debe sonar agresivo; sí profundo, íntimo y sanador.
+`,
+
+  semilla_estelar: `
+En lecturas de Semilla Estelar:
+- El tono debe sentirse cósmico, álmico, expansivo y con identidad.
+- La lectura debe tocar propósito, memoria interior, despertar y autenticidad.
+- La pasión debe sentirse como recuerdo del alma, activación interna o llamada profunda a ser quien realmente es.
+- Debe generar sensación de reconocimiento: "esto explica lo que me pasa".
+`,
+
+  arcanos_mayores_3: `
+En lecturas de 3 cartas / Tres Puertas del Destino:
+- La lectura debe sentirse clara, intensa y muy enfocada.
+- Tiene que haber sensación de cruce de caminos, decisión y movimiento interno.
+- La pasión debe actuar como impulso emocional que empuja a elegir, a mirar la verdad o a dejar de posponer algo importante.
+- Debe dejar sensación de claridad y fuerza.
+`,
+
+  arcanos_mayores_12: `
+En lecturas profundas de 12 cartas:
+- La lectura debe sentirse amplia, narrativa, envolvente y premium.
+- Debe parecer un mapa completo del momento vital de la persona.
+- La pasión debe aparecer como fuerza que reorganiza su camino, remueve bloqueos o despierta una verdad que ya no puede ignorar.
+- Tiene que sentirse transformadora, seria y con alto valor percibido.
+`
+}
+
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
   return [
     String(orderId || "").trim(),
@@ -889,6 +969,19 @@ function sectionsFromPlainText(text) {
   }
 }
 
+function getProductTone(productName, deck, pick) {
+  if (deck === "angeles") return PRODUCT_READING_TONES.angeles
+  if (deck === "semilla_estelar") return PRODUCT_READING_TONES.semilla_estelar
+  if (deck === "arcanos_mayores" && Number(pick) === 12) return PRODUCT_READING_TONES.arcanos_mayores_12
+  if (deck === "arcanos_mayores" && Number(pick) === 3) return PRODUCT_READING_TONES.arcanos_mayores_3
+
+  const productText = String(productName || "").toLowerCase()
+  if (productText.includes("ángeles") || productText.includes("angeles")) return PRODUCT_READING_TONES.angeles
+  if (productText.includes("semilla")) return PRODUCT_READING_TONES.semilla_estelar
+  if (Number(pick) >= 10) return PRODUCT_READING_TONES.arcanos_mayores_12
+  return PRODUCT_READING_TONES.arcanos_mayores_3
+}
+
 async function generateAIReading(productName, deck, pick, cardsData) {
   const style = randomStyle(deck)
 
@@ -899,6 +992,7 @@ async function generateAIReading(productName, deck, pick, cardsData) {
       ? "cósmico, álmico, expansivo, vibracional"
       : "místico, profundo, simbólico, introspectivo"
 
+  const productTone = getProductTone(productName, deck, pick)
   const specialSection = getSpecialSectionTitle(deck)
 
   const cardsText = cardsData
@@ -942,9 +1036,12 @@ Invertida: ${reversed}
     .join("\n")
 
   const prompt = `
-Eres una tarotista espiritual profesional.
+${READING_STYLE_GUIDE}
 
-Escribe en español una lectura ceremonial, cálida, profunda y elegante.
+${productTone}
+
+Eres una tarotista espiritual profesional de altísimo nivel.
+Tu lectura debe sentirse única, intensa, elegante, emocional y premium.
 
 Producto: ${productName}
 Cantidad de cartas elegidas: ${pick}
@@ -981,6 +1078,14 @@ Reglas:
 - Cambia el estilo de redacción en cada lectura para evitar repeticiones entre compras distintas.
 - Si un campo no existe en la carta, créalo de forma coherente a partir del significado general.
 - La lectura debe sentirse única y premium.
+- Cada campo debe aportar información nueva y valiosa.
+- "introduccion" debe abrir emocionalmente la lectura.
+- "significado_general" debe explicar con profundidad lo que está ocurriendo.
+- "amor" debe sonar íntimo, real y emocional.
+- "trabajo_proposito" debe conectar vocación, dirección, energía y verdad interior.
+- "consejo_espiritual" debe sentirse útil, cálido y revelador.
+- "consejo_especial" debe ser especialmente memorable y con alto impacto emocional.
+- "cierre" debe dejar sensación de guía, verdad y transformación.
 `
 
   const response = await openai.responses.create({
@@ -1112,7 +1217,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v5-split-arcanos-pages"
+    version: "production-sqlite-v6-premium-reading-style"
   })
 })
 
