@@ -54,6 +54,15 @@ const PRODUCTS = {
   }
 }
 
+/*
+  Añade aquí los product_id o variant_id premium de Shopify
+  para que el webhook los detecte y los excluya del flujo automático.
+  Ejemplo:
+  const PREMIUM_PRODUCTS = new Set([
+    "1234567890",
+    "0987654321"
+  ])
+*/
 const PREMIUM_PRODUCTS = new Set([])
 
 const decksCache = new Map()
@@ -172,6 +181,33 @@ En lecturas profundas de 12 cartas:
 - Tiene que sentirse transformadora, seria y con alto valor percibido.
 `
 }
+
+const PREMIUM_SYSTEM_PROMPT = `
+Eres una mentora intuitiva y estratégica especializada en lecturas premium profundamente personalizadas.
+
+Tu estilo:
+- profundo
+- cálido
+- lúcido
+- nada genérico
+- emocionalmente inteligente
+- honesto pero compasivo
+- orientado a claridad y transformación real
+
+Reglas:
+- Nunca suenes automática ni mecánica.
+- Nunca repitas ideas con otras palabras.
+- No uses clichés vacíos.
+- No moralices.
+- No prometas resultados absolutos.
+- No diagnostiques salud mental ni des consejos legales, médicos o financieros.
+- Si la persona muestra confusión, ayúdala a ordenar prioridades.
+- Si la persona muestra dolor emocional, responde con contención y claridad.
+- Prioriza precisión, personalización y profundidad psicológica.
+- No menciones nunca que eres una IA ni que esto ha sido generado automáticamente.
+- Responde siempre en español.
+- Devuelve HTML simple, elegante y apto para email.
+`
 
 function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
   return [
@@ -687,6 +723,101 @@ function buildResultEmailHtml(session) {
   `
 }
 
+function buildPremiumResultEmailText(result) {
+  return [
+    `Hola${result.customerName ? ` ${result.customerName}` : ""},`,
+    "",
+    "Tu mentoría premium ya está lista.",
+    "",
+    "Te compartimos tu respuesta personalizada a continuación:",
+    "",
+    stripHtml(result.answer || ""),
+    "",
+    "Con luz,",
+    "El Tarot de la Rueda de la Fortuna"
+  ].join("\n")
+}
+
+function buildPremiumResultEmailHtml(result) {
+  return `
+    <div style="margin:0;padding:0;background:#f6f1e7;">
+      <div style="max-width:720px;margin:0 auto;padding:32px 18px;">
+        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+          <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
+
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
+                Mentoría Premium
+              </div>
+            </div>
+
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
+                Tu respuesta premium ya está aquí
+              </h1>
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
+                Una guía más profunda, personalizada y enfocada en tu momento actual
+              </p>
+            </div>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
+
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
+              Hola${result.customerName ? ` ${escapeHtml(result.customerName)}` : ""},
+            </p>
+
+            <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
+              Gracias por compartir tu proceso con tanta honestidad.
+              Hemos preparado tu mentoría premium personalizada para acompañarte con más claridad en este momento.
+            </p>
+
+            <div style="
+              font-size:16px;
+              line-height:1.9;
+              color:#2f243c;
+              margin:0 0 20px;
+            ">
+              ${result.answer || ""}
+            </div>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
+
+            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
+              Con luz,
+            </p>
+
+            <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
+              <strong>El Tarot de la Rueda de la Fortuna</strong>
+            </p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+}
+
+function stripHtml(html) {
+  return String(html || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<li>/gi, "- ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
 function rowToSession(row) {
   if (!row) return null
 
@@ -892,6 +1023,32 @@ async function sendResultEmail(session) {
 
   console.log("RESEND RESULT OK:", result)
   return result
+}
+
+async function sendPremiumResultEmail(result) {
+  if (!result?.email) {
+    throw new Error("El resultado premium no tiene email")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+  }
+
+  const emailResult = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: result.email,
+    subject: "✨ Tu mentoría premium ya está lista",
+    text: buildPremiumResultEmailText(result),
+    html: buildPremiumResultEmailHtml(result)
+  })
+
+  if (emailResult?.error) {
+    console.error("RESEND PREMIUM RESULT ERROR:", emailResult.error)
+    throw new Error(`Resend error: ${emailResult.error.message || "error desconocido"}`)
+  }
+
+  console.log("RESEND PREMIUM RESULT OK:", emailResult)
+  return emailResult
 }
 
 function randomStyle(deck) {
@@ -1144,6 +1301,190 @@ ${normalized.cierre}
   }
 }
 
+function stringifyValue(value) {
+  if (Array.isArray(value)) return value.join(", ")
+  if (value && typeof value === "object") return JSON.stringify(value)
+  return String(value ?? "")
+}
+
+function extractResponseText(response) {
+  if (response?.output_text) {
+    return String(response.output_text).trim()
+  }
+
+  try {
+    return response.output
+      .flatMap((item) => item.content || [])
+      .filter((content) => content.type === "output_text")
+      .map((content) => content.text || "")
+      .join("\n")
+      .trim()
+  } catch (_error) {
+    return ""
+  }
+}
+
+function normalizePremiumPayload(body = {}) {
+  return {
+    submissionId:
+      body.submissionId ||
+      body.responseId ||
+      body.formResponseId ||
+      crypto.randomUUID(),
+
+    orderId: body.orderId || body.shopifyOrderId || null,
+    orderName: body.orderName || null,
+    productId: body.productId || null,
+    productTitle: body.productTitle || null,
+    productType: body.productType || "premium_mentoria",
+    spreadType: body.spreadType || "premium_mentoria",
+
+    email: String(body.email || "").trim(),
+    customerName: String(body.customerName || body.name || "").trim(),
+    language: body.language || "es",
+
+    formId: body.formId || null,
+    formName: body.formName || null,
+    submittedAt: body.submittedAt || new Date().toISOString(),
+
+    focusArea: body.focusArea || "",
+    mainQuestion: body.mainQuestion || "",
+    context: body.context || "",
+    currentSituation: body.currentSituation || "",
+    blockages: body.blockages || "",
+    desiredOutcome: body.desiredOutcome || "",
+    background: body.background || "",
+    urgencyLevel: body.urgencyLevel || "",
+    extraNotes: body.extraNotes || "",
+
+    answers: body.answers || {},
+    rawForm: body.rawForm || body
+  }
+}
+
+function validatePremiumPayload(payload) {
+  const errors = []
+
+  if (!payload.email) errors.push("email is required")
+  if (!payload.mainQuestion) errors.push("mainQuestion is required")
+  if (!payload.context && !payload.currentSituation) {
+    errors.push("context or currentSituation is required")
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors
+  }
+}
+
+function buildPremiumPrompt(data) {
+  const answerLines = Object.entries(data.answers || {})
+    .map(([key, value]) => `- ${key}: ${stringifyValue(value)}`)
+    .join("\n")
+
+  return `
+Genera una mentoría premium personalizada en español a partir de los siguientes datos del cliente.
+
+DATOS DEL CLIENTE
+- Nombre: ${data.customerName || "No indicado"}
+- Email: ${data.email}
+- Tipo de producto: ${data.productType}
+- Tipo de lectura: ${data.spreadType}
+- Pedido Shopify: ${data.orderId || "No indicado"}
+- Fecha de envío del formulario: ${data.submittedAt}
+- Idioma: ${data.language}
+
+FORMULARIO
+- Área de enfoque: ${data.focusArea || "No indicada"}
+- Pregunta principal: ${data.mainQuestion || "No indicada"}
+- Situación actual: ${data.currentSituation || "No indicada"}
+- Contexto adicional: ${data.context || "No indicado"}
+- Bloqueos: ${data.blockages || "No indicados"}
+- Resultado deseado: ${data.desiredOutcome || "No indicado"}
+- Historia previa / antecedentes: ${data.background || "No indicados"}
+- Nivel de urgencia: ${data.urgencyLevel || "No indicado"}
+- Notas extra: ${data.extraNotes || "No indicadas"}
+
+RESPUESTAS COMPLETAS DEL FORMULARIO
+${answerLines || "- Sin respuestas estructuradas adicionales"}
+
+INSTRUCCIONES
+1. Escribe una respuesta premium profunda, cálida, clara y muy personalizada.
+2. No hagas una lectura superficial: prioriza análisis, patrones, contradicciones internas, bloqueos y oportunidades reales.
+3. Debe sentirse como una mentoría intuitiva y estratégica, no como texto genérico.
+4. Usa tono humano, cercano y elegante.
+5. No inventes datos fuera de lo que el cliente ha compartido.
+6. Si falta información, trabaja con prudencia y dilo de forma natural.
+7. Cierra con acciones concretas y útiles.
+8. Evita frases vacías y repetitivas.
+9. Responde en HTML simple, apto para email.
+
+ESTRUCTURA OBLIGATORIA EN HTML
+<h2>Lectura Premium Personalizada</h2>
+<p>Introducción breve y personalizada</p>
+
+<h3>Lo que está ocurriendo en el fondo</h3>
+<p>Análisis profundo</p>
+
+<h3>Bloqueos y patrones que se repiten</h3>
+<p>Análisis específico</p>
+
+<h3>Lo que ahora mismo necesita ver con claridad</h3>
+<p>Insight central</p>
+
+<h3>Camino más alineado para avanzar</h3>
+<p>Orientación práctica y emocional</p>
+
+<h3>Pasos concretos para los próximos días</h3>
+<ul>
+  <li>Paso 1</li>
+  <li>Paso 2</li>
+  <li>Paso 3</li>
+  <li>Paso 4</li>
+</ul>
+
+<h3>Cierre</h3>
+<p>Cierre cálido, potente y personalizado</p>
+`.trim()
+}
+
+async function generatePremiumReading(payload) {
+  const prompt = buildPremiumPrompt(payload)
+
+  const response = await openai.responses.create({
+    model: process.env.OPENAI_PREMIUM_MODEL || process.env.OPENAI_MODEL || "gpt-4.1-mini",
+    input: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text: PREMIUM_SYSTEM_PROMPT
+          }
+        ]
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: prompt
+          }
+        ]
+      }
+    ],
+    max_output_tokens: 2200
+  })
+
+  const answer = extractResponseText(response)
+
+  if (!answer) {
+    throw new Error("OpenAI devolvió una respuesta premium vacía")
+  }
+
+  return answer
+}
+
 function findProductConfigFromLineItem(item) {
   const productId = item?.product_id ? String(item.product_id) : null
   const variantId = item?.variant_id ? String(item.variant_id) : null
@@ -1217,7 +1558,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v6-premium-reading-style"
+    version: "production-sqlite-v7-premium-submit"
   })
 })
 
@@ -1461,6 +1802,70 @@ app.post("/api/submit", async (req, res) => {
     return res.status(500).json({
       ok: false,
       error: error.message
+    })
+  }
+})
+
+app.post("/api/premium/submit", async (req, res) => {
+  try {
+    const apiKey = req.headers["x-api-key"]
+
+    if (!apiKey || apiKey !== process.env.PREMIUM_API_KEY) {
+      return res.status(401).json({
+        ok: false,
+        error: "Unauthorized"
+      })
+    }
+
+    const payload = normalizePremiumPayload(req.body)
+    const validation = validatePremiumPayload(payload)
+
+    if (!validation.ok) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid payload",
+        details: validation.errors
+      })
+    }
+
+    console.log("=== PREMIUM SUBMIT REQUEST ===")
+    console.log("PREMIUM BODY:", JSON.stringify(payload, null, 2))
+
+    const answer = await generatePremiumReading(payload)
+
+    const result = {
+      ok: true,
+      mode: "premium",
+      submissionId: payload.submissionId,
+      orderId: payload.orderId || null,
+      orderName: payload.orderName || null,
+      email: payload.email,
+      customerName: payload.customerName || null,
+      productId: payload.productId || null,
+      productTitle: payload.productTitle || null,
+      productType: payload.productType,
+      spreadType: payload.spreadType || null,
+      generatedAt: new Date().toISOString(),
+      answer,
+      meta: {
+        formId: payload.formId || null,
+        formName: payload.formName || null
+      }
+    }
+
+    try {
+      await sendPremiumResultEmail(result)
+    } catch (emailError) {
+      console.error("PREMIUM RESULT EMAIL ERROR:", emailError)
+    }
+
+    return res.status(200).json(result)
+  } catch (error) {
+    console.error("PREMIUM SUBMIT ERROR:", error)
+    return res.status(500).json({
+      ok: false,
+      error: "Internal server error",
+      message: error.message || "Unknown error"
     })
   }
 })
