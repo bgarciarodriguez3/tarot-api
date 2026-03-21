@@ -20,6 +20,8 @@ app.use(cors())
 app.use("/api/shopify/order-paid", express.raw({ type: "application/json" }))
 app.use(express.json())
 
+const premiumRoutes = require("./routes/premium")
+app.use("/api/premium", premiumRoutes)
 const STORE_URL =
   process.env.STORE_URL || "https://eltarotdelaruedadelafortuna.com"
 
