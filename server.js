@@ -56,16 +56,25 @@ const PRODUCTS = {
   }
 }
 
-/*
-  Añade aquí los product_id o variant_id premium de Shopify
-  para que el webhook los detecte y los excluya del flujo automático.
-  Ejemplo:
-  const PREMIUM_PRODUCTS = new Set([
-    "1234567890",
-    "0987654321"
-  ])
-*/
-const PREMIUM_PRODUCTS = new Set([])
+const PREMIUM_CONFIGS = {
+  "10496141754705": {
+    name: "Tu Camino, Tu Destino y Tus Decisiones – Mentoría Premium",
+    type: "premium_mentoria",
+    spreadType: "camino_destino_decisiones"
+  },
+  "10523108966737": {
+    name: "Claridad en tus Relaciones y tu Camino Sentimental – Tarot del Amor Premium",
+    type: "premium_mentoria",
+    spreadType: "amor_premium"
+  },
+  "10667662606673": {
+    name: "Nuevos Comienzos, Liderazgo y Economía Personal – Consulta Premium",
+    type: "premium_mentoria",
+    spreadType: "economia_liderazgo_premium"
+  }
+}
+
+const PREMIUM_PRODUCTS = new Set(Object.keys(PREMIUM_CONFIGS))
 
 const decksCache = new Map()
 
@@ -1492,19 +1501,57 @@ function findProductConfigFromLineItem(item) {
   const variantId = item?.variant_id ? String(item.variant_id) : null
 
   if (productId && PRODUCTS[productId]) {
-    return { productId, config: PRODUCTS[productId], matchedBy: "product_id" }
+    return {
+      productId,
+      config: PRODUCTS[productId],
+      matchedBy: "product_id",
+      mode: "automatic"
+    }
   }
 
   if (variantId && PRODUCTS[variantId]) {
-    return { productId: variantId, config: PRODUCTS[variantId], matchedBy: "variant_id" }
+    return {
+      productId: variantId,
+      config: PRODUCTS[variantId],
+      matchedBy: "variant_id",
+      mode: "automatic"
+    }
+  }
+
+  if (productId && PREMIUM_CONFIGS[productId]) {
+    return {
+      productId,
+      config: PREMIUM_CONFIGS[productId],
+      matchedBy: "premium_product_id",
+      mode: "premium"
+    }
+  }
+
+  if (variantId && PREMIUM_CONFIGS[variantId]) {
+    return {
+      productId: variantId,
+      config: PREMIUM_CONFIGS[variantId],
+      matchedBy: "premium_variant_id",
+      mode: "premium"
+    }
   }
 
   if (productId && PREMIUM_PRODUCTS.has(productId)) {
-    return { productId, config: null, matchedBy: "premium_product_id" }
+    return {
+      productId,
+      config: PREMIUM_CONFIGS[productId] || null,
+      matchedBy: "premium_product_id_set",
+      mode: "premium"
+    }
   }
 
   if (variantId && PREMIUM_PRODUCTS.has(variantId)) {
-    return { productId: variantId, config: null, matchedBy: "premium_variant_id" }
+    return {
+      productId: variantId,
+      config: PREMIUM_CONFIGS[variantId] || null,
+      matchedBy: "premium_variant_id_set",
+      mode: "premium"
+    }
   }
 
   return null
@@ -1560,7 +1607,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v7-premium-submit"
+    version: "production-sqlite-v8-premium-3-products"
   })
 })
 
@@ -1820,6 +1867,27 @@ app.post("/api/premium/submit", async (req, res) => {
     }
 
     const payload = normalizePremiumPayload(req.body)
+
+    if (
+      payload.productId &&
+      !PREMIUM_CONFIGS[String(payload.productId)]
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "productId is not configured as premium"
+      })
+    }
+
+    const premiumConfig = payload.productId
+      ? PREMIUM_CONFIGS[String(payload.productId)] || null
+      : null
+
+    if (premiumConfig) {
+      payload.productType = premiumConfig.type || payload.productType
+      payload.spreadType = premiumConfig.spreadType || payload.spreadType
+      payload.productTitle = payload.productTitle || premiumConfig.name
+    }
+
     const validation = validatePremiumPayload(payload)
 
     if (!validation.ok) {
@@ -2006,12 +2074,13 @@ app.post("/api/shopify/order-paid", async (req, res) => {
         continue
       }
 
-      if (!found.config) {
+      if (found.mode === "premium") {
         skippedPremium += Number(item.quantity || 1)
         console.log("Producto premium detectado, fuera de flujo automático:", {
           title: item.title,
           product_id: item.product_id,
-          variant_id: item.variant_id
+          variant_id: item.variant_id,
+          premiumConfig: found.config
         })
         continue
       }
