@@ -15,7 +15,9 @@ const app = express()
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 app.use(cors())
-app.use("/api/premium/shopify/order-paid", express.raw({ type: "application/json" }))
+
+app.use("/api/premium/shopify/order-paid", express.raw({ type: "*/*" }))
+
 app.use(express.json())
 
 // ==============================
@@ -333,7 +335,9 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
       markPremiumWebhookProcessed(webhookId)
     }
 
-    const order = JSON.parse(req.body.toString("utf8"))
+    const order = typeof req.body === "string"
+      ? JSON.parse(req.body)
+      : req.body
     const email = order.email || order.contact_email || ""
 
     console.log("=== PREMIUM WEBHOOK RECIBIDO ===")
