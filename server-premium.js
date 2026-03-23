@@ -3,13 +3,18 @@ require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
 const crypto = require("crypto")
-const fs = require("fs")
-const path = require("path")
-const Database = require("better-sqlite3")
 const { Resend } = require("resend")
+const { Pool } = require("pg")
 
 const app = express()
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes("localhost")
+    ? false
+    : { rejectUnauthorized: false }
+})
 
 app.use(cors())
 app.use("/api/premium/shopify/order-paid", express.raw({ type: "application/json" }))
@@ -35,47 +40,53 @@ const PREMIUM_PRODUCTS = {
   }
 }
 
-const DB_PATH = path.join(__dirname, "data", "tarot-premium.sqlite")
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true })
+// ==============================
+// DB INIT
+// ==============================
 
-const db = new Database(DB_PATH)
-db.pragma("journal_mode = WAL")
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_requests (
+      id TEXT PRIMARY KEY,
+      order_id TEXT,
+      line_item_id TEXT,
+      product_id TEXT,
+      product_name TEXT,
+      premium_type TEXT,
+      form_url TEXT,
+      customer_name TEXT,
+      email TEXT,
+      status TEXT,
+      access_email_sent INTEGER DEFAULT 0,
+      received_email_sent INTEGER DEFAULT 0,
+      internal_email_sent INTEGER DEFAULT 0,
+      created_at TEXT,
+      form_submitted_at TEXT,
+      completed_at TEXT
+    );
+  `)
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS premium_requests (
-  id TEXT PRIMARY KEY,
-  order_id TEXT,
-  line_item_id TEXT,
-  product_id TEXT,
-  product_name TEXT,
-  premium_type TEXT,
-  form_url TEXT,
-  customer_name TEXT,
-  email TEXT,
-  status TEXT,
-  access_email_sent INTEGER DEFAULT 0,
-  received_email_sent INTEGER DEFAULT 0,
-  internal_email_sent INTEGER DEFAULT 0,
-  created_at TEXT,
-  form_submitted_at TEXT,
-  completed_at TEXT
-);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_form_submissions (
+      id TEXT PRIMARY KEY,
+      premium_request_id TEXT,
+      order_id TEXT,
+      email TEXT,
+      product_name TEXT,
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `)
 
-CREATE TABLE IF NOT EXISTS premium_form_submissions (
-  id TEXT PRIMARY KEY,
-  premium_request_id TEXT,
-  order_id TEXT,
-  email TEXT,
-  product_name TEXT,
-  payload_json TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_processed_webhooks (
+      webhook_id TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
+  `)
 
-CREATE TABLE IF NOT EXISTS premium_processed_webhooks (
-  webhook_id TEXT PRIMARY KEY,
-  created_at TEXT NOT NULL
-);
-`)
+  console.log("Postgres tables ready")
+}
 
 // ==============================
 // HELPERS
@@ -142,32 +153,46 @@ function findPremiumConfigFromLineItem(item) {
   return null
 }
 
-function isWebhookProcessed(webhookId) {
+async function isWebhookProcessed(webhookId) {
   if (!webhookId) return false
 
-  const row = db
-    .prepare("SELECT webhook_id FROM premium_processed_webhooks WHERE webhook_id = ?")
-    .get(String(webhookId))
+  const result = await pool.query(
+    "SELECT webhook_id FROM premium_processed_webhooks WHERE webhook_id = $1 LIMIT 1",
+    [String(webhookId)]
+  )
 
-  return Boolean(row)
+  return result.rowCount > 0
 }
 
-function markWebhookProcessed(webhookId) {
+async function markWebhookProcessed(webhookId) {
   if (!webhookId) return
 
-  db.prepare(`
-    INSERT OR IGNORE INTO premium_processed_webhooks (webhook_id, created_at)
-    VALUES (?, ?)
-  `).run(String(webhookId), new Date().toISOString())
+  await pool.query(
+    `
+    INSERT INTO premium_processed_webhooks (webhook_id, created_at)
+    VALUES ($1, $2)
+    ON CONFLICT (webhook_id) DO NOTHING
+    `,
+    [String(webhookId), new Date().toISOString()]
+  )
 }
 
-function getPremiumRequestById(id) {
-  return db
-    .prepare("SELECT * FROM premium_requests WHERE id = ?")
-    .get(String(id))
+async function getPremiumRequestById(id) {
+  const result = await pool.query(
+    "SELECT * FROM premium_requests WHERE id = $1 LIMIT 1",
+    [String(id)]
+  )
+  return result.rows[0] || null
 }
 
-function createPremiumRequest({ orderId, lineItemId, productId, email, customerName = "", unitIndex = 0 }) {
+async function createPremiumRequest({
+  orderId,
+  lineItemId,
+  productId,
+  email,
+  customerName = "",
+  unitIndex = 0
+}) {
   const config = PREMIUM_PRODUCTS[String(productId)]
 
   if (!config) {
@@ -175,26 +200,24 @@ function createPremiumRequest({ orderId, lineItemId, productId, email, customerN
   }
 
   const id = createPremiumId(orderId, lineItemId, productId, unitIndex)
-  const existing = getPremiumRequestById(id)
+  const existing = await getPremiumRequestById(id)
 
   if (existing) {
     if (email && !existing.email) {
-      db.prepare(`
-        UPDATE premium_requests
-        SET email = ?
-        WHERE id = ?
-      `).run(String(email), id)
+      await pool.query(
+        `UPDATE premium_requests SET email = $1 WHERE id = $2`,
+        [String(email), id]
+      )
     }
 
     if (customerName && !existing.customer_name) {
-      db.prepare(`
-        UPDATE premium_requests
-        SET customer_name = ?
-        WHERE id = ?
-      `).run(String(customerName), id)
+      await pool.query(
+        `UPDATE premium_requests SET customer_name = $1 WHERE id = $2`,
+        [String(customerName), id]
+      )
     }
 
-    return db.prepare("SELECT * FROM premium_requests WHERE id = ?").get(id)
+    return await getPremiumRequestById(id)
   }
 
   const record = {
@@ -216,19 +239,39 @@ function createPremiumRequest({ orderId, lineItemId, productId, email, customerN
     completed_at: null
   }
 
-  db.prepare(`
+  await pool.query(
+    `
     INSERT INTO premium_requests (
       id, order_id, line_item_id, product_id, product_name, premium_type,
       form_url, customer_name, email, status, access_email_sent,
       received_email_sent, internal_email_sent, created_at, form_submitted_at, completed_at
     ) VALUES (
-      @id, @order_id, @line_item_id, @product_id, @product_name, @premium_type,
-      @form_url, @customer_name, @email, @status, @access_email_sent,
-      @received_email_sent, @internal_email_sent, @created_at, @form_submitted_at, @completed_at
+      $1, $2, $3, $4, $5, $6,
+      $7, $8, $9, $10, $11,
+      $12, $13, $14, $15, $16
     )
-  `).run(record)
+    `,
+    [
+      record.id,
+      record.order_id,
+      record.line_item_id,
+      record.product_id,
+      record.product_name,
+      record.premium_type,
+      record.form_url,
+      record.customer_name,
+      record.email,
+      record.status,
+      record.access_email_sent,
+      record.received_email_sent,
+      record.internal_email_sent,
+      record.created_at,
+      record.form_submitted_at,
+      record.completed_at
+    ]
+  )
 
-  return db.prepare("SELECT * FROM premium_requests WHERE id = ?").get(id)
+  return await getPremiumRequestById(id)
 }
 
 // ==============================
@@ -484,7 +527,7 @@ async function sendAccessEmail(record) {
     throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
   }
 
-  if (record.access_email_sent) {
+  if (Number(record.access_email_sent) === 1) {
     console.log("EMAIL ACCESO PREMIUM: ya enviado para", record.id)
     return { already: true }
   }
@@ -502,11 +545,10 @@ async function sendAccessEmail(record) {
     throw new Error(result.error.message || "Error enviando email de acceso premium")
   }
 
-  db.prepare(`
-    UPDATE premium_requests
-    SET access_email_sent = 1
-    WHERE id = ?
-  `).run(record.id)
+  await pool.query(
+    `UPDATE premium_requests SET access_email_sent = 1 WHERE id = $1`,
+    [record.id]
+  )
 
   console.log("RESEND ACCESS PREMIUM OK:", result)
   return result
@@ -539,11 +581,10 @@ async function sendClientConfirmationEmail(payload, requestRecord) {
   }
 
   if (requestRecord?.id) {
-    db.prepare(`
-      UPDATE premium_requests
-      SET received_email_sent = 1
-      WHERE id = ?
-    `).run(requestRecord.id)
+    await pool.query(
+      `UPDATE premium_requests SET received_email_sent = 1 WHERE id = $1`,
+      [requestRecord.id]
+    )
   }
 
   console.log("RESEND CLIENT CONFIRMATION OK:", result)
@@ -569,11 +610,10 @@ async function sendInternalAlertEmail(payload, requestRecord) {
   }
 
   if (requestRecord?.id) {
-    db.prepare(`
-      UPDATE premium_requests
-      SET internal_email_sent = 1
-      WHERE id = ?
-    `).run(requestRecord.id)
+    await pool.query(
+      `UPDATE premium_requests SET internal_email_sent = 1 WHERE id = $1`,
+      [requestRecord.id]
+    )
   }
 
   console.log("RESEND INTERNAL ALERT OK:", result)
@@ -609,38 +649,47 @@ function normalizeFormPayload(body = {}) {
   }
 }
 
-function findRequestForSubmittedForm(payload) {
+async function findRequestForSubmittedForm(payload) {
   if (payload.orderId && payload.email) {
-    const row = db.prepare(`
+    const result = await pool.query(
+      `
       SELECT *
       FROM premium_requests
-      WHERE order_id = ? AND email = ?
+      WHERE order_id = $1 AND email = $2
       ORDER BY created_at DESC
-    `).get(String(payload.orderId), String(payload.email))
-
-    if (row) return row
+      LIMIT 1
+      `,
+      [String(payload.orderId), String(payload.email)]
+    )
+    if (result.rows[0]) return result.rows[0]
   }
 
   if (payload.email && payload.productId) {
-    const row = db.prepare(`
+    const result = await pool.query(
+      `
       SELECT *
       FROM premium_requests
-      WHERE email = ? AND product_id = ?
+      WHERE email = $1 AND product_id = $2
       ORDER BY created_at DESC
-    `).get(String(payload.email), String(payload.productId))
-
-    if (row) return row
+      LIMIT 1
+      `,
+      [String(payload.email), String(payload.productId)]
+    )
+    if (result.rows[0]) return result.rows[0]
   }
 
   if (payload.email && payload.productName) {
-    const row = db.prepare(`
+    const result = await pool.query(
+      `
       SELECT *
       FROM premium_requests
-      WHERE email = ? AND product_name = ?
+      WHERE email = $1 AND product_name = $2
       ORDER BY created_at DESC
-    `).get(String(payload.email), String(payload.productName))
-
-    if (row) return row
+      LIMIT 1
+      `,
+      [String(payload.email), String(payload.productName)]
+    )
+    if (result.rows[0]) return result.rows[0]
   }
 
   return null
@@ -654,12 +703,18 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-premium",
-    version: "premium-v1"
+    version: "premium-v1-postgres"
   })
 })
 
-app.get("/api/health", (_req, res) => {
-  res.json({ ok: true })
+app.get("/api/health", async (_req, res) => {
+  try {
+    await pool.query("SELECT 1")
+    res.json({ ok: true })
+  } catch (error) {
+    console.error("HEALTH ERROR:", error)
+    res.status(500).json({ ok: false, error: error.message })
+  }
 })
 
 app.get("/favicon.ico", (_req, res) => {
@@ -676,7 +731,7 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
     }
 
     const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-    if (webhookId && isWebhookProcessed(webhookId)) {
+    if (webhookId && await isWebhookProcessed(webhookId)) {
       console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
       return res.status(200).json({
         ok: true,
@@ -713,7 +768,7 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
     }
 
     let processedCount = 0
-    const created = []
+    const createdRecords = []
 
     for (const item of order.line_items || []) {
       const found = findPremiumConfigFromLineItem(item)
@@ -730,7 +785,7 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
       const quantity = Number(item.quantity || 1)
 
       for (let i = 0; i < quantity; i += 1) {
-        const record = createPremiumRequest({
+        const record = await createPremiumRequest({
           orderId: String(order.id),
           lineItemId: String(item.id),
           productId: found.productId,
@@ -739,35 +794,35 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
           unitIndex: i
         })
 
-        if (!record.access_email_sent && record.email) {
-          try {
-            await sendAccessEmail(record)
-          } catch (emailError) {
-            console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
-          }
-        }
-
-        created.push({
-          id: record.id,
-          orderId: record.order_id,
-          productId: record.product_id,
-          productName: record.product_name,
-          formUrl: record.form_url
-        })
-
+        createdRecords.push(record)
         processedCount += 1
       }
     }
 
     if (webhookId) {
-      markWebhookProcessed(webhookId)
+      await markWebhookProcessed(webhookId)
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       ok: true,
       processedCount,
-      created
+      created: createdRecords.map((record) => ({
+        id: record.id,
+        orderId: record.order_id,
+        productId: record.product_id,
+        productName: record.product_name,
+        formUrl: record.form_url
+      }))
     })
+
+    for (const record of createdRecords) {
+      if (!record.email) continue
+      try {
+        await sendAccessEmail(record)
+      } catch (emailError) {
+        console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
+      }
+    }
   } catch (error) {
     console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", error)
     return res.status(500).json({
@@ -791,38 +846,44 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       })
     }
 
-    const requestRecord = findRequestForSubmittedForm(payload)
+    const requestRecord = await findRequestForSubmittedForm(payload)
 
-    db.prepare(`
+    await pool.query(
+      `
       INSERT INTO premium_form_submissions (
         id, premium_request_id, order_id, email, product_name, payload_json, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      payload.submissionId,
-      requestRecord?.id || null,
-      payload.orderId || null,
-      payload.email || null,
-      payload.productName || requestRecord?.product_name || null,
-      JSON.stringify(payload),
-      new Date().toISOString()
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `,
+      [
+        payload.submissionId,
+        requestRecord?.id || null,
+        payload.orderId || null,
+        payload.email || null,
+        payload.productName || requestRecord?.product_name || null,
+        JSON.stringify(payload),
+        new Date().toISOString()
+      ]
     )
 
     if (requestRecord?.id) {
-      db.prepare(`
+      await pool.query(
+        `
         UPDATE premium_requests
         SET
-          status = ?,
+          status = $1,
           customer_name = CASE
-            WHEN customer_name IS NULL OR customer_name = '' THEN ?
+            WHEN customer_name IS NULL OR customer_name = '' THEN $2
             ELSE customer_name
           END,
-          form_submitted_at = ?
-        WHERE id = ?
-      `).run(
-        "form_submitted",
-        payload.customerName || "",
-        new Date().toISOString(),
-        requestRecord.id
+          form_submitted_at = $3
+        WHERE id = $4
+        `,
+        [
+          "form_submitted",
+          payload.customerName || "",
+          new Date().toISOString(),
+          requestRecord.id
+        ]
       )
     }
 
@@ -857,8 +918,19 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 
 const PORT = process.env.PORT || 8080
 
-console.log("PORT FINAL:", PORT)
+async function startServer() {
+  try {
+    console.log("PORT FINAL:", PORT)
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("premium server running on port", PORT)
-})
+    await initDb()
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("premium server running on port", PORT)
+    })
+  } catch (error) {
+    console.error("SERVER START ERROR:", error)
+    process.exit(1)
+  }
+}
+
+startServer()
