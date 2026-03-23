@@ -218,9 +218,9 @@ Un abrazo de luz.
 
 // ================== PORT (FIX RAILWAY) ==================
 
-console.log("PORT ENV:", process.env.PORT)
+const PORT = process.env.PORT || 8080
 
-const PORT = process.env.PORT
+console.log("PORT FINAL:", PORT)
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("premium server running on port", PORT)
