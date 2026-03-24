@@ -16,10 +16,6 @@ const pool = new Pool({
     : { rejectUnauthorized: false }
 })
 
-app.use(cors())
-app.use("/api/premium/shopify/order-paid", express.raw({ type: "application/json" }))
-app.use(express.json())
-
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
 const PREMIUM_PRODUCTS = {
@@ -39,6 +35,25 @@ const PREMIUM_PRODUCTS = {
     formUrl: "https://forms.gle/AyAm7JACnZCoXNsy7"
   }
 }
+
+// ==============================
+// MIDDLEWARES
+// ==============================
+
+app.use(cors())
+
+app.get("/favicon.ico", (_req, res) => {
+  res.status(204).end()
+})
+
+// IMPORTANTE:
+// Excluimos el webhook premium del express.json para no romper el body raw de Shopify
+app.use((req, res, next) => {
+  if (req.path === "/api/premium/shopify/order-paid") {
+    return next()
+  }
+  return express.json()(req, res, next)
+})
 
 // ==============================
 // DB INIT
@@ -717,120 +732,120 @@ app.get("/api/health", async (_req, res) => {
   }
 })
 
-app.get("/favicon.ico", (_req, res) => {
-  res.status(204).end()
-})
+app.post(
+  "/api/premium/shopify/order-paid",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
 
-app.post("/api/premium/shopify/order-paid", async (req, res) => {
-  try {
-    console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
+      if (!verifyShopify(req)) {
+        console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
+        return res.status(401).send("invalid")
+      }
 
-    if (!verifyShopify(req)) {
-      console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
-      return res.status(401).send("invalid")
-    }
+      const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+      if (webhookId && await isWebhookProcessed(webhookId)) {
+        console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
+        return res.status(200).json({
+          ok: true,
+          duplicate: true
+        })
+      }
 
-    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-    if (webhookId && await isWebhookProcessed(webhookId)) {
-      console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
-      return res.status(200).json({
+      const order = JSON.parse(req.body.toString("utf8"))
+
+      const email = String(order.email || order.contact_email || "").trim()
+      const customerName = String(
+        order?.customer?.first_name ||
+        order?.billing_address?.first_name ||
+        ""
+      ).trim()
+
+      const financialStatus = String(order.financial_status || "").toLowerCase()
+
+      console.log("PREMIUM ORDER INFO:", {
+        orderId: order.id,
+        orderName: order.name,
+        email,
+        financialStatus,
+        itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
+      })
+
+      if (financialStatus !== "paid") {
+        console.log("⛔ Pedido premium ignorado por financial_status:", financialStatus)
+        return res.status(200).json({
+          ok: true,
+          skipped: true,
+          reason: "order_not_paid"
+        })
+      }
+
+      let processedCount = 0
+      const createdRecords = []
+
+      for (const item of order.line_items || []) {
+        const found = findPremiumConfigFromLineItem(item)
+
+        if (!found || !found.config) {
+          console.log("Producto premium no configurado:", {
+            title: item.title,
+            product_id: item.product_id,
+            variant_id: item.variant_id
+          })
+          continue
+        }
+
+        const quantity = Number(item.quantity || 1)
+
+        for (let i = 0; i < quantity; i += 1) {
+          const record = await createPremiumRequest({
+            orderId: String(order.id),
+            lineItemId: String(item.id),
+            productId: found.productId,
+            email,
+            customerName,
+            unitIndex: i
+          })
+
+          createdRecords.push(record)
+          processedCount += 1
+        }
+      }
+
+      if (webhookId) {
+        await markWebhookProcessed(webhookId)
+      }
+
+      res.status(200).json({
         ok: true,
-        duplicate: true
+        processedCount,
+        created: createdRecords.map((record) => ({
+          id: record.id,
+          orderId: record.order_id,
+          productId: record.product_id,
+          productName: record.product_name,
+          formUrl: record.form_url
+        }))
+      })
+
+      for (const record of createdRecords) {
+        if (!record.email) continue
+        try {
+          await sendAccessEmail(record)
+        } catch (emailError) {
+          console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
+        }
+      }
+    } catch (error) {
+      console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", error)
+      return res.status(500).json({
+        ok: false,
+        error: error.message
       })
     }
-
-    const order = JSON.parse(req.body.toString("utf8"))
-
-    const email = String(order.email || order.contact_email || "").trim()
-    const customerName = String(
-      order?.customer?.first_name ||
-      order?.billing_address?.first_name ||
-      ""
-    ).trim()
-
-    const financialStatus = String(order.financial_status || "").toLowerCase()
-
-    console.log("PREMIUM ORDER INFO:", {
-      orderId: order.id,
-      orderName: order.name,
-      email,
-      financialStatus,
-      itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
-    })
-
-    if (financialStatus !== "paid") {
-      console.log("⛔ Pedido premium ignorado por financial_status:", financialStatus)
-      return res.status(200).json({
-        ok: true,
-        skipped: true,
-        reason: "order_not_paid"
-      })
-    }
-
-    let processedCount = 0
-    const createdRecords = []
-
-    for (const item of order.line_items || []) {
-      const found = findPremiumConfigFromLineItem(item)
-
-      if (!found || !found.config) {
-        console.log("Producto premium no configurado:", {
-          title: item.title,
-          product_id: item.product_id,
-          variant_id: item.variant_id
-        })
-        continue
-      }
-
-      const quantity = Number(item.quantity || 1)
-
-      for (let i = 0; i < quantity; i += 1) {
-        const record = await createPremiumRequest({
-          orderId: String(order.id),
-          lineItemId: String(item.id),
-          productId: found.productId,
-          email,
-          customerName,
-          unitIndex: i
-        })
-
-        createdRecords.push(record)
-        processedCount += 1
-      }
-    }
-
-    if (webhookId) {
-      await markWebhookProcessed(webhookId)
-    }
-
-    res.status(200).json({
-      ok: true,
-      processedCount,
-      created: createdRecords.map((record) => ({
-        id: record.id,
-        orderId: record.order_id,
-        productId: record.product_id,
-        productName: record.product_name,
-        formUrl: record.form_url
-      }))
-    })
-
-    for (const record of createdRecords) {
-      if (!record.email) continue
-      try {
-        await sendAccessEmail(record)
-      } catch (emailError) {
-        console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
-      }
-    }
-  } catch (error) {
-    console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", error)
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
   }
-})
+)
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
@@ -933,4 +948,33 @@ async function startServer() {
   }
 }
 
-startServer()
+startServer()  server premium actual, corrigemelo y listo para pegar entero if needed. One primary issue: the final user pasted code and asks "corrigemelo y listo para pegar entero". Need provide corrected full code. Need identify issues. They likely already applied raw route but 502 persists maybe because deploy logs don't show request logs. Maybe issue is middleware app.use((req,res,next)=> express.json()(req,res,next)) weird excluded route omitted in pasted current code. In current code, they removed global exclusion and just have express.raw in route. But they never call app.use(express.json()) at all! For form-submitted route, req.body undefined maybe but not relevant. 502 on webhook though. Potential issue maybe middleware ordering with no body parser not issue because route has raw. Why no deploy logs of request? maybe deploy logs only show startup, app logs at runtime not there? Yet should. HTTP logs show 502 indicates thrown before response? Could be from platform because app closes connection? Maybe because body too large? But likely from verifyShopify/JSON.parse. But route should catch and log. Since no logs of webhook, perhaps issue is not deployed after code change? Yet pasted code maybe not committed. But user asks correct code full. Need improve logging and use express.json for non-webhook routes. Also add route-specific raw parser and add request logging maybe enough. Need maybe 502 due express route double-reading? I think if no global app.use(express.json()) then /api/premium/form-submitted won't parse, but webhook route okay.
+
+Could also be because Shopify webhook content type may include charset: application/json; charset=utf-8. express.raw({type:"application/json"}) handles via type-is should match application/json with suffix params yes. okay.
+
+Need perhaps use app.use("/api/premium/form-submitted", express.json()) or global after webhook route definitions. Better clean code:
+app.use(cors())
+app.get favicon
+app.use(express.json({limit:"2mb"})) after raw route? Actually if route-specific raw defined in app.post before app.use(express.json()), route matched first and body parser raw runs. Then app.use(express.json()) for following routes. So define webhook route before express.json middleware? In Express, middleware order matters, but route path exact on first route. If a later app.use(express.json()) exists earlier in stack, it will consume body. So easiest define webhook route before app.use(express.json()) or use app.use skip condition. Let's provide robust version:
+- app.use(cors())
+- favicon route
+- define helpers, then webhook route with express.raw route-level
+- then app.use(express.json({limit:"2mb"}))
+- then form-submitted route
+Could still access helper definitions prior.
+
+Need maybe add pool.on('error') logging.
+Could add more detailed logs inside webhook catch.
+Potential 502 due `res.status(200).json(...)` then asynchronous email sending throwing causing unhandled rejection after response? No because inside for loop after res sent but within same try, errors caught locally. fine.
+
+Need maybe use await req.body? no.
+
+Let's craft full corrected code with:
+- express.json only after webhook route
+- extensive logs
+- safer verifyShopify with base64 decode? Actually Buffer.from(hmac,"utf8") okay compare ascii bytes; better compare strings? timingSafeEqual on ascii okay if equal length. fine.
+- Add `/api/health` and root.
+- maybe include `app.disable("x-powered-by")`
+
+Need ensure normalizeFormPayload can handle undefined body by express.json. Fine.
+Let's produce complete code and mention paste whole file and redeploy. No citations needed.
