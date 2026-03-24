@@ -22,6 +22,14 @@ pool.on("error", (error) => {
   console.error("POSTGRES POOL ERROR:", error)
 })
 
+process.on("uncaughtException", (error) => {
+  console.error("UNCAUGHT EXCEPTION:", error)
+})
+
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason)
+})
+
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
 const PREMIUM_PRODUCTS = {
@@ -103,6 +111,24 @@ async function initDb() {
 // ==============================
 // HELPERS
 // ==============================
+
+function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+
+    req.on("data", (chunk) => {
+      chunks.push(chunk)
+    })
+
+    req.on("end", () => {
+      resolve(Buffer.concat(chunks))
+    })
+
+    req.on("error", (error) => {
+      reject(error)
+    })
+  })
+}
 
 function verifyShopify(req) {
   const hmac = req.get("X-Shopify-Hmac-Sha256")
@@ -747,170 +773,168 @@ app.get("/api/health", async (_req, res) => {
 
 // ==============================
 // WEBHOOK SHOPIFY
-// IMPORTANTE: esta ruta va con express.raw
 // ==============================
 
-app.post(
-  "/api/premium/shopify/order-paid",
-  express.raw({ type: "application/json", limit: "2mb" }),
-  async (req, res) => {
-    try {
-      console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
-      console.log("Headers:", {
-        webhookId: req.get("X-Shopify-Webhook-Id") || "",
-        topic: req.get("X-Shopify-Topic") || "",
-        shopDomain: req.get("X-Shopify-Shop-Domain") || "",
-        contentType: req.get("content-type") || ""
-      })
+app.post("/api/premium/shopify/order-paid", async (req, res) => {
+  try {
+    console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
+    console.log("Headers:", {
+      webhookId: req.get("X-Shopify-Webhook-Id") || "",
+      topic: req.get("X-Shopify-Topic") || "",
+      shopDomain: req.get("X-Shopify-Shop-Domain") || "",
+      contentType: req.get("content-type") || ""
+    })
 
-      if (!verifyShopify(req)) {
-        console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
-        return res.status(401).send("invalid")
-      }
+    const rawBody = await readRawBody(req)
 
-      const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+    console.log("PREMIUM WEBHOOK RAW BODY LENGTH:", rawBody.length)
 
-      if (webhookId && (await isWebhookProcessed(webhookId))) {
-        console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
-        return res.status(200).json({
-          ok: true,
-          duplicate: true
-        })
-      }
+    req.body = rawBody
 
-      const rawBody = req.body.toString("utf8")
-      console.log("PREMIUM WEBHOOK BODY LENGTH:", rawBody.length)
+    if (!verifyShopify(req)) {
+      console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
+      return res.status(401).send("invalid")
+    }
 
-      const order = JSON.parse(rawBody)
+    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
 
-      const email = String(order.email || order.contact_email || "").trim()
-      const customerName = String(
-        order?.customer?.first_name ||
-          order?.billing_address?.first_name ||
-          ""
-      ).trim()
-
-      const financialStatus = String(order.financial_status || "").toLowerCase()
-
-      console.log("PREMIUM ORDER INFO:", {
-        orderId: order.id,
-        orderName: order.name,
-        email,
-        customerName,
-        financialStatus,
-        itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
-      })
-
-      if (financialStatus !== "paid") {
-        console.log("PREMIUM PEDIDO IGNORADO POR financial_status:", financialStatus)
-        return res.status(200).json({
-          ok: true,
-          skipped: true,
-          reason: "order_not_paid"
-        })
-      }
-
-      let processedCount = 0
-      const createdRecords = []
-
-      for (const item of order.line_items || []) {
-        console.log("LINE ITEM RECIBIDO:", {
-          id: item?.id,
-          title: item?.title,
-          product_id: item?.product_id,
-          variant_id: item?.variant_id,
-          quantity: item?.quantity
-        })
-
-        const found = findPremiumConfigFromLineItem(item)
-
-        if (!found || !found.config) {
-          console.log("PRODUCTO PREMIUM NO CONFIGURADO:", {
-            title: item?.title,
-            product_id: item?.product_id,
-            variant_id: item?.variant_id
-          })
-          continue
-        }
-
-        console.log("PRODUCTO PREMIUM MATCH:", {
-          matchedBy: found.matchedBy,
-          productId: found.productId,
-          name: found.config.name
-        })
-
-        const quantity = Number(item.quantity || 1)
-
-        for (let i = 0; i < quantity; i += 1) {
-          const record = await createPremiumRequest({
-            orderId: String(order.id),
-            lineItemId: String(item.id),
-            productId: found.productId,
-            email,
-            customerName,
-            unitIndex: i
-          })
-
-          console.log("PREMIUM REQUEST OK:", {
-            id: record.id,
-            email: record.email,
-            productId: record.product_id
-          })
-
-          createdRecords.push(record)
-          processedCount += 1
-        }
-      }
-
-      if (webhookId) {
-        await markWebhookProcessed(webhookId)
-        console.log("PREMIUM WEBHOOK MARCADO COMO PROCESADO:", webhookId)
-      }
-
-      res.status(200).json({
+    if (webhookId && (await isWebhookProcessed(webhookId))) {
+      console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
+      return res.status(200).json({
         ok: true,
-        processedCount,
-        created: createdRecords.map((record) => ({
-          id: record.id,
-          orderId: record.order_id,
-          productId: record.product_id,
-          productName: record.product_name,
-          formUrl: record.form_url
-        }))
-      })
-
-      for (const record of createdRecords) {
-        if (!record.email) {
-          console.error("ACCESS EMAIL SKIPPED: falta email en record", record.id)
-          continue
-        }
-
-        try {
-          await sendAccessEmail(record)
-        } catch (emailError) {
-          console.error("ACCESS PREMIUM EMAIL ERROR:", {
-            recordId: record.id,
-            email: record.email,
-            error: emailError?.message || emailError
-          })
-        }
-      }
-    } catch (error) {
-      console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", {
-        message: error?.message,
-        stack: error?.stack
-      })
-
-      return res.status(500).json({
-        ok: false,
-        error: error.message
+        duplicate: true
       })
     }
+
+    const order = JSON.parse(rawBody.toString("utf8"))
+
+    const email = String(order.email || order.contact_email || "").trim()
+    const customerName = String(
+      order?.customer?.first_name ||
+      order?.billing_address?.first_name ||
+      ""
+    ).trim()
+
+    const financialStatus = String(order.financial_status || "").toLowerCase()
+
+    console.log("PREMIUM ORDER INFO:", {
+      orderId: order.id,
+      orderName: order.name,
+      email,
+      customerName,
+      financialStatus,
+      itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
+    })
+
+    if (financialStatus !== "paid") {
+      console.log("PREMIUM PEDIDO IGNORADO POR financial_status:", financialStatus)
+      return res.status(200).json({
+        ok: true,
+        skipped: true,
+        reason: "order_not_paid"
+      })
+    }
+
+    let processedCount = 0
+    const createdRecords = []
+
+    for (const item of order.line_items || []) {
+      console.log("LINE ITEM RECIBIDO:", {
+        id: item?.id,
+        title: item?.title,
+        product_id: item?.product_id,
+        variant_id: item?.variant_id,
+        quantity: item?.quantity
+      })
+
+      const found = findPremiumConfigFromLineItem(item)
+
+      if (!found || !found.config) {
+        console.log("PRODUCTO PREMIUM NO CONFIGURADO:", {
+          title: item?.title,
+          product_id: item?.product_id,
+          variant_id: item?.variant_id
+        })
+        continue
+      }
+
+      console.log("PRODUCTO PREMIUM MATCH:", {
+        matchedBy: found.matchedBy,
+        productId: found.productId,
+        name: found.config.name
+      })
+
+      const quantity = Number(item.quantity || 1)
+
+      for (let i = 0; i < quantity; i += 1) {
+        const record = await createPremiumRequest({
+          orderId: String(order.id),
+          lineItemId: String(item.id),
+          productId: found.productId,
+          email,
+          customerName,
+          unitIndex: i
+        })
+
+        console.log("PREMIUM REQUEST OK:", {
+          id: record.id,
+          email: record.email,
+          productId: record.product_id
+        })
+
+        createdRecords.push(record)
+        processedCount += 1
+      }
+    }
+
+    if (webhookId) {
+      await markWebhookProcessed(webhookId)
+      console.log("PREMIUM WEBHOOK MARCADO COMO PROCESADO:", webhookId)
+    }
+
+    res.status(200).json({
+      ok: true,
+      processedCount,
+      created: createdRecords.map((record) => ({
+        id: record.id,
+        orderId: record.order_id,
+        productId: record.product_id,
+        productName: record.product_name,
+        formUrl: record.form_url
+      }))
+    })
+
+    for (const record of createdRecords) {
+      if (!record.email) {
+        console.error("ACCESS EMAIL SKIPPED: falta email en record", record.id)
+        continue
+      }
+
+      try {
+        await sendAccessEmail(record)
+      } catch (emailError) {
+        console.error("ACCESS PREMIUM EMAIL ERROR:", {
+          recordId: record.id,
+          email: record.email,
+          error: emailError?.message || emailError
+        })
+      }
+    }
+  } catch (error) {
+    console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", {
+      message: error?.message,
+      stack: error?.stack
+    })
+
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
   }
-)
+})
 
 // ==============================
-// JSON BODY PARSER PARA EL RESTO
+// JSON PARSER PARA EL RESTO
 // ==============================
 
 app.use(express.json({ limit: "2mb" }))
