@@ -205,14 +205,14 @@ async function createPremiumRequest({
   if (existing) {
     if (email && !existing.email) {
       await pool.query(
-        `UPDATE premium_requests SET email = $1 WHERE id = $2`,
+        "UPDATE premium_requests SET email = $1 WHERE id = $2",
         [String(email), id]
       )
     }
 
     if (customerName && !existing.customer_name) {
       await pool.query(
-        `UPDATE premium_requests SET customer_name = $1 WHERE id = $2`,
+        "UPDATE premium_requests SET customer_name = $1 WHERE id = $2",
         [String(customerName), id]
       )
     }
