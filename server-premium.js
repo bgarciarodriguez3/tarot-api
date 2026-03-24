@@ -7,9 +7,12 @@ const { Resend } = require("resend")
 const { Pool } = require("pg")
 
 const app = express()
-app.disable("x-powered-by")
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+app.use(cors())
+app.use("/api/premium/shopify/order-paid", express.raw({ type: "application/json" }))
+app.use(express.json())
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,14 +23,6 @@ const pool = new Pool({
 
 pool.on("error", (error) => {
   console.error("POSTGRES POOL ERROR:", error)
-})
-
-process.on("uncaughtException", (error) => {
-  console.error("UNCAUGHT EXCEPTION:", error)
-})
-
-process.on("unhandledRejection", (reason) => {
-  console.error("UNHANDLED REJECTION:", reason)
 })
 
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
@@ -51,16 +46,6 @@ const PREMIUM_PRODUCTS = {
 }
 
 // ==============================
-// MIDDLEWARES BÁSICOS
-// ==============================
-
-app.use(cors())
-
-app.get("/favicon.ico", (_req, res) => {
-  res.status(204).end()
-})
-
-// ==============================
 // DB INIT
 // ==============================
 
@@ -77,10 +62,10 @@ async function initDb() {
       customer_name TEXT,
       email TEXT,
       status TEXT,
-      access_email_sent INTEGER DEFAULT 0,
-      received_email_sent INTEGER DEFAULT 0,
-      internal_email_sent INTEGER DEFAULT 0,
-      created_at TEXT,
+      access_email_sent INTEGER NOT NULL DEFAULT 0,
+      received_email_sent INTEGER NOT NULL DEFAULT 0,
+      internal_email_sent INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
       form_submitted_at TEXT,
       completed_at TEXT
     );
@@ -112,24 +97,6 @@ async function initDb() {
 // HELPERS
 // ==============================
 
-function readRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = []
-
-    req.on("data", (chunk) => {
-      chunks.push(chunk)
-    })
-
-    req.on("end", () => {
-      resolve(Buffer.concat(chunks))
-    })
-
-    req.on("error", (error) => {
-      reject(error)
-    })
-  })
-}
-
 function verifyShopify(req) {
   const hmac = req.get("X-Shopify-Hmac-Sha256")
 
@@ -145,29 +112,13 @@ function verifyShopify(req) {
 
   const secret = process.env.SHOPIFY_WEBHOOK_SECRET || ""
 
-  if (!secret) {
-    console.error("SHOPIFY HMAC ERROR: falta SHOPIFY_WEBHOOK_SECRET")
-    return false
-  }
-
   const digest = crypto
     .createHmac("sha256", secret)
     .update(req.body)
     .digest("base64")
 
   try {
-    const hmacBuffer = Buffer.from(hmac, "utf8")
-    const digestBuffer = Buffer.from(digest, "utf8")
-
-    if (hmacBuffer.length !== digestBuffer.length) {
-      console.error("SHOPIFY HMAC ERROR: length mismatch", {
-        hmacLength: hmacBuffer.length,
-        digestLength: digestBuffer.length
-      })
-      return false
-    }
-
-    return crypto.timingSafeEqual(hmacBuffer, digestBuffer)
+    return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(digest))
   } catch (error) {
     console.error("SHOPIFY HMAC ERROR:", error)
     return false
@@ -189,38 +140,25 @@ function findPremiumConfigFromLineItem(item) {
   const variantId = item?.variant_id ? String(item.variant_id) : null
 
   if (productId && PREMIUM_PRODUCTS[productId]) {
-    return {
-      productId,
-      config: PREMIUM_PRODUCTS[productId],
-      matchedBy: "product_id"
-    }
+    return { productId, config: PREMIUM_PRODUCTS[productId], matchedBy: "product_id" }
   }
 
   if (variantId && PREMIUM_PRODUCTS[variantId]) {
-    return {
-      productId: variantId,
-      config: PREMIUM_PRODUCTS[variantId],
-      matchedBy: "variant_id"
-    }
+    return { productId: variantId, config: PREMIUM_PRODUCTS[variantId], matchedBy: "variant_id" }
   }
 
   return null
 }
 
 async function isWebhookProcessed(webhookId) {
-  if (!webhookId) return false
-
   const result = await pool.query(
     "SELECT webhook_id FROM premium_processed_webhooks WHERE webhook_id = $1 LIMIT 1",
     [String(webhookId)]
   )
-
   return result.rowCount > 0
 }
 
 async function markWebhookProcessed(webhookId) {
-  if (!webhookId) return
-
   await pool.query(
     `
     INSERT INTO premium_processed_webhooks (webhook_id, created_at)
@@ -274,62 +212,116 @@ async function createPremiumRequest({
     return await getPremiumRequestById(id)
   }
 
-  const record = {
-    id,
-    order_id: String(orderId || ""),
-    line_item_id: String(lineItemId || ""),
-    product_id: String(productId || ""),
-    product_name: config.name,
-    premium_type: config.type,
-    form_url: config.formUrl,
-    customer_name: String(customerName || ""),
-    email: String(email || ""),
-    status: "pending_form",
-    access_email_sent: 0,
-    received_email_sent: 0,
-    internal_email_sent: 0,
-    created_at: new Date().toISOString(),
-    form_submitted_at: null,
-    completed_at: null
-  }
-
   await pool.query(
     `
     INSERT INTO premium_requests (
       id, order_id, line_item_id, product_id, product_name, premium_type,
-      form_url, customer_name, email, status, access_email_sent,
-      received_email_sent, internal_email_sent, created_at, form_submitted_at, completed_at
+      form_url, customer_name, email, status,
+      access_email_sent, received_email_sent, internal_email_sent,
+      created_at, form_submitted_at, completed_at
     ) VALUES (
       $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11,
-      $12, $13, $14, $15, $16
+      $7, $8, $9, $10,
+      $11, $12, $13,
+      $14, $15, $16
     )
     `,
     [
-      record.id,
-      record.order_id,
-      record.line_item_id,
-      record.product_id,
-      record.product_name,
-      record.premium_type,
-      record.form_url,
-      record.customer_name,
-      record.email,
-      record.status,
-      record.access_email_sent,
-      record.received_email_sent,
-      record.internal_email_sent,
-      record.created_at,
-      record.form_submitted_at,
-      record.completed_at
+      id,
+      String(orderId || ""),
+      String(lineItemId || ""),
+      String(productId || ""),
+      config.name,
+      config.type,
+      config.formUrl,
+      String(customerName || ""),
+      String(email || ""),
+      "pending_form",
+      0,
+      0,
+      0,
+      new Date().toISOString(),
+      null,
+      null
     ]
   )
 
   return await getPremiumRequestById(id)
 }
 
+function normalizeFormPayload(body = {}) {
+  return {
+    submissionId:
+      body.submissionId ||
+      body.responseId ||
+      body.formResponseId ||
+      crypto.randomUUID(),
+
+    orderId: String(body.orderId || body.shopifyOrderId || "").trim(),
+    email: String(body.email || "").trim(),
+    customerName: String(body.customerName || body.name || "").trim(),
+    productId: String(body.productId || "").trim(),
+    productName: String(
+      body.productName ||
+      body.productTitle ||
+      body.tipo ||
+      body.tipoConsulta ||
+      ""
+    ).trim(),
+    submittedAt: body.submittedAt || new Date().toISOString(),
+    answers: body.answers || {},
+    rawForm: body.rawForm || body
+  }
+}
+
+async function findRequestForSubmittedForm(payload) {
+  if (payload.orderId && payload.email) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE order_id = $1 AND email = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [payload.orderId, payload.email]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  if (payload.email && payload.productId) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE email = $1 AND product_id = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [payload.email, payload.productId]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  if (payload.email && payload.productName) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE email = $1 AND product_name = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [payload.email, payload.productName]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  return null
+}
+
 // ==============================
-// EMAIL TEMPLATES
+// EMAILS
 // ==============================
 
 function buildAccessEmailText(record) {
@@ -358,7 +350,6 @@ function buildAccessEmailHtml(record) {
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
         <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
           <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
-
             <div style="text-align:center;margin-bottom:22px;">
               <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
                 Tus mensajes cósmicos ya están listos
@@ -377,9 +368,7 @@ function buildAccessEmailHtml(record) {
 
             <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
 
-            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
-              Querida alma,
-            </p>
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">Querida alma,</p>
 
             <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
               Tu portal de sabiduría personalizada ya está abierto.
@@ -414,25 +403,8 @@ function buildAccessEmailHtml(record) {
             </p>
 
             <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
-              <strong>Equipo de Expertos Premium El Tarot de La Rueda de la Fortuna</strong>
+              <strong>Equipo de Expertos Premium Tarot de La Rueda de la Fortuna</strong>
             </p>
-
-            <div style="text-align:center;margin:16px 0 10px;">
-              <img
-                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
-                alt="La Rueda de la Fortuna"
-                style="max-width:220px;width:100%;height:auto;display:inline-block;"
-              >
-            </div>
-
-            <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
-              📧 contactopremium@laruedadelafortuna.com
-            </p>
-
-            <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
-              🌐 www.laruedadelafortuna.com
-            </p>
-
           </div>
         </div>
       </div>
@@ -465,7 +437,6 @@ function buildClientConfirmationHtml({ customerName }) {
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
         <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
           <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
-
             <div style="text-align:center;margin-bottom:22px;">
               <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
                 Formulario recibido
@@ -513,23 +484,6 @@ function buildClientConfirmationHtml({ customerName }) {
             <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
               <strong>Equipo de Expertos Premium Tarot de La Rueda de la Fortuna</strong>
             </p>
-
-            <div style="text-align:center;margin:16px 0 10px;">
-              <img
-                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
-                alt="La Rueda de la Fortuna"
-                style="max-width:220px;width:100%;height:auto;display:inline-block;"
-              >
-            </div>
-
-            <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
-              📧 contactopremium@laruedadelafortuna.com
-            </p>
-
-            <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
-              🌐 www.laruedadelafortuna.com
-            </p>
-
           </div>
         </div>
       </div>
@@ -567,10 +521,6 @@ function buildInternalAlertHtml(payload) {
     </div>
   `
 }
-
-// ==============================
-// EMAIL SENDERS
-// ==============================
 
 async function sendAccessEmail(record) {
   if (!record.email) {
@@ -675,89 +625,14 @@ async function sendInternalAlertEmail(payload, requestRecord) {
 }
 
 // ==============================
-// FORM HELPERS
-// ==============================
-
-function normalizeFormPayload(body = {}) {
-  return {
-    submissionId:
-      body.submissionId ||
-      body.responseId ||
-      body.formResponseId ||
-      crypto.randomUUID(),
-
-    orderId: body.orderId || body.shopifyOrderId || "",
-    email: String(body.email || "").trim(),
-    customerName: String(body.customerName || body.name || "").trim(),
-    productId: String(body.productId || "").trim(),
-    productName: String(
-      body.productName ||
-      body.productTitle ||
-      body.tipo ||
-      body.tipoConsulta ||
-      ""
-    ).trim(),
-    submittedAt: body.submittedAt || new Date().toISOString(),
-    answers: body.answers || {},
-    rawForm: body.rawForm || body
-  }
-}
-
-async function findRequestForSubmittedForm(payload) {
-  if (payload.orderId && payload.email) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE order_id = $1 AND email = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.orderId), String(payload.email)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  if (payload.email && payload.productId) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE email = $1 AND product_id = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.email), String(payload.productId)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  if (payload.email && payload.productName) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE email = $1 AND product_name = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.email), String(payload.productName)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  return null
-}
-
-// ==============================
-// ROUTES PÚBLICAS
+// ROUTES
 // ==============================
 
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-premium",
-    version: "premium-v1-postgres"
+    version: "premium-postgres-v1"
   })
 })
 
@@ -771,25 +646,9 @@ app.get("/api/health", async (_req, res) => {
   }
 })
 
-// ==============================
-// WEBHOOK SHOPIFY
-// ==============================
-
 app.post("/api/premium/shopify/order-paid", async (req, res) => {
   try {
     console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
-    console.log("Headers:", {
-      webhookId: req.get("X-Shopify-Webhook-Id") || "",
-      topic: req.get("X-Shopify-Topic") || "",
-      shopDomain: req.get("X-Shopify-Shop-Domain") || "",
-      contentType: req.get("content-type") || ""
-    })
-
-    const rawBody = await readRawBody(req)
-
-    console.log("PREMIUM WEBHOOK RAW BODY LENGTH:", rawBody.length)
-
-    req.body = rawBody
 
     if (!verifyShopify(req)) {
       console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
@@ -797,8 +656,7 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
     }
 
     const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-
-    if (webhookId && (await isWebhookProcessed(webhookId))) {
+    if (webhookId && await isWebhookProcessed(webhookId)) {
       console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
       return res.status(200).json({
         ok: true,
@@ -806,7 +664,11 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
       })
     }
 
-    const order = JSON.parse(rawBody.toString("utf8"))
+    if (webhookId) {
+      await markWebhookProcessed(webhookId)
+    }
+
+    const order = JSON.parse(req.body.toString("utf8"))
 
     const email = String(order.email || order.contact_email || "").trim()
     const customerName = String(
@@ -821,13 +683,12 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
       orderId: order.id,
       orderName: order.name,
       email,
-      customerName,
       financialStatus,
       itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
     })
 
     if (financialStatus !== "paid") {
-      console.log("PREMIUM PEDIDO IGNORADO POR financial_status:", financialStatus)
+      console.log("⛔ Pedido premium ignorado por financial_status:", financialStatus)
       return res.status(200).json({
         ok: true,
         skipped: true,
@@ -836,33 +697,19 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
     }
 
     let processedCount = 0
-    const createdRecords = []
+    const created = []
 
     for (const item of order.line_items || []) {
-      console.log("LINE ITEM RECIBIDO:", {
-        id: item?.id,
-        title: item?.title,
-        product_id: item?.product_id,
-        variant_id: item?.variant_id,
-        quantity: item?.quantity
-      })
-
       const found = findPremiumConfigFromLineItem(item)
 
       if (!found || !found.config) {
-        console.log("PRODUCTO PREMIUM NO CONFIGURADO:", {
-          title: item?.title,
-          product_id: item?.product_id,
-          variant_id: item?.variant_id
+        console.log("Producto premium no configurado:", {
+          title: item.title,
+          product_id: item.product_id,
+          variant_id: item.variant_id
         })
         continue
       }
-
-      console.log("PRODUCTO PREMIUM MATCH:", {
-        matchedBy: found.matchedBy,
-        productId: found.productId,
-        name: found.config.name
-      })
 
       const quantity = Number(item.quantity || 1)
 
@@ -876,56 +723,32 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
           unitIndex: i
         })
 
-        console.log("PREMIUM REQUEST OK:", {
+        if (record.email && Number(record.access_email_sent) !== 1) {
+          try {
+            await sendAccessEmail(record)
+          } catch (emailError) {
+            console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
+          }
+        }
+
+        created.push({
           id: record.id,
-          email: record.email,
-          productId: record.product_id
+          productId: record.product_id,
+          productName: record.product_name,
+          formUrl: record.form_url
         })
 
-        createdRecords.push(record)
         processedCount += 1
       }
     }
 
-    if (webhookId) {
-      await markWebhookProcessed(webhookId)
-      console.log("PREMIUM WEBHOOK MARCADO COMO PROCESADO:", webhookId)
-    }
-
-    res.status(200).json({
+    return res.status(200).json({
       ok: true,
       processedCount,
-      created: createdRecords.map((record) => ({
-        id: record.id,
-        orderId: record.order_id,
-        productId: record.product_id,
-        productName: record.product_name,
-        formUrl: record.form_url
-      }))
+      created
     })
-
-    for (const record of createdRecords) {
-      if (!record.email) {
-        console.error("ACCESS EMAIL SKIPPED: falta email en record", record.id)
-        continue
-      }
-
-      try {
-        await sendAccessEmail(record)
-      } catch (emailError) {
-        console.error("ACCESS PREMIUM EMAIL ERROR:", {
-          recordId: record.id,
-          email: record.email,
-          error: emailError?.message || emailError
-        })
-      }
-    }
   } catch (error) {
-    console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", {
-      message: error?.message,
-      stack: error?.stack
-    })
-
+    console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", error)
     return res.status(500).json({
       ok: false,
       error: error.message
@@ -933,22 +756,12 @@ app.post("/api/premium/shopify/order-paid", async (req, res) => {
   }
 })
 
-// ==============================
-// JSON PARSER PARA EL RESTO
-// ==============================
-
-app.use(express.json({ limit: "2mb" }))
-
-// ==============================
-// FORM SUBMITTED
-// ==============================
-
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
-    const payload = normalizeFormPayload(req.body)
-
     console.log("=== PREMIUM FORM SUBMITTED ===")
-    console.log("BODY:", JSON.stringify(payload, null, 2))
+    console.log("BODY:", JSON.stringify(req.body, null, 2))
+
+    const payload = normalizeFormPayload(req.body)
 
     if (!payload.email) {
       return res.status(400).json({
@@ -964,6 +777,7 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       INSERT INTO premium_form_submissions (
         id, premium_request_id, order_id, email, product_name, payload_json, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (id) DO NOTHING
       `,
       [
         payload.submissionId,
@@ -1015,11 +829,7 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       matchedRequestId: requestRecord?.id || null
     })
   } catch (error) {
-    console.error("PREMIUM FORM SUBMITTED ERROR:", {
-      message: error?.message,
-      stack: error?.stack
-    })
-
+    console.error("PREMIUM FORM SUBMITTED ERROR:", error)
     return res.status(500).json({
       ok: false,
       error: error.message
@@ -1031,32 +841,14 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 // START SERVER
 // ==============================
 
-const PORT = process.env.PORT || 8080
+const PORT = Number(process.env.PORT) || 8080
 
 async function startServer() {
   try {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("Falta DATABASE_URL")
-    }
-
-    if (!process.env.RESEND_API_KEY) {
-      console.warn("WARN: falta RESEND_API_KEY")
-    }
-
-    if (!process.env.RESEND_FROM_EMAIL) {
-      console.warn("WARN: falta RESEND_FROM_EMAIL")
-    }
-
-    if (!process.env.SHOPIFY_WEBHOOK_SECRET) {
-      console.warn("WARN: falta SHOPIFY_WEBHOOK_SECRET")
-    }
-
-    console.log("PORT FINAL:", PORT)
-
     await initDb()
 
     app.listen(PORT, "0.0.0.0", () => {
-      console.log("premium server running on port", PORT)
+      console.log(`premium server running on port ${PORT}`)
     })
   } catch (error) {
     console.error("SERVER START ERROR:", error)
@@ -1064,4 +856,4 @@ async function startServer() {
   }
 }
 
-startServer();
+startServer()
