@@ -13,7 +13,7 @@ app.use(express.json({ limit: "2mb" }))
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// ✅ TU GOOGLE SCRIPT YA CONFIGURADO
+// ✅ TU GOOGLE SCRIPT
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2K07SGICgJZ0JzxbmMz3LMrTBnb3PN6MvXVyA88FWLiNXMaM-OCK__oA6bMRUC032/exec"
 
 // ==============================
@@ -46,21 +46,21 @@ async function initDb() {
 }
 
 // ==============================
-// DETECTAR TIPO
+// DETECTAR TIPO (FIJO Y ROBUSTO)
 // ==============================
 
 function detectPremiumType(text = "") {
   const t = text.toLowerCase()
 
-  if (t.includes("mentoria")) return "mentoria"
   if (t.includes("amor")) return "amor"
   if (t.includes("dinero")) return "dinero"
+  if (t.includes("mentoria")) return "mentoria"
 
-  return "general"
+  return "mentoria" // fallback seguro
 }
 
 // ==============================
-// FORMULARIOS DINÁMICOS 🔥
+// FORMULARIOS
 // ==============================
 
 function getFormUrl(type) {
@@ -72,76 +72,78 @@ function getFormUrl(type) {
 }
 
 // ==============================
-// BOTÓN PREMIUM 🔥
+// EMAIL PREMIUM (BOTÓN REAL)
 // ==============================
 
-function buildPremiumButton(url) {
+function buildEmail(formUrl) {
   return `
-  <div style="text-align:center;margin:50px 0;">
-    <a href="${url}" target="_blank"
-      style="
-        display:inline-block;
-        padding:22px 45px;
-        font-size:22px;
-        font-weight:900;
-        color:#ffffff;
-        text-decoration:none;
-        border-radius:999px;
-        background:linear-gradient(135deg,#6b46ff,#d4af37);
-        box-shadow:0 12px 35px rgba(0,0,0,0.4);
-      ">
-      🔮 COMPLETAR CONSULTA PREMIUM
-    </a>
-    <div style="margin-top:10px;font-size:13px;color:#888;">
-      Accede ahora para iniciar tu lectura personalizada
+    <div style="font-family:Arial;text-align:center;padding:30px;">
+      
+      <h1 style="font-size:28px;">Tu consulta premium 🔮</h1>
+
+      <p style="font-size:18px;">
+        Completa el formulario para iniciar tu lectura personalizada
+      </p>
+
+      <a href="${formUrl}" 
+         style="
+           display:inline-block;
+           margin-top:30px;
+           padding:22px 40px;
+           font-size:22px;
+           font-weight:900;
+           color:white;
+           text-decoration:none;
+           border-radius:999px;
+           background:linear-gradient(135deg,#6b46ff,#d4af37);
+           box-shadow:0 10px 40px rgba(0,0,0,0.4);
+         ">
+        👉 IR AL FORMULARIO
+      </a>
+
+      <p style="margin-top:20px;color:#666;">
+        Tiempo estimado: 24-48h
+      </p>
+
     </div>
-  </div>
   `
 }
 
 // ==============================
-// HEALTH
-// ==============================
-
-app.get("/", (_req, res) => {
-  res.send("premium vivo")
-})
-
-// ==============================
-// WEBHOOK FORMULARIO
+// ROUTE PRINCIPAL
 // ==============================
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
     const body = req.body
 
+    const premiumType = detectPremiumType(body.productName || "")
+
     const payload = {
       id: crypto.randomUUID(),
-      email: body.email || "",
-      orderId: body.orderId || "",
-      productName: body.productName || "",
-      premiumType: detectPremiumType(body.productName || ""),
-      createdAt: new Date().toISOString(),
-      raw: body
+      email: body.email,
+      orderId: body.orderId,
+      productName: body.productName,
+      premiumType: premiumType,
+      createdAt: new Date().toISOString()
     }
 
     if (!payload.email) {
       return res.status(400).json({ error: "missing email" })
     }
 
-    // 💾 GUARDAR DB
+    // 💾 DB
     await pool.query(
       `INSERT INTO premium_form_submissions
       (id, email, order_id, product_name, premium_type, payload_json, created_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-      ON CONFLICT DO NOTHING`,
+      VALUES ($1,$2,$3,$4,$5,$6,$7)`,
       [
         payload.id,
         payload.email,
         payload.orderId,
         payload.productName,
         payload.premiumType,
-        JSON.stringify(payload.raw),
+        JSON.stringify(payload),
         payload.createdAt
       ]
     )
@@ -155,36 +157,22 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       body: JSON.stringify(payload)
     })
 
-    // 📧 EMAIL DINÁMICO CON BOTÓN PREMIUM
-    const formUrl = getFormUrl(payload.premiumType)
+    // 📧 EMAIL
+    const formUrl = getFormUrl(premiumType)
 
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL,
       to: payload.email,
-      subject: "✨ Completa tu consulta premium",
-      html: `
-        <div style="font-family:Arial;text-align:center;padding:20px;">
-          <h2>Tu consulta premium está lista 🔮</h2>
-
-          <p>
-            Completa el formulario para comenzar tu lectura personalizada
-          </p>
-
-          ${buildPremiumButton(formUrl)}
-
-          <p style="margin-top:20px;color:#666;">
-            Tiempo estimado: 24-48h
-          </p>
-        </div>
-      `
+      subject: "🔮 Accede a tu consulta premium",
+      html: buildEmail(formUrl)
     })
 
-    console.log("TODO OK:", payload)
+    console.log("OK:", payload)
 
     res.json({ ok: true })
 
   } catch (err) {
-    console.error("ERROR:", err)
+    console.error(err)
     res.status(500).json({ error: err.message })
   }
 })
