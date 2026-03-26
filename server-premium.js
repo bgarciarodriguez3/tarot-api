@@ -4,27 +4,11 @@ const express = require("express")
 const cors = require("cors")
 const crypto = require("crypto")
 const { Pool } = require("pg")
+const fetch = require("node-fetch")
 
 const app = express()
 app.use(cors())
 app.use(express.json({ limit: "2mb" }))
-
-// ==============================
-// LOGS (CLAVE)
-// ==============================
-
-process.on("uncaughtException", (error) => {
-  console.error("UNCAUGHT EXCEPTION:", error)
-})
-
-process.on("unhandledRejection", (reason) => {
-  console.error("UNHANDLED REJECTION:", reason)
-})
-
-app.use((req, _res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`)
-  next()
-})
 
 // ==============================
 // DB
@@ -35,10 +19,6 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL?.includes("localhost")
     ? false
     : { rejectUnauthorized: false }
-})
-
-pool.on("error", (error) => {
-  console.error("POSTGRES ERROR:", error)
 })
 
 // ==============================
@@ -65,16 +45,8 @@ async function initDb() {
 // HELPERS
 // ==============================
 
-function normalizeText(value = "") {
-  return String(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-}
-
 function detectPremiumType(text = "") {
-  const t = normalizeText(text)
+  const t = text.toLowerCase()
 
   if (t.includes("mentoria")) return "mentoria"
   if (t.includes("amor")) return "amor"
@@ -84,32 +56,35 @@ function detectPremiumType(text = "") {
 }
 
 // ==============================
-// BOTÓN PREMIUM 🔥
+// BOTÓN PREMIUM (EMAIL)
 // ==============================
 
 function buildPremiumButton(url) {
   return `
-  <div style="text-align:center;margin:40px 0;">
+  <div style="text-align:center;margin:50px 0;">
     <a href="${url}" target="_blank"
       style="
         display:inline-block;
-        padding:18px 36px;
-        font-size:18px;
-        font-weight:700;
-        color:#fff;
+        padding:20px 40px;
+        font-size:20px;
+        font-weight:800;
+        color:#ffffff;
         text-decoration:none;
         border-radius:999px;
-        background:linear-gradient(135deg,#7b5cff,#c6a45a);
-        box-shadow:0 8px 25px rgba(123,92,255,0.4);
+        background:linear-gradient(135deg,#6b46ff,#d4af37);
+        box-shadow:0 10px 30px rgba(0,0,0,0.3);
       ">
-      ✨ ACCEDER A TU CONSULTA PREMIUM
+      ✨ COMPLETAR FORMULARIO PREMIUM
     </a>
+    <div style="margin-top:10px;font-size:13px;color:#777;">
+      Accede aquí para iniciar tu consulta personalizada
+    </div>
   </div>
   `
 }
 
 // ==============================
-// HEALTH CHECK (MUY IMPORTANTE)
+// HEALTH CHECK
 // ==============================
 
 app.get("/", (_req, res) => {
@@ -117,23 +92,19 @@ app.get("/", (_req, res) => {
 })
 
 // ==============================
-// WEBHOOK FORM
+// WEBHOOK FORMULARIO
 // ==============================
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
-    console.log("BODY:", req.body)
-
     const body = req.body
 
     const payload = {
-      id: body.submissionId || crypto.randomUUID(),
+      id: crypto.randomUUID(),
       email: body.email || "",
       orderId: body.orderId || "",
       productName: body.productName || "",
-      premiumType: detectPremiumType(
-        body.premiumType || body.productName || ""
-      ),
+      premiumType: detectPremiumType(body.productName || ""),
       createdAt: new Date().toISOString(),
       raw: body
     }
@@ -159,21 +130,27 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       ]
     )
 
-    // LOG CLARO 🔥
-    console.log("FORM GUARDADO:", payload.email, payload.premiumType)
+    // 🔥 ENVIAR A GOOGLE SHEETS
+    await fetch(process.env.GOOGLE_SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
 
-    // 👉 AQUÍ LUEGO PODEMOS METER EMAIL AUTOMÁTICO
+    console.log("FORM GUARDADO Y ENVIADO:", payload)
 
     res.json({ ok: true })
 
   } catch (err) {
-    console.error("ERROR FORM:", err)
+    console.error("ERROR:", err)
     res.status(500).json({ error: err.message })
   }
 })
 
 // ==============================
-// START SERVER (IMPORTANTE)
+// START
 // ==============================
 
 const PORT = process.env.PORT || 8080
