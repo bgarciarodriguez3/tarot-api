@@ -10,7 +10,7 @@ app.use(cors())
 app.use(express.json({ limit: "2mb" }))
 
 // ==============================
-// LOGS (MUY IMPORTANTE)
+// LOGS (CLAVE)
 // ==============================
 
 process.on("uncaughtException", (error) => {
@@ -27,7 +27,7 @@ app.use((req, _res, next) => {
 })
 
 // ==============================
-// DATABASE
+// DB
 // ==============================
 
 const pool = new Pool({
@@ -37,8 +37,8 @@ const pool = new Pool({
     : { rejectUnauthorized: false }
 })
 
-pool.on("error", (err) => {
-  console.error("POSTGRES ERROR:", err)
+pool.on("error", (error) => {
+  console.error("POSTGRES ERROR:", error)
 })
 
 // ==============================
@@ -49,8 +49,8 @@ async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS premium_form_submissions (
       id TEXT PRIMARY KEY,
-      order_id TEXT,
       email TEXT,
+      order_id TEXT,
       product_name TEXT,
       premium_type TEXT,
       payload_json TEXT,
@@ -58,66 +58,128 @@ async function initDb() {
     );
   `)
 
-  console.log("Postgres tables ready")
+  console.log("DB READY")
 }
 
 // ==============================
-// 🔥 HEALTH CHECK (CLAVE PARA RAILWAY)
+// HELPERS
 // ==============================
 
-app.get("/", (req, res) => {
-  res.send("premium alive")
-})
+function normalizeText(value = "") {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+}
 
-app.get("/health", (req, res) => {
-  res.json({ ok: true })
+function detectPremiumType(text = "") {
+  const t = normalizeText(text)
+
+  if (t.includes("mentoria")) return "mentoria"
+  if (t.includes("amor")) return "amor"
+  if (t.includes("dinero")) return "dinero"
+
+  return "general"
+}
+
+// ==============================
+// BOTÓN PREMIUM 🔥
+// ==============================
+
+function buildPremiumButton(url) {
+  return `
+  <div style="text-align:center;margin:40px 0;">
+    <a href="${url}" target="_blank"
+      style="
+        display:inline-block;
+        padding:18px 36px;
+        font-size:18px;
+        font-weight:700;
+        color:#fff;
+        text-decoration:none;
+        border-radius:999px;
+        background:linear-gradient(135deg,#7b5cff,#c6a45a);
+        box-shadow:0 8px 25px rgba(123,92,255,0.4);
+      ">
+      ✨ ACCEDER A TU CONSULTA PREMIUM
+    </a>
+  </div>
+  `
+}
+
+// ==============================
+// HEALTH CHECK (MUY IMPORTANTE)
+// ==============================
+
+app.get("/", (_req, res) => {
+  res.send("premium vivo")
 })
 
 // ==============================
-// WEBHOOK
+// WEBHOOK FORM
 // ==============================
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
     console.log("BODY:", req.body)
 
-    const email = req.body.email
+    const body = req.body
 
-    if (!email) {
+    const payload = {
+      id: body.submissionId || crypto.randomUUID(),
+      email: body.email || "",
+      orderId: body.orderId || "",
+      productName: body.productName || "",
+      premiumType: detectPremiumType(
+        body.premiumType || body.productName || ""
+      ),
+      createdAt: new Date().toISOString(),
+      raw: body
+    }
+
+    if (!payload.email) {
       return res.status(400).json({ error: "missing email" })
     }
 
+    // GUARDAR EN DB
     await pool.query(
       `INSERT INTO premium_form_submissions
-      (id, order_id, email, product_name, premium_type, payload_json, created_at)
+      (id, email, order_id, product_name, premium_type, payload_json, created_at)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       ON CONFLICT DO NOTHING`,
       [
-        crypto.randomUUID(),
-        req.body.orderId || "",
-        email,
-        req.body.productName || "",
-        req.body.premiumType || "",
-        JSON.stringify(req.body),
-        new Date().toISOString()
+        payload.id,
+        payload.email,
+        payload.orderId,
+        payload.productName,
+        payload.premiumType,
+        JSON.stringify(payload.raw),
+        payload.createdAt
       ]
     )
 
+    // LOG CLARO 🔥
+    console.log("FORM GUARDADO:", payload.email, payload.premiumType)
+
+    // 👉 AQUÍ LUEGO PODEMOS METER EMAIL AUTOMÁTICO
+
     res.json({ ok: true })
+
   } catch (err) {
-    console.error("FORM ERROR:", err)
+    console.error("ERROR FORM:", err)
     res.status(500).json({ error: err.message })
   }
 })
 
 // ==============================
-// START (ESTO ES LO QUE ARREGLA TODO)
+// START SERVER (IMPORTANTE)
 // ==============================
 
 const PORT = process.env.PORT || 8080
 
 initDb().then(() => {
   app.listen(PORT, "0.0.0.0", () => {
-    console.log("premium server running on port", PORT)
+    console.log("🚀 premium server running on", PORT)
   })
 })
