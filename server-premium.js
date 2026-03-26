@@ -10,7 +10,7 @@ app.use(cors())
 app.use(express.json({ limit: "2mb" }))
 
 // ==============================
-// LOGS (CLAVE PARA DEBUG)
+// LOGS (MUY IMPORTANTE)
 // ==============================
 
 process.on("uncaughtException", (error) => {
@@ -27,7 +27,7 @@ app.use((req, _res, next) => {
 })
 
 // ==============================
-// DB
+// DATABASE
 // ==============================
 
 const pool = new Pool({
@@ -37,8 +37,8 @@ const pool = new Pool({
     : { rejectUnauthorized: false }
 })
 
-pool.on("error", (error) => {
-  console.error("POSTGRES ERROR:", error)
+pool.on("error", (err) => {
+  console.error("POSTGRES ERROR:", err)
 })
 
 // ==============================
@@ -58,20 +58,16 @@ async function initDb() {
     );
   `)
 
-  console.log("Postgres ready")
+  console.log("Postgres tables ready")
 }
 
 // ==============================
-// HEALTH CHECK (🔥 CLAVE)
+// 🔥 HEALTH CHECK (CLAVE PARA RAILWAY)
 // ==============================
 
 app.get("/", (req, res) => {
   res.send("premium alive")
 })
-
-// ==============================
-// TEST ENDPOINT
-// ==============================
 
 app.get("/health", (req, res) => {
   res.json({ ok: true })
@@ -85,7 +81,7 @@ app.post("/api/premium/form-submitted", async (req, res) => {
   try {
     console.log("BODY:", req.body)
 
-    const email = req.body.email || ""
+    const email = req.body.email
 
     if (!email) {
       return res.status(400).json({ error: "missing email" })
@@ -109,13 +105,13 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 
     res.json({ ok: true })
   } catch (err) {
-    console.error("ERROR:", err)
+    console.error("FORM ERROR:", err)
     res.status(500).json({ error: err.message })
   }
 })
 
 // ==============================
-// START (🔥 MUY IMPORTANTE)
+// START (ESTO ES LO QUE ARREGLA TODO)
 // ==============================
 
 const PORT = process.env.PORT || 8080
