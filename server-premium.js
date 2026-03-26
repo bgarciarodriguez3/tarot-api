@@ -130,7 +130,7 @@ app.get("/test-email", async (req, res) => {
 // ROOT
 // ==============================
 
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   res.send("🔥 PREMIUM API RUNNING")
 })
 
