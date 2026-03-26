@@ -11,6 +11,13 @@ app.use(cors())
 app.use(express.json({ limit: "2mb" }))
 
 // ==============================
+// CONFIG
+// ==============================
+
+// ⚠️ CAMBIA SOLO ESTA URL CUANDO TENGAS LA BUENA
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbXXXXXXX/exec"
+
+// ==============================
 // DB
 // ==============================
 
@@ -56,7 +63,7 @@ function detectPremiumType(text = "") {
 }
 
 // ==============================
-// BOTÓN PREMIUM (EMAIL)
+// BOTÓN PREMIUM REAL
 // ==============================
 
 function buildPremiumButton(url) {
@@ -65,19 +72,19 @@ function buildPremiumButton(url) {
     <a href="${url}" target="_blank"
       style="
         display:inline-block;
-        padding:20px 40px;
-        font-size:20px;
-        font-weight:800;
+        padding:22px 45px;
+        font-size:22px;
+        font-weight:900;
         color:#ffffff;
         text-decoration:none;
         border-radius:999px;
         background:linear-gradient(135deg,#6b46ff,#d4af37);
-        box-shadow:0 10px 30px rgba(0,0,0,0.3);
+        box-shadow:0 12px 35px rgba(0,0,0,0.4);
       ">
-      ✨ COMPLETAR FORMULARIO PREMIUM
+      🔮 COMPLETAR CONSULTA PREMIUM
     </a>
-    <div style="margin-top:10px;font-size:13px;color:#777;">
-      Accede aquí para iniciar tu consulta personalizada
+    <div style="margin-top:10px;font-size:13px;color:#888;">
+      Accede ahora para iniciar tu lectura personalizada
     </div>
   </div>
   `
@@ -113,7 +120,9 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       return res.status(400).json({ error: "missing email" })
     }
 
+    // ==========================
     // GUARDAR EN DB
+    // ==========================
     await pool.query(
       `INSERT INTO premium_form_submissions
       (id, email, order_id, product_name, premium_type, payload_json, created_at)
@@ -130,16 +139,22 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       ]
     )
 
-    // 🔥 ENVIAR A GOOGLE SHEETS
-    await fetch(process.env.GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    })
+    // ==========================
+    // ENVIAR A GOOGLE SHEETS
+    // ==========================
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      })
+    } catch (err) {
+      console.error("ERROR SHEETS:", err)
+    }
 
-    console.log("FORM GUARDADO Y ENVIADO:", payload)
+    console.log("FORM COMPLETO:", payload)
 
     res.json({ ok: true })
 
