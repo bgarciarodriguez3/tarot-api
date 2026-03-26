@@ -1,129 +1,145 @@
+require("dotenv").config()
+
 const express = require("express")
-const fetch = require("node-fetch")
-const nodemailer = require("nodemailer")
+const cors = require("cors")
+const crypto = require("crypto")
+const { Resend } = require("resend")
 
 const app = express()
+app.use(cors())
 app.use(express.json())
 
 // ==============================
 // CONFIG
 // ==============================
 
-const PORT = process.env.PORT || 8080
+const resend = new Resend(process.env.RESEND_API_KEY)
 
-// 👉 TU GOOGLE SCRIPT
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2K07SGICgJZ0JzxbmMz3LMrTBnb3PN6MvXVyA88FWLiNXMaM-OCK__oA6bMRUC032/exec"
 
-// 👉 FORMULARIO (puedes cambiar dinámico después)
-const FORM_URL = "https://forms.gle/UFFju3qX5tKaatkQ6"
-
-// 👉 EMAIL CONFIG (GMAIL)
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-})
-
 // ==============================
-// HEALTH CHECK
+// FORMULARIOS POR PRODUCTO
 // ==============================
 
-app.get("/", (req, res) => {
-  res.send("premium vivo 🚀")
-})
+const FORMS = {
+  mentoria: "https://forms.gle/UFFju3qX5tKaatkQ6",
+  amor: "https://forms.gle/UFFju3qX5tKaatkQ6",
+  dinero: "https://forms.gle/UFFju3qX5tKaatkQ6"
+}
 
 // ==============================
-// ENVÍO FORMULARIO (CORE)
+// BOTÓN PREMIUM ULTRA VISIBLE
+// ==============================
+
+function premiumButton(url) {
+  return `
+  <div style="text-align:center;margin:40px 0;">
+    <a href="${url}" target="_blank"
+      style="
+        display:inline-block;
+        padding:22px 40px;
+        font-size:20px;
+        font-weight:bold;
+        color:#fff;
+        background:linear-gradient(135deg,#7b5cff,#c6a45a);
+        border-radius:50px;
+        text-decoration:none;
+        box-shadow:0 10px 25px rgba(0,0,0,0.3);
+        animation:pulse 1.5s infinite;
+      ">
+      ✨ COMPLETAR FORMULARIO PREMIUM ✨
+    </a>
+  </div>
+
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+  `
+}
+
+// ==============================
+// EMAIL PREMIUM
+// ==============================
+
+async function sendEmail({ to, name, type }) {
+  const formUrl = FORMS[type] || FORMS.mentoria
+
+  await resend.emails.send({
+    from: "Premium Tarot <contactopremium@eltarotdelaruedadelafortuna.com>",
+    to,
+    subject: "✨ Tu consulta premium — siguiente paso",
+    html: `
+      <div style="font-family:Arial;padding:20px;max-width:600px;margin:auto;">
+        <h2 style="text-align:center;">🔮 Consulta Premium</h2>
+
+        <p>Hola ${name || ""},</p>
+
+        <p>Para comenzar tu consulta, completa el formulario:</p>
+
+        ${premiumButton(formUrl)}
+
+        <p style="text-align:center;font-size:14px;color:#777;">
+          Tiempo estimado: 48h
+        </p>
+      </div>
+    `
+  })
+}
+
+// ==============================
+// API FORM SUBMITTED (CRM)
 // ==============================
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
-    const { productName, premiumType, email } = req.body
+    console.log("DATA:", req.body)
 
-    if (!email) {
-      return res.status(400).json({ error: "Email requerido" })
-    }
-
-    // ==========================
-    // 1. ENVIAR A GOOGLE SHEETS
-    // ==========================
+    // Guardar en Google Sheets (CRM)
     await fetch(GOOGLE_SCRIPT_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        productName,
-        premiumType,
-        status: "Pendiente",
-        timestamp: new Date().toISOString()
-      })
+      body: JSON.stringify(req.body),
+      headers: { "Content-Type": "application/json" }
     })
 
-    // ==========================
-    // 2. EMAIL PREMIUM (🔥 BOTÓN)
-    // ==========================
-
-    const htmlEmail = `
-      <h2 style="text-align:center;">Tu Consulta Premium: siguiente paso</h2>
-
-      <p>Gracias de corazón 💙 por confiar en nosotros.</p>
-
-      <p>
-      Para comenzar tu análisis necesitamos que completes el formulario.
-      En cuanto lo recibamos, empezaremos tu consulta personalizada.
-      </p>
-
-      <div style="text-align:center; margin:40px 0;">
-        <a href="${FORM_URL}"
-           style="
-             background: linear-gradient(135deg, #d4af37, #f5d06f);
-             color: #000;
-             padding: 20px 40px;
-             font-size: 20px;
-             font-weight: bold;
-             text-decoration: none;
-             border-radius: 14px;
-             display: inline-block;
-             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-           ">
-           ✨ COMPLETAR FORMULARIO PREMIUM ✨
-        </a>
-      </div>
-
-      <p style="text-align:center;">
-      Recibirás tu mentoría en un plazo máximo de <b>48 horas</b>.
-      </p>
-
-      <p style="text-align:center;">
-      Un fuerte abrazo,<br>
-      Equipo Premium Tarot
-      </p>
-    `
-
-    await transporter.sendMail({
-      from: `"Tarot Premium" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "✨ Completa tu consulta Premium",
-      html: htmlEmail
-    })
-
-    // ==========================
-    // 3. RESPUESTA API
-    // ==========================
     res.json({ ok: true })
-
   } catch (err) {
-    console.error("ERROR:", err)
+    console.error(err)
     res.status(500).json({ error: err.message })
   }
 })
 
 // ==============================
-// START SERVER
+// TEST EMAIL
 // ==============================
 
+app.get("/test-email", async (req, res) => {
+  await sendEmail({
+    to: "bgarciarodriguez3@gmail.com",
+    name: "Miriam",
+    type: "mentoria"
+  })
+
+  res.send("EMAIL ENVIADO 🚀")
+})
+
+// ==============================
+// ROOT
+// ==============================
+
+app.get("/", (req, res) => {
+  res.send("🔥 PREMIUM API RUNNING")
+})
+
+// ==============================
+// START
+// ==============================
+
+const PORT = process.env.PORT || 8080
+
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("🔥 Premium server corriendo en puerto", PORT)
+  console.log("🚀 Server running on", PORT)
 })
