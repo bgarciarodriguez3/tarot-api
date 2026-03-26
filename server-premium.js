@@ -10,23 +10,7 @@ const app = express()
 app.use(cors())
 
 // ==============================
-// 🔥 FIX 502 → CAPTURAR RAW BODY
-// ==============================
-
-app.use((req, res, next) => {
-  let data = ""
-  req.on("data", chunk => data += chunk)
-  req.on("end", () => {
-    req.rawBody = data
-    next()
-  })
-})
-
-// ❌ IMPORTANTE: NO usamos express.json()
-// app.use(express.json())
-
-// ==============================
-// GLOBAL ERROR LOGS
+// LOGS GLOBALES (CLAVE)
 // ==============================
 
 process.on("uncaughtException", (error) => {
@@ -62,6 +46,25 @@ pool.on("error", (error) => {
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
 // ==============================
+// PRODUCTOS
+// ==============================
+
+const PREMIUM_PRODUCTS = {
+  "10496141754705": {
+    name: "Mentoría",
+    type: "mentoria"
+  },
+  "10523108966737": {
+    name: "Amor",
+    type: "amor"
+  },
+  "10667662606673": {
+    name: "Dinero",
+    type: "dinero"
+  }
+}
+
+// ==============================
 // DB INIT
 // ==============================
 
@@ -70,39 +73,22 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS premium_requests (
       id TEXT PRIMARY KEY,
       order_id TEXT,
-      line_item_id TEXT,
-      product_id TEXT,
-      product_name TEXT,
-      premium_type TEXT,
-      form_url TEXT,
-      customer_name TEXT,
       email TEXT,
+      premium_type TEXT,
       status TEXT,
-      access_email_sent INTEGER DEFAULT 0,
-      received_email_sent INTEGER DEFAULT 0,
-      internal_email_sent INTEGER DEFAULT 0,
-      created_at TEXT,
-      form_submitted_at TEXT,
-      completed_at TEXT
+      created_at TEXT
     );
   `)
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS premium_form_submissions (
       id TEXT PRIMARY KEY,
-      premium_request_id TEXT,
       order_id TEXT,
       email TEXT,
-      product_name TEXT,
       premium_type TEXT,
       payload_json TEXT,
       created_at TEXT
     );
-  `)
-
-  await pool.query(`
-    ALTER TABLE premium_form_submissions
-    ADD COLUMN IF NOT EXISTS premium_type TEXT
   `)
 
   console.log("Postgres tables ready")
@@ -123,98 +109,57 @@ function normalizeText(value = "") {
 function detectPremiumType(input = "") {
   const text = normalizeText(input)
 
-  if (!text) return ""
-  if (text.includes("mentoria") || text.includes("camino")) return "mentoria"
-  if (text.includes("amor") || text.includes("relaciones")) return "amor"
-  if (text.includes("dinero") || text.includes("economia")) return "dinero"
+  if (text.includes("mentoria")) return "mentoria"
+  if (text.includes("amor")) return "amor"
+  if (text.includes("dinero")) return "dinero"
 
   return ""
-}
-
-function getValueFromAnswers(answers = {}, keys = []) {
-  for (const key of keys) {
-    const norm = normalizeText(key)
-
-    for (const [k, v] of Object.entries(answers)) {
-      if (normalizeText(k).includes(norm)) {
-        return String(v || "").trim()
-      }
-    }
-  }
-  return ""
-}
-
-function normalizeFormPayload(body = {}) {
-  const answers = body.answers || {}
-
-  const email =
-    body.email ||
-    getValueFromAnswers(answers, ["email", "correo"])
-
-  const orderId =
-    body.orderId ||
-    getValueFromAnswers(answers, ["pedido"])
-
-  const productName =
-    body.productName ||
-    body.tipoConsulta ||
-    body.sourceSheet ||
-    ""
-
-  const premiumType =
-    detectPremiumType(body.tipoConsulta) ||
-    detectPremiumType(body.sourceSheet) ||
-    detectPremiumType(productName)
-
-  return {
-    submissionId: body.submissionId || crypto.randomUUID(),
-    orderId: String(orderId || "").trim(),
-    email: String(email || "").trim(),
-    customerName: String(body.customerName || "").trim(),
-    productName: String(productName || "").trim(),
-    premiumType,
-    submittedAt: body.submittedAt || new Date().toISOString(),
-    answers,
-    rawForm: body
-  }
 }
 
 // ==============================
-// ROUTE (ARREGLADO)
+// MIDDLEWARE
+// ==============================
+
+app.use(express.json({ limit: "2mb" }))
+
+// 🔥 IMPORTANTE → evita que Railway mate el servidor
+app.get("/", (req, res) => {
+  res.send("premium alive")
+})
+
+// ==============================
+// ROUTE PRINCIPAL
 // ==============================
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
-    console.log("RAW BODY:", req.rawBody)
+    console.log("BODY:", req.body)
 
-    const body = JSON.parse(req.rawBody || "{}")
+    const email = req.body.email || ""
+    const orderId = req.body.orderId || ""
+    const premiumType = detectPremiumType(req.body.productName || "")
 
-    const payload = normalizeFormPayload(body)
-
-    console.log("NORMALIZED:", payload)
-
-    if (!payload.email) {
+    if (!email) {
       return res.status(400).json({ error: "missing email" })
     }
 
     await pool.query(
       `INSERT INTO premium_form_submissions
-      (id, order_id, email, product_name, premium_type, payload_json, created_at)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-      ON CONFLICT DO NOTHING`,
+      (id, order_id, email, premium_type, payload_json, created_at)
+      VALUES ($1,$2,$3,$4,$5,$6)`,
       [
-        payload.submissionId,
-        payload.orderId,
-        payload.email,
-        payload.productName,
-        payload.premiumType,
-        JSON.stringify(payload),
+        crypto.randomUUID(),
+        orderId,
+        email,
+        premiumType,
+        JSON.stringify(req.body),
         new Date().toISOString()
       ]
     )
 
-    res.json({ ok: true })
+    console.log("✅ FORM GUARDADO")
 
+    res.json({ ok: true })
   } catch (err) {
     console.error("FORM ERROR:", err)
     res.status(500).json({ error: err.message })
@@ -228,7 +173,7 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 const PORT = process.env.PORT || 8080
 
 initDb().then(() => {
-  app.listen(PORT, () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log("premium server running on port", PORT)
   })
 })
