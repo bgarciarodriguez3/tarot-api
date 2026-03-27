@@ -32,7 +32,7 @@ const PREMIUM_PRODUCTS = {
   }
 }
 
-const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || ""
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
 
 // ==============================
 // MIDDLEWARES
