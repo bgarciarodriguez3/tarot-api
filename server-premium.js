@@ -2,306 +2,979 @@ require("dotenv").config()
 
 const express = require("express")
 const cors = require("cors")
-const path = require("path")
+const crypto = require("crypto")
 const { Resend } = require("resend")
+const { Pool } = require("pg")
 
 const app = express()
-
-app.use(cors())
-app.use(express.json())
-app.use(express.static(path.join(__dirname, "public")))
-
-// ==============================
-// CONFIG
-// ==============================
-
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const GOOGLE_SCRIPT_URL =
-  process.env.GOOGLE_SCRIPT_URL ||
-  "https://script.google.com/macros/s/AKfycby2K07SGICgJZ0JzxbmMz3LMrTBnb3PN6MvXVyA88FWLiNXMaM-OCK__oA6bMRUC032/exec"
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes("localhost")
+    ? false
+    : { rejectUnauthorized: false }
+})
 
-// ==============================
-// FORMULARIOS POR PRODUCTO
-// ==============================
+const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
-const FORMS = {
-  mentoria: "https://forms.gle/Ygg9kMnmm3CvSSd88",
-  amor: "https://forms.gle/z7Yqenb3VsrAVjij9",
-  dinero: "https://forms.gle/jknaRNDVqEivuu4M8"
+const PREMIUM_PRODUCTS = {
+  "10496141754705": {
+    name: "Tu Camino, Tu Destino y Tus Decisiones – Mentoría",
+    type: "camino_destino_decisiones",
+    formUrl: "https://forms.gle/9m6P5m3pBZ4BEybf9"
+  },
+  "10523108966737": {
+    name: "Claridad en tus Relaciones y tu Camino Sentimental",
+    type: "relaciones_sentimental",
+    formUrl: "https://forms.gle/z7Yqenb3VsrAVjij9"
+  },
+  "10667662606673": {
+    name: "Nuevos Comienzos, Liderazgo y Economía Personal – Consulta Premium",
+    type: "liderazgo_economia_personal",
+    formUrl: "https://forms.gle/AyAm7JACnZCoXNsy7"
+  }
 }
 
 // ==============================
-// CONFIG PREMIUM POR TIPO
+// MIDDLEWARES
 // ==============================
 
-const PREMIUM_CONFIG = {
-  mentoria: {
-    productName: "Mentoría Premium",
-    subject: "✨ Tu consulta premium de mentoría — siguiente paso"
-  },
-  amor: {
-    productName: "Consulta Amor",
-    subject: "💖 Tu consulta premium de amor — siguiente paso"
-  },
-  dinero: {
-    productName: "Consulta Dinero",
-    subject: "💰 Tu consulta premium de dinero — siguiente paso"
+app.use(cors())
+
+app.get("/favicon.ico", (_req, res) => {
+  res.status(204).end()
+})
+
+// IMPORTANTE:
+// Excluimos el webhook premium del express.json para no romper el body raw de Shopify
+app.use((req, res, next) => {
+  if (req.path === "/api/premium/shopify/order-paid") {
+    return next()
   }
+  return express.json()(req, res, next)
+})
+
+// ==============================
+// DB INIT
+// ==============================
+
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_requests (
+      id TEXT PRIMARY KEY,
+      order_id TEXT,
+      line_item_id TEXT,
+      product_id TEXT,
+      product_name TEXT,
+      premium_type TEXT,
+      form_url TEXT,
+      customer_name TEXT,
+      email TEXT,
+      status TEXT,
+      access_email_sent INTEGER DEFAULT 0,
+      received_email_sent INTEGER DEFAULT 0,
+      internal_email_sent INTEGER DEFAULT 0,
+      created_at TEXT,
+      form_submitted_at TEXT,
+      completed_at TEXT
+    );
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_form_submissions (
+      id TEXT PRIMARY KEY,
+      premium_request_id TEXT,
+      order_id TEXT,
+      email TEXT,
+      product_name TEXT,
+      payload_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS premium_processed_webhooks (
+      webhook_id TEXT PRIMARY KEY,
+      created_at TEXT NOT NULL
+    );
+  `)
+
+  console.log("Postgres tables ready")
 }
 
 // ==============================
 // HELPERS
 // ==============================
 
-function sanitize(value = "") {
-  return String(value).trim()
+function verifyShopify(req) {
+  const hmac = req.get("X-Shopify-Hmac-Sha256")
+
+  if (!hmac) {
+    console.error("SHOPIFY HMAC ERROR: falta header X-Shopify-Hmac-Sha256")
+    return false
+  }
+
+  if (!Buffer.isBuffer(req.body)) {
+    console.error("SHOPIFY HMAC ERROR: req.body no es Buffer")
+    return false
+  }
+
+  const secret = process.env.SHOPIFY_WEBHOOK_SECRET || ""
+
+  const digest = crypto
+    .createHmac("sha256", secret)
+    .update(req.body)
+    .digest("base64")
+
+  try {
+    const hmacBuffer = Buffer.from(hmac, "utf8")
+    const digestBuffer = Buffer.from(digest, "utf8")
+
+    if (hmacBuffer.length !== digestBuffer.length) {
+      console.error("SHOPIFY HMAC ERROR: length mismatch")
+      return false
+    }
+
+    return crypto.timingSafeEqual(hmacBuffer, digestBuffer)
+  } catch (error) {
+    console.error("SHOPIFY HMAC ERROR:", error)
+    return false
+  }
 }
 
-function isValidEmail(email = "") {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+function createPremiumId(orderId, lineItemId, productId, unitIndex = 0) {
+  return [
+    "premium",
+    String(orderId || "").trim(),
+    String(lineItemId || "").trim(),
+    String(productId || "").trim(),
+    String(unitIndex || 0).trim()
+  ].join("-")
 }
 
-function getPremiumType(type = "") {
-  const normalized = sanitize(type).toLowerCase()
-  return ["mentoria", "amor", "dinero"].includes(normalized)
-    ? normalized
-    : "mentoria"
+function findPremiumConfigFromLineItem(item) {
+  const productId = item?.product_id ? String(item.product_id) : null
+  const variantId = item?.variant_id ? String(item.variant_id) : null
+
+  if (productId && PREMIUM_PRODUCTS[productId]) {
+    return { productId, config: PREMIUM_PRODUCTS[productId], matchedBy: "product_id" }
+  }
+
+  if (variantId && PREMIUM_PRODUCTS[variantId]) {
+    return { productId: variantId, config: PREMIUM_PRODUCTS[variantId], matchedBy: "variant_id" }
+  }
+
+  return null
 }
 
-function getPremiumConfig(type = "") {
-  const premiumType = getPremiumType(type)
-  return PREMIUM_CONFIG[premiumType]
+async function isWebhookProcessed(webhookId) {
+  if (!webhookId) return false
+
+  const result = await pool.query(
+    "SELECT webhook_id FROM premium_processed_webhooks WHERE webhook_id = $1 LIMIT 1",
+    [String(webhookId)]
+  )
+
+  return result.rowCount > 0
 }
 
-function premiumButton(url) {
+async function markWebhookProcessed(webhookId) {
+  if (!webhookId) return
+
+  await pool.query(
+    `
+    INSERT INTO premium_processed_webhooks (webhook_id, created_at)
+    VALUES ($1, $2)
+    ON CONFLICT (webhook_id) DO NOTHING
+    `,
+    [String(webhookId), new Date().toISOString()]
+  )
+}
+
+async function getPremiumRequestById(id) {
+  const result = await pool.query(
+    "SELECT * FROM premium_requests WHERE id = $1 LIMIT 1",
+    [String(id)]
+  )
+  return result.rows[0] || null
+}
+
+async function createPremiumRequest({
+  orderId,
+  lineItemId,
+  productId,
+  email,
+  customerName = "",
+  unitIndex = 0
+}) {
+  const config = PREMIUM_PRODUCTS[String(productId)]
+
+  if (!config) {
+    throw new Error(`Producto premium no configurado: ${productId}`)
+  }
+
+  const id = createPremiumId(orderId, lineItemId, productId, unitIndex)
+  const existing = await getPremiumRequestById(id)
+
+  if (existing) {
+    if (email && !existing.email) {
+      await pool.query(
+        "UPDATE premium_requests SET email = $1 WHERE id = $2",
+        [String(email), id]
+      )
+    }
+
+    if (customerName && !existing.customer_name) {
+      await pool.query(
+        "UPDATE premium_requests SET customer_name = $1 WHERE id = $2",
+        [String(customerName), id]
+      )
+    }
+
+    return await getPremiumRequestById(id)
+  }
+
+  const record = {
+    id,
+    order_id: String(orderId || ""),
+    line_item_id: String(lineItemId || ""),
+    product_id: String(productId || ""),
+    product_name: config.name,
+    premium_type: config.type,
+    form_url: config.formUrl,
+    customer_name: String(customerName || ""),
+    email: String(email || ""),
+    status: "pending_form",
+    access_email_sent: 0,
+    received_email_sent: 0,
+    internal_email_sent: 0,
+    created_at: new Date().toISOString(),
+    form_submitted_at: null,
+    completed_at: null
+  }
+
+  await pool.query(
+    `
+    INSERT INTO premium_requests (
+      id, order_id, line_item_id, product_id, product_name, premium_type,
+      form_url, customer_name, email, status, access_email_sent,
+      received_email_sent, internal_email_sent, created_at, form_submitted_at, completed_at
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6,
+      $7, $8, $9, $10, $11,
+      $12, $13, $14, $15, $16
+    )
+    `,
+    [
+      record.id,
+      record.order_id,
+      record.line_item_id,
+      record.product_id,
+      record.product_name,
+      record.premium_type,
+      record.form_url,
+      record.customer_name,
+      record.email,
+      record.status,
+      record.access_email_sent,
+      record.received_email_sent,
+      record.internal_email_sent,
+      record.created_at,
+      record.form_submitted_at,
+      record.completed_at
+    ]
+  )
+
+  return await getPremiumRequestById(id)
+}
+
+// ==============================
+// EMAIL TEMPLATES
+// ==============================
+
+function buildAccessEmailText(record) {
+  return [
+    "Querida alma,",
+    "",
+    "Tu portal de sabiduría personalizada ya está abierto para que, cuando estés lista, nos compartas tus dudas e inquietudes.",
+    "",
+    "Para comenzar a descubrir las revelaciones que el Universo guarda para ti, necesitamos conocer tu situación con el cariño y el respeto que merece.",
+    "",
+    "Accede aquí a tu Portal de Sabiduría:",
+    record.form_url,
+    "",
+    "En cuanto recibamos la hoja de ruta de tu momento actual, nos pondremos en sintonía con tu brújula estelar para prepararte un mapa totalmente personalizado.",
+    "",
+    "Un fuerte abrazo de luz,",
+    "Equipo de Expertos Premium Tarot de La Rueda de la Fortuna",
+    "contactopremium@laruedadelafortuna.com",
+    "www.laruedadelafortuna.com"
+  ].join("\n")
+}
+
+function buildAccessEmailHtml(record) {
   return `
-    <div style="text-align:center;margin:40px 0;">
-      <a href="${url}" target="_blank"
-        style="
-          display:inline-block;
-          padding:22px 40px;
-          font-size:20px;
-          font-weight:bold;
-          color:#fff;
-          background:linear-gradient(135deg,#7b5cff,#c6a45a);
-          border-radius:50px;
-          text-decoration:none;
-          box-shadow:0 10px 25px rgba(0,0,0,0.3);
-        ">
-        ✨ COMPLETAR FORMULARIO PREMIUM ✨
-      </a>
+    <div style="margin:0;padding:0;background:#f6f1e7;">
+      <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
+        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+          <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
+
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
+                Tus mensajes cósmicos ya están listos
+              </div>
+            </div>
+
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
+                Accede a tu destino
+              </h1>
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
+                Tu destino, revelado.
+              </p>
+            </div>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
+
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
+              Querida alma,
+            </p>
+
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Tu portal de sabiduría personalizada ya está abierto.
+            </p>
+
+            <p style="margin:0 0 22px;font-size:16px;line-height:1.85;">
+              Para poder explorar los mapas de tu destino necesitamos conocer tus dudas e inquietudes.
+            </p>
+
+            <p style="margin:0 0 22px;font-size:16px;line-height:1.85;">
+              Será un espacio íntimo y confidencial para que nos cuentes lo que sientes y podamos prepararte una senda totalmente personalizada para tu camino.
+            </p>
+
+            <div style="text-align:center;margin:28px 0;">
+              <a
+                href="${record.form_url}"
+                style="display:inline-block;background:#241845;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:999px;font-weight:bold;"
+              >
+                Accede a tu destino
+              </a>
+            </div>
+
+            <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:#6d5a7b;text-align:center;">
+              Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+              <span style="word-break:break-all;">${record.form_url}</span>
+            </p>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
+
+            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
+              Un fuerte abrazo de luz,
+            </p>
+
+            <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
+              <strong>Equipo de Expertos Premium El Tarot de La Rueda de la Fortuna</strong>
+            </p>
+
+            <div style="text-align:center;margin:16px 0 10px;">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
+                alt="La Rueda de la Fortuna"
+                style="max-width:220px;width:100%;height:auto;display:inline-block;"
+              >
+            </div>
+
+            <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
+              📧 contactopremium@laruedadelafortuna.com
+            </p>
+
+            <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
+              🌐 www.laruedadelafortuna.com
+            </p>
+
+          </div>
+        </div>
+      </div>
     </div>
   `
 }
 
-async function saveLeadToSheets(payload) {
-  const response = await fetch(GOOGLE_SCRIPT_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  })
-
-  const rawText = await response.text()
-
-  let parsed = {}
-  try {
-    parsed = JSON.parse(rawText)
-  } catch {
-    parsed = { raw: rawText }
-  }
-
-  if (!response.ok) {
-    throw new Error(`Google Sheets HTTP ${response.status}`)
-  }
-
-  if (parsed.success === false) {
-    throw new Error(parsed.message || "Google Sheets devolvió error")
-  }
-
-  return parsed
+function buildClientConfirmationText({ customerName }) {
+  return [
+    `Querida alma${customerName ? ` ${customerName}` : ""},`,
+    "",
+    "Hemos sintonizado con tu mensaje. Tu viaje de transformación ha comenzado.",
+    "",
+    "Gracias por abrir este espacio y compartirnos tus vivencias.",
+    "",
+    "Desde este instante nos sumergimos en tu energía para tejer una guía que es solo tuya, creada con el rigor y la delicadeza que tu alma requiere.",
+    "",
+    "Damos comienzo a tu claridad personalizada. El tiempo máximo para recibir tus mensajes cósmicos es de 48 horas laborables.",
+    "",
+    "Un fuerte abrazo de luz,",
+    "Equipo de Expertos Premium Tarot de La Rueda de la Fortuna",
+    "contactopremium@laruedadelafortuna.com",
+    "www.laruedadelafortuna.com"
+  ].join("\n")
 }
 
-async function sendPremiumEmail({ to, name, type }) {
-  const premiumType = getPremiumType(type)
-  const config = getPremiumConfig(premiumType)
-  const formUrl = FORMS[premiumType]
+function buildClientConfirmationHtml({ customerName }) {
+  return `
+    <div style="margin:0;padding:0;background:#f6f1e7;">
+      <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
+        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+          <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
 
-  return resend.emails.send({
-    from:
-      process.env.RESEND_FROM ||
-      "Premium Tarot <contactopremium@eltarotdelaruedadelafortuna.com>",
-    to,
-    subject: config.subject,
-    html: `
-      <div style="font-family:Arial,sans-serif;padding:20px;max-width:600px;margin:auto;color:#222;">
-        <h2 style="text-align:center;">🔮 Consulta Premium</h2>
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
+                Formulario recibido
+              </div>
+            </div>
 
-        <p>Hola ${name || ""},</p>
+            <div style="text-align:center;margin-bottom:20px;">
+              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
+                A partir de este momento, tu historia es nuestra prioridad
+              </h1>
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
+                Tus dudas pasan a ser nuestro enfoque de canalización.
+              </p>
+            </div>
 
-        <p>Gracias por tu interés en <strong>${config.productName}</strong>.</p>
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
 
-        <p>Para continuar con tu proceso premium, completa este formulario específico:</p>
+            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">
+              Querida alma${customerName ? ` ${customerName}` : ""},
+            </p>
 
-        ${premiumButton(formUrl)}
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              La conexión se ha establecido. Tu energía ya está en nuestras manos.
+            </p>
 
-        <p style="text-align:center;font-size:14px;color:#777;">
-          Tiempo estimado de respuesta: 24–48h
-        </p>
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Gracias por compartir tu frecuencia con nosotras. Iniciamos un proceso de canalización hecho a medida para que cada revelación surja con la claridad que solo la presencia total puede ofrecer.
+            </p>
 
-        <p style="margin-top:30px;">
-          Con cariño,<br>
-          <strong>Equipo Premium</strong>
-        </p>
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Tu historia ya está en nuestras manos y la cuidaremos con mucho amor. La descifraremos en un tiempo máximo de <strong>48 horas laborables</strong>.
+            </p>
+
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
+              Queremos que sientas que esta experiencia está cuidada de principio a fin, y eso empieza por tratar tu historia con la atención que merece.
+            </p>
+
+            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
+
+            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
+              Un fuerte abrazo de luz,
+            </p>
+
+            <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
+              <strong>Equipo de Expertos Premium Tarot de La Rueda de la Fortuna</strong>
+            </p>
+
+            <div style="text-align:center;margin:16px 0 10px;">
+              <img
+                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
+                alt="La Rueda de la Fortuna"
+                style="max-width:220px;width:100%;height:auto;display:inline-block;"
+              >
+            </div>
+
+            <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
+              📧 contactopremium@laruedadelafortuna.com
+            </p>
+
+            <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
+              🌐 www.laruedadelafortuna.com
+            </p>
+
+          </div>
+        </div>
       </div>
-    `
-  })
+    </div>
+  `
+}
+
+function buildInternalAlertText(payload) {
+  return [
+    "Nuevo formulario premium recibido",
+    "",
+    `Email cliente: ${payload.email || ""}`,
+    `Order ID: ${payload.orderId || ""}`,
+    `Nombre cliente: ${payload.customerName || ""}`,
+    `Producto: ${payload.productName || ""}`,
+    `Fecha envío: ${payload.submittedAt || new Date().toISOString()}`,
+    "",
+    "Payload completo:",
+    JSON.stringify(payload, null, 2)
+  ].join("\n")
+}
+
+function buildInternalAlertHtml(payload) {
+  const pretty = JSON.stringify(payload, null, 2)
+
+  return `
+    <div style="font-family:Arial,sans-serif;color:#1f1f1f;">
+      <h2>Nuevo formulario premium recibido</h2>
+      <p><strong>Email cliente:</strong> ${payload.email || ""}</p>
+      <p><strong>Order ID:</strong> ${payload.orderId || ""}</p>
+      <p><strong>Nombre cliente:</strong> ${payload.customerName || ""}</p>
+      <p><strong>Producto:</strong> ${payload.productName || ""}</p>
+      <p><strong>Fecha envío:</strong> ${payload.submittedAt || new Date().toISOString()}</p>
+      <pre style="white-space:pre-wrap;background:#f7f7f7;padding:16px;border-radius:8px;">${pretty}</pre>
+    </div>
+  `
 }
 
 // ==============================
-// API FORM SUBMITTED
+// EMAIL SENDERS
 // ==============================
+
+async function sendAccessEmail(record) {
+  if (!record.email) {
+    throw new Error("El premium request no tiene email")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+  }
+
+  if (Number(record.access_email_sent) === 1) {
+    console.log("EMAIL ACCESO PREMIUM: ya enviado para", record.id)
+    return { already: true }
+  }
+
+  const result = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: record.email,
+    subject: "✨ Accede a tu destino",
+    text: buildAccessEmailText(record),
+    html: buildAccessEmailHtml(record)
+  })
+
+  if (result?.error) {
+    console.error("RESEND ACCESS PREMIUM ERROR:", result.error)
+    throw new Error(result.error.message || "Error enviando email de acceso premium")
+  }
+
+  await pool.query(
+    `UPDATE premium_requests SET access_email_sent = 1 WHERE id = $1`,
+    [record.id]
+  )
+
+  console.log("RESEND ACCESS PREMIUM OK:", result)
+  return result
+}
+
+async function sendClientConfirmationEmail(payload, requestRecord) {
+  if (!payload.email) {
+    throw new Error("Falta email del cliente")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+  }
+
+  const result = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: payload.email,
+    subject: "✨ Hemos recibido tu formulario premium",
+    text: buildClientConfirmationText({
+      customerName: payload.customerName || requestRecord?.customer_name || ""
+    }),
+    html: buildClientConfirmationHtml({
+      customerName: payload.customerName || requestRecord?.customer_name || ""
+    })
+  })
+
+  if (result?.error) {
+    console.error("RESEND CLIENT CONFIRMATION ERROR:", result.error)
+    throw new Error(result.error.message || "Error enviando confirmación al cliente")
+  }
+
+  if (requestRecord?.id) {
+    await pool.query(
+      `UPDATE premium_requests SET received_email_sent = 1 WHERE id = $1`,
+      [requestRecord.id]
+    )
+  }
+
+  console.log("RESEND CLIENT CONFIRMATION OK:", result)
+  return result
+}
+
+async function sendInternalAlertEmail(payload, requestRecord) {
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
+  }
+
+  const result = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL,
+    to: INTERNAL_EMAIL,
+    subject: "🔥 Nuevo formulario premium recibido",
+    text: buildInternalAlertText(payload),
+    html: buildInternalAlertHtml(payload)
+  })
+
+  if (result?.error) {
+    console.error("RESEND INTERNAL ALERT ERROR:", result.error)
+    throw new Error(result.error.message || "Error enviando aviso interno")
+  }
+
+  if (requestRecord?.id) {
+    await pool.query(
+      `UPDATE premium_requests SET internal_email_sent = 1 WHERE id = $1`,
+      [requestRecord.id]
+    )
+  }
+
+  console.log("RESEND INTERNAL ALERT OK:", result)
+  return result
+}
+
+// ==============================
+// FORM HELPERS
+// ==============================
+
+function normalizeFormPayload(body = {}) {
+  return {
+    submissionId:
+      body.submissionId ||
+      body.responseId ||
+      body.formResponseId ||
+      crypto.randomUUID(),
+
+    orderId: body.orderId || body.shopifyOrderId || "",
+    email: String(body.email || "").trim(),
+    customerName: String(body.customerName || body.name || "").trim(),
+    productId: String(body.productId || "").trim(),
+    productName: String(
+      body.productName ||
+      body.productTitle ||
+      body.tipo ||
+      body.tipoConsulta ||
+      ""
+    ).trim(),
+    submittedAt: body.submittedAt || new Date().toISOString(),
+    answers: body.answers || {},
+    rawForm: body.rawForm || body
+  }
+}
+
+async function findRequestForSubmittedForm(payload) {
+  if (payload.orderId && payload.email) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE order_id = $1 AND email = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [String(payload.orderId), String(payload.email)]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  if (payload.email && payload.productId) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE email = $1 AND product_id = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [String(payload.email), String(payload.productId)]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  if (payload.email && payload.productName) {
+    const result = await pool.query(
+      `
+      SELECT *
+      FROM premium_requests
+      WHERE email = $1 AND product_name = $2
+      ORDER BY created_at DESC
+      LIMIT 1
+      `,
+      [String(payload.email), String(payload.productName)]
+    )
+    if (result.rows[0]) return result.rows[0]
+  }
+
+  return null
+}
+
+// ==============================
+// ROUTES
+// ==============================
+
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "tarot-premium",
+    version: "premium-v1-postgres"
+  })
+})
+
+app.get("/api/health", async (_req, res) => {
+  try {
+    await pool.query("SELECT 1")
+    res.json({ ok: true })
+  } catch (error) {
+    console.error("HEALTH ERROR:", error)
+    res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.post(
+  "/api/premium/shopify/order-paid",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    try {
+      console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
+
+      if (!verifyShopify(req)) {
+        console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
+        return res.status(401).send("invalid")
+      }
+
+      const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+      if (webhookId && await isWebhookProcessed(webhookId)) {
+        console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
+        return res.status(200).json({
+          ok: true,
+          duplicate: true
+        })
+      }
+
+      const order = JSON.parse(req.body.toString("utf8"))
+
+      const email = String(order.email || order.contact_email || "").trim()
+      const customerName = String(
+        order?.customer?.first_name ||
+        order?.billing_address?.first_name ||
+        ""
+      ).trim()
+
+      const financialStatus = String(order.financial_status || "").toLowerCase()
+
+      console.log("PREMIUM ORDER INFO:", {
+        orderId: order.id,
+        orderName: order.name,
+        email,
+        financialStatus,
+        itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
+      })
+
+      if (financialStatus !== "paid") {
+        console.log("⛔ Pedido premium ignorado por financial_status:", financialStatus)
+        return res.status(200).json({
+          ok: true,
+          skipped: true,
+          reason: "order_not_paid"
+        })
+      }
+
+      let processedCount = 0
+      const createdRecords = []
+
+      for (const item of order.line_items || []) {
+        const found = findPremiumConfigFromLineItem(item)
+
+        if (!found || !found.config) {
+          console.log("Producto premium no configurado:", {
+            title: item.title,
+            product_id: item.product_id,
+            variant_id: item.variant_id
+          })
+          continue
+        }
+
+        const quantity = Number(item.quantity || 1)
+
+        for (let i = 0; i < quantity; i += 1) {
+          const record = await createPremiumRequest({
+            orderId: String(order.id),
+            lineItemId: String(item.id),
+            productId: found.productId,
+            email,
+            customerName,
+            unitIndex: i
+          })
+
+          createdRecords.push(record)
+          processedCount += 1
+        }
+      }
+
+      if (webhookId) {
+        await markWebhookProcessed(webhookId)
+      }
+
+      res.status(200).json({
+        ok: true,
+        processedCount,
+        created: createdRecords.map((record) => ({
+          id: record.id,
+          orderId: record.order_id,
+          productId: record.product_id,
+          productName: record.product_name,
+          formUrl: record.form_url
+        }))
+      })
+
+      for (const record of createdRecords) {
+        if (!record.email) continue
+        try {
+          await sendAccessEmail(record)
+        } catch (emailError) {
+          console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
+        }
+      }
+    } catch (error) {
+      console.error("PREMIUM SHOPIFY ORDER PAID ERROR:", error)
+      return res.status(500).json({
+        ok: false,
+        error: error.message
+      })
+    }
+  }
+)
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
-    const customerName = sanitize(req.body.customerName)
-    const email = sanitize(req.body.email).toLowerCase()
-    const premiumType = getPremiumType(req.body.premiumType)
-    const message = sanitize(req.body.message)
-    const config = getPremiumConfig(premiumType)
+    const payload = normalizeFormPayload(req.body)
 
-    if (!customerName) {
+    console.log("=== PREMIUM FORM SUBMITTED ===")
+    console.log("BODY:", JSON.stringify(payload, null, 2))
+
+    if (!payload.email) {
       return res.status(400).json({
-        success: false,
-        message: "customerName es obligatorio"
+        ok: false,
+        error: "Falta email"
       })
     }
 
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({
-        success: false,
-        message: "email no es válido"
-      })
-    }
+    const requestRecord = await findRequestForSubmittedForm(payload)
 
-    if (!message || message.length < 10) {
-      return res.status(400).json({
-        success: false,
-        message: "message debe tener al menos 10 caracteres"
-      })
-    }
+    await pool.query(
+      `
+      INSERT INTO premium_form_submissions (
+        id, premium_request_id, order_id, email, product_name, payload_json, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `,
+      [
+        payload.submissionId,
+        requestRecord?.id || null,
+        payload.orderId || null,
+        payload.email || null,
+        payload.productName || requestRecord?.product_name || null,
+        JSON.stringify(payload),
+        new Date().toISOString()
+      ]
+    )
 
-    const payload = {
-      customerName,
-      email,
-      premiumType,
-      productName: config.productName,
-      message,
-      source: sanitize(req.body.source || "railway-premium-form"),
-      formVersion: sanitize(req.body.formVersion || "v1"),
-      pageUrl: sanitize(req.body.pageUrl || ""),
-      userAgent: sanitize(req.body.userAgent || req.headers["user-agent"] || ""),
-      submittedAt: req.body.submittedAt || new Date().toISOString(),
-      receivedAt: new Date().toISOString()
-    }
-
-    console.log("🔥 PREMIUM FORM DATA:", payload)
-
-    let savedToSheets = false
-    let emailSent = false
-    let sheetsError = null
-    let emailError = null
-
-    try {
-      await saveLeadToSheets(payload)
-      savedToSheets = true
-    } catch (err) {
-      sheetsError = err.message
-      console.error("❌ SHEETS ERROR:", err.message)
+    if (requestRecord?.id) {
+      await pool.query(
+        `
+        UPDATE premium_requests
+        SET
+          status = $1,
+          customer_name = CASE
+            WHEN customer_name IS NULL OR customer_name = '' THEN $2
+            ELSE customer_name
+          END,
+          form_submitted_at = $3
+        WHERE id = $4
+        `,
+        [
+          "form_submitted",
+          payload.customerName || "",
+          new Date().toISOString(),
+          requestRecord.id
+        ]
+      )
     }
 
     try {
-      await sendPremiumEmail({
-        to: email,
-        name: customerName,
-        type: premiumType
-      })
-      emailSent = true
-    } catch (err) {
-      emailError = err.message
-      console.error("❌ EMAIL ERROR:", err.message)
+      await sendInternalAlertEmail(payload, requestRecord)
+    } catch (internalError) {
+      console.error("INTERNAL ALERT SEND ERROR:", internalError)
     }
 
-    if (!savedToSheets && !emailSent) {
-      return res.status(500).json({
-        success: false,
-        message: "No se pudo guardar ni enviar el email",
-        savedToSheets,
-        emailSent,
-        sheetsError,
-        emailError
-      })
+    try {
+      await sendClientConfirmationEmail(payload, requestRecord)
+    } catch (clientError) {
+      console.error("CLIENT CONFIRMATION SEND ERROR:", clientError)
     }
 
     return res.status(200).json({
-      success: true,
-      message: "Consulta registrada correctamente",
-      savedToSheets,
-      emailSent,
-      sheetsError,
-      emailError
+      ok: true,
+      matchedRequestId: requestRecord?.id || null
     })
-  } catch (err) {
-    console.error("❌ PREMIUM API ERROR:", err)
+  } catch (error) {
+    console.error("PREMIUM FORM SUBMITTED ERROR:", error)
     return res.status(500).json({
-      success: false,
-      message: err.message || "Error interno del servidor"
+      ok: false,
+      error: error.message
     })
   }
 })
 
 // ==============================
-// TEST EMAIL
-// ==============================
-
-app.get("/test-email", async (req, res) => {
-  try {
-    const result = await sendPremiumEmail({
-      to: "bgarciarodriguez3@gmail.com",
-      name: "Miriam",
-      type: "mentoria"
-    })
-
-    res.status(200).json({
-      success: true,
-      message: "Email enviado",
-      result
-    })
-  } catch (err) {
-    console.error("❌ TEST EMAIL ERROR:", err)
-    res.status(500).json({
-      success: false,
-      message: err.message
-    })
-  }
-})
-
-// ==============================
-// ROOT
-// ==============================
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "form-premium.html"))
-})
-
-// ==============================
-// START
+// START SERVER
 // ==============================
 
 const PORT = process.env.PORT || 8080
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🚀 Premium server running on", PORT)
-})
+async function startServer() {
+  try {
+    console.log("PORT FINAL:", PORT)
+
+    await initDb()
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("premium server running on port", PORT)
+    })
+  } catch (error) {
+    console.error("SERVER START ERROR:", error)
+    process.exit(1)
+  }
+}
+
+startServer()  server premium actual, corrigemelo y listo para pegar entero if needed. One primary issue: the final user pasted code and asks "corrigemelo y listo para pegar entero". Need provide corrected full code. Need identify issues. They likely already applied raw route but 502 persists maybe because deploy logs don't show request logs. Maybe issue is middleware app.use((req,res,next)=> express.json()(req,res,next)) weird excluded route omitted in pasted current code. In current code, they removed global exclusion and just have express.raw in route. But they never call app.use(express.json()) at all! For form-submitted route, req.body undefined maybe but not relevant. 502 on webhook though. Potential issue maybe middleware ordering with no body parser not issue because route has raw. Why no deploy logs of request? maybe deploy logs only show startup, app logs at runtime not there? Yet should. HTTP logs show 502 indicates thrown before response? Could be from platform because app closes connection? Maybe because body too large? But likely from verifyShopify/JSON.parse. But route should catch and log. Since no logs of webhook, perhaps issue is not deployed after code change? Yet pasted code maybe not committed. But user asks correct code full. Need improve logging and use express.json for non-webhook routes. Also add route-specific raw parser and add request logging maybe enough. Need maybe 502 due express route double-reading? I think if no global app.use(express.json()) then /api/premium/form-submitted won't parse, but webhook route okay.
+
+Could also be because Shopify webhook content type may include charset: application/json; charset=utf-8. express.raw({type:"application/json"}) handles via type-is should match application/json with suffix params yes. okay.
+
+Need perhaps use app.use("/api/premium/form-submitted", express.json()) or global after webhook route definitions. Better clean code:
+app.use(cors())
+app.get favicon
+app.use(express.json({limit:"2mb"})) after raw route? Actually if route-specific raw defined in app.post before app.use(express.json()), route matched first and body parser raw runs. Then app.use(express.json()) for following routes. So define webhook route before express.json middleware? In Express, middleware order matters, but route path exact on first route. If a later app.use(express.json()) exists earlier in stack, it will consume body. So easiest define webhook route before app.use(express.json()) or use app.use skip condition. Let's provide robust version:
+- app.use(cors())
+- favicon route
+- define helpers, then webhook route with express.raw route-level
+- then app.use(express.json({limit:"2mb"}))
+- then form-submitted route
+Could still access helper definitions prior.
+
+Need maybe add pool.on('error') logging.
+Could add more detailed logs inside webhook catch.
+Potential 502 due `res.status(200).json(...)` then asynchronous email sending throwing causing unhandled rejection after response? No because inside for loop after res sent but within same try, errors caught locally. fine.
+
+Need maybe use await req.body? no.
+
+Let's craft full corrected code with:
+- express.json only after webhook route
+- extensive logs
+- safer verifyShopify with base64 decode? Actually Buffer.from(hmac,"utf8") okay compare ascii bytes; better compare strings? timingSafeEqual on ascii okay if equal length. fine.
+- Add `/api/health` and root.
+- maybe include `app.disable("x-powered-by")`
+
+Need ensure normalizeFormPayload can handle undefined body by express.json. Fine.
+Let's produce complete code and mention paste whole file and redeploy. No citations needed.
