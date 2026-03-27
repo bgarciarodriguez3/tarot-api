@@ -4,19 +4,15 @@ const express = require("express")
 const cors = require("cors")
 const crypto = require("crypto")
 const { Resend } = require("resend")
-const { Pool } = require("pg")
 
 const app = express()
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes("localhost")
-    ? false
-    : { rejectUnauthorized: false }
-})
-
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
+
+// ==============================
+// CONFIG PRODUCTOS PREMIUM
+// ==============================
 
 const PREMIUM_PRODUCTS = {
   "10496141754705": {
@@ -36,6 +32,8 @@ const PREMIUM_PRODUCTS = {
   }
 }
 
+const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL || ""
+
 // ==============================
 // MIDDLEWARES
 // ==============================
@@ -45,58 +43,6 @@ app.use(cors())
 app.get("/favicon.ico", (_req, res) => {
   res.status(204).end()
 })
-
-pool.on("error", (err) => {
-  console.error("POSTGRES POOL ERROR:", err)
-})
-
-// ==============================
-// DB INIT
-// ==============================
-
-async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS premium_requests (
-      id TEXT PRIMARY KEY,
-      order_id TEXT,
-      line_item_id TEXT,
-      product_id TEXT,
-      product_name TEXT,
-      premium_type TEXT,
-      form_url TEXT,
-      customer_name TEXT,
-      email TEXT,
-      status TEXT,
-      access_email_sent INTEGER DEFAULT 0,
-      received_email_sent INTEGER DEFAULT 0,
-      internal_email_sent INTEGER DEFAULT 0,
-      created_at TEXT,
-      form_submitted_at TEXT,
-      completed_at TEXT
-    );
-  `)
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS premium_form_submissions (
-      id TEXT PRIMARY KEY,
-      premium_request_id TEXT,
-      order_id TEXT,
-      email TEXT,
-      product_name TEXT,
-      payload_json TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-  `)
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS premium_processed_webhooks (
-      webhook_id TEXT PRIMARY KEY,
-      created_at TEXT NOT NULL
-    );
-  `)
-
-  console.log("Postgres tables ready")
-}
 
 // ==============================
 // HELPERS
@@ -143,155 +89,28 @@ function verifyShopify(req) {
   }
 }
 
-function createPremiumId(orderId, lineItemId, productId, unitIndex = 0) {
-  return [
-    "premium",
-    String(orderId || "").trim(),
-    String(lineItemId || "").trim(),
-    String(productId || "").trim(),
-    String(unitIndex || 0).trim()
-  ].join("-")
-}
-
 function findPremiumConfigFromLineItem(item) {
   const productId = item?.product_id ? String(item.product_id) : null
   const variantId = item?.variant_id ? String(item.variant_id) : null
 
   if (productId && PREMIUM_PRODUCTS[productId]) {
-    return { productId, config: PREMIUM_PRODUCTS[productId], matchedBy: "product_id" }
+    return {
+      productId,
+      config: PREMIUM_PRODUCTS[productId],
+      matchedBy: "product_id"
+    }
   }
 
   if (variantId && PREMIUM_PRODUCTS[variantId]) {
-    return { productId: variantId, config: PREMIUM_PRODUCTS[variantId], matchedBy: "variant_id" }
+    return {
+      productId: variantId,
+      config: PREMIUM_PRODUCTS[variantId],
+      matchedBy: "variant_id"
+    }
   }
 
   return null
 }
-
-async function isWebhookProcessed(webhookId) {
-  if (!webhookId) return false
-
-  const result = await pool.query(
-    "SELECT webhook_id FROM premium_processed_webhooks WHERE webhook_id = $1 LIMIT 1",
-    [String(webhookId)]
-  )
-
-  return result.rowCount > 0
-}
-
-async function markWebhookProcessed(webhookId) {
-  if (!webhookId) return
-
-  await pool.query(
-    `
-    INSERT INTO premium_processed_webhooks (webhook_id, created_at)
-    VALUES ($1, $2)
-    ON CONFLICT (webhook_id) DO NOTHING
-    `,
-    [String(webhookId), new Date().toISOString()]
-  )
-}
-
-async function getPremiumRequestById(id) {
-  const result = await pool.query(
-    "SELECT * FROM premium_requests WHERE id = $1 LIMIT 1",
-    [String(id)]
-  )
-  return result.rows[0] || null
-}
-
-async function createPremiumRequest({
-  orderId,
-  lineItemId,
-  productId,
-  email,
-  customerName = "",
-  unitIndex = 0
-}) {
-  const config = PREMIUM_PRODUCTS[String(productId)]
-
-  if (!config) {
-    throw new Error(`Producto premium no configurado: ${productId}`)
-  }
-
-  const id = createPremiumId(orderId, lineItemId, productId, unitIndex)
-  const existing = await getPremiumRequestById(id)
-
-  if (existing) {
-    if (email && !existing.email) {
-      await pool.query(
-        "UPDATE premium_requests SET email = $1 WHERE id = $2",
-        [String(email), id]
-      )
-    }
-
-    if (customerName && !existing.customer_name) {
-      await pool.query(
-        "UPDATE premium_requests SET customer_name = $1 WHERE id = $2",
-        [String(customerName), id]
-      )
-    }
-
-    return await getPremiumRequestById(id)
-  }
-
-  const record = {
-    id,
-    order_id: String(orderId || ""),
-    line_item_id: String(lineItemId || ""),
-    product_id: String(productId || ""),
-    product_name: config.name,
-    premium_type: config.type,
-    form_url: config.formUrl,
-    customer_name: String(customerName || ""),
-    email: String(email || ""),
-    status: "pending_form",
-    access_email_sent: 0,
-    received_email_sent: 0,
-    internal_email_sent: 0,
-    created_at: new Date().toISOString(),
-    form_submitted_at: null,
-    completed_at: null
-  }
-
-  await pool.query(
-    `
-    INSERT INTO premium_requests (
-      id, order_id, line_item_id, product_id, product_name, premium_type,
-      form_url, customer_name, email, status, access_email_sent,
-      received_email_sent, internal_email_sent, created_at, form_submitted_at, completed_at
-    ) VALUES (
-      $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11,
-      $12, $13, $14, $15, $16
-    )
-    `,
-    [
-      record.id,
-      record.order_id,
-      record.line_item_id,
-      record.product_id,
-      record.product_name,
-      record.premium_type,
-      record.form_url,
-      record.customer_name,
-      record.email,
-      record.status,
-      record.access_email_sent,
-      record.received_email_sent,
-      record.internal_email_sent,
-      record.created_at,
-      record.form_submitted_at,
-      record.completed_at
-    ]
-  )
-
-  return await getPremiumRequestById(id)
-}
-
-// ==============================
-// EMAIL TEMPLATES
-// ==============================
 
 function buildAccessEmailText(record) {
   return [
@@ -529,6 +348,40 @@ function buildInternalAlertHtml(payload) {
   `
 }
 
+async function saveToGoogleSheets(payload) {
+  if (!GOOGLE_SCRIPT_URL) {
+    console.log("GOOGLE_SCRIPT_URL no configurada, se omite guardado en Sheets")
+    return { skipped: true }
+  }
+
+  const response = await fetch(GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+
+  const text = await response.text()
+
+  let parsed = {}
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    parsed = { raw: text }
+  }
+
+  if (!response.ok) {
+    throw new Error(`Google Sheets HTTP ${response.status}`)
+  }
+
+  if (parsed.success === false) {
+    throw new Error(parsed.message || "Google Sheets devolvió error")
+  }
+
+  return parsed
+}
+
 // ==============================
 // EMAIL SENDERS
 // ==============================
@@ -540,11 +393,6 @@ async function sendAccessEmail(record) {
 
   if (!process.env.RESEND_FROM_EMAIL) {
     throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
-  }
-
-  if (Number(record.access_email_sent) === 1) {
-    console.log("EMAIL ACCESO PREMIUM: ya enviado para", record.id)
-    return { already: true }
   }
 
   const result = await resend.emails.send({
@@ -560,16 +408,11 @@ async function sendAccessEmail(record) {
     throw new Error(result.error.message || "Error enviando email de acceso premium")
   }
 
-  await pool.query(
-    `UPDATE premium_requests SET access_email_sent = 1 WHERE id = $1`,
-    [record.id]
-  )
-
   console.log("RESEND ACCESS PREMIUM OK:", result)
   return result
 }
 
-async function sendClientConfirmationEmail(payload, requestRecord) {
+async function sendClientConfirmationEmail(payload) {
   if (!payload.email) {
     throw new Error("Falta email del cliente")
   }
@@ -583,10 +426,10 @@ async function sendClientConfirmationEmail(payload, requestRecord) {
     to: payload.email,
     subject: "✨ Hemos recibido tu formulario premium",
     text: buildClientConfirmationText({
-      customerName: payload.customerName || requestRecord?.customer_name || ""
+      customerName: payload.customerName || ""
     }),
     html: buildClientConfirmationHtml({
-      customerName: payload.customerName || requestRecord?.customer_name || ""
+      customerName: payload.customerName || ""
     })
   })
 
@@ -595,18 +438,11 @@ async function sendClientConfirmationEmail(payload, requestRecord) {
     throw new Error(result.error.message || "Error enviando confirmación al cliente")
   }
 
-  if (requestRecord?.id) {
-    await pool.query(
-      `UPDATE premium_requests SET received_email_sent = 1 WHERE id = $1`,
-      [requestRecord.id]
-    )
-  }
-
   console.log("RESEND CLIENT CONFIRMATION OK:", result)
   return result
 }
 
-async function sendInternalAlertEmail(payload, requestRecord) {
+async function sendInternalAlertEmail(payload) {
   if (!process.env.RESEND_FROM_EMAIL) {
     throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
   }
@@ -622,13 +458,6 @@ async function sendInternalAlertEmail(payload, requestRecord) {
   if (result?.error) {
     console.error("RESEND INTERNAL ALERT ERROR:", result.error)
     throw new Error(result.error.message || "Error enviando aviso interno")
-  }
-
-  if (requestRecord?.id) {
-    await pool.query(
-      `UPDATE premium_requests SET internal_email_sent = 1 WHERE id = $1`,
-      [requestRecord.id]
-    )
   }
 
   console.log("RESEND INTERNAL ALERT OK:", result)
@@ -664,52 +493,6 @@ function normalizeFormPayload(body = {}) {
   }
 }
 
-async function findRequestForSubmittedForm(payload) {
-  if (payload.orderId && payload.email) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE order_id = $1 AND email = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.orderId), String(payload.email)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  if (payload.email && payload.productId) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE email = $1 AND product_id = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.email), String(payload.productId)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  if (payload.email && payload.productName) {
-    const result = await pool.query(
-      `
-      SELECT *
-      FROM premium_requests
-      WHERE email = $1 AND product_name = $2
-      ORDER BY created_at DESC
-      LIMIT 1
-      `,
-      [String(payload.email), String(payload.productName)]
-    )
-    if (result.rows[0]) return result.rows[0]
-  }
-
-  return null
-}
-
 // ==============================
 // ROUTES
 // ==============================
@@ -718,23 +501,17 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-premium",
-    version: "premium-v2-postgres"
+    version: "premium-v3-no-postgres"
   })
 })
 
-app.get("/api/health", async (_req, res) => {
-  try {
-    await pool.query("SELECT 1")
-    res.json({ ok: true })
-  } catch (error) {
-    console.error("HEALTH ERROR:", error)
-    res.status(500).json({ ok: false, error: error.message })
-  }
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true })
 })
 
 // ------------------------------
 // SHOPIFY WEBHOOK PREMIUM
-// IMPORTANTE: body raw SOLO aquí
+// body raw SOLO aquí
 // ------------------------------
 
 app.post(
@@ -747,15 +524,6 @@ app.post(
       if (!verifyShopify(req)) {
         console.error("PREMIUM SHOPIFY WEBHOOK INVALID HMAC")
         return res.status(401).send("invalid")
-      }
-
-      const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-      if (webhookId && await isWebhookProcessed(webhookId)) {
-        console.log("PREMIUM WEBHOOK DUPLICADO IGNORADO:", webhookId)
-        return res.status(200).json({
-          ok: true,
-          duplicate: true
-        })
       }
 
       const order = JSON.parse(req.body.toString("utf8"))
@@ -786,7 +554,6 @@ app.post(
         })
       }
 
-      let processedCount = 0
       const createdRecords = []
 
       for (const item of order.line_items || []) {
@@ -804,27 +571,23 @@ app.post(
         const quantity = Number(item.quantity || 1)
 
         for (let i = 0; i < quantity; i += 1) {
-          const record = await createPremiumRequest({
-            orderId: String(order.id),
-            lineItemId: String(item.id),
-            productId: found.productId,
-            email,
-            customerName,
-            unitIndex: i
+          createdRecords.push({
+            id: crypto.randomUUID(),
+            order_id: String(order.id || ""),
+            line_item_id: String(item.id || ""),
+            product_id: String(found.productId || ""),
+            product_name: found.config.name,
+            premium_type: found.config.type,
+            form_url: found.config.formUrl,
+            customer_name: customerName,
+            email
           })
-
-          createdRecords.push(record)
-          processedCount += 1
         }
-      }
-
-      if (webhookId) {
-        await markWebhookProcessed(webhookId)
       }
 
       res.status(200).json({
         ok: true,
-        processedCount,
+        processedCount: createdRecords.length,
         created: createdRecords.map((record) => ({
           id: record.id,
           orderId: record.order_id,
@@ -836,10 +599,29 @@ app.post(
 
       for (const record of createdRecords) {
         if (!record.email) continue
+
         try {
           await sendAccessEmail(record)
         } catch (emailError) {
           console.error("ACCESS PREMIUM EMAIL ERROR:", emailError)
+        }
+
+        try {
+          await saveToGoogleSheets({
+            eventType: "premium_order_paid",
+            premiumRequestId: record.id,
+            orderId: record.order_id,
+            lineItemId: record.line_item_id,
+            productId: record.product_id,
+            productName: record.product_name,
+            premiumType: record.premium_type,
+            formUrl: record.form_url,
+            customerName: record.customer_name,
+            email: record.email,
+            createdAt: new Date().toISOString()
+          })
+        } catch (sheetError) {
+          console.error("SHEETS SAVE ORDER PAID ERROR:", sheetError)
         }
       }
     } catch (error) {
@@ -872,67 +654,36 @@ app.post("/api/premium/form-submitted", async (req, res) => {
       })
     }
 
-    const requestRecord = await findRequestForSubmittedForm(payload)
-
-    await pool.query(
-      `
-      INSERT INTO premium_form_submissions (
-        id, premium_request_id, order_id, email, product_name, payload_json, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `,
-      [
-        payload.submissionId,
-        requestRecord?.id || null,
-        payload.orderId || null,
-        payload.email || null,
-        payload.productName || requestRecord?.product_name || null,
-        JSON.stringify(payload),
-        new Date().toISOString()
-      ]
-    )
-
-    if (requestRecord?.id) {
-      await pool.query(
-        `
-        UPDATE premium_requests
-        SET
-          status = $1,
-          customer_name = CASE
-            WHEN customer_name IS NULL OR customer_name = '' THEN $2
-            ELSE customer_name
-          END,
-          form_submitted_at = $3
-        WHERE id = $4
-        `,
-        [
-          "form_submitted",
-          payload.customerName || "",
-          new Date().toISOString(),
-          requestRecord.id
-        ]
-      )
+    try {
+      await saveToGoogleSheets({
+        eventType: "premium_form_submitted",
+        ...payload
+      })
+    } catch (sheetError) {
+      console.error("SHEETS SAVE FORM ERROR:", sheetError)
     }
 
     try {
-      await sendInternalAlertEmail(payload, requestRecord)
+      await sendInternalAlertEmail(payload)
     } catch (internalError) {
       console.error("INTERNAL ALERT SEND ERROR:", internalError)
     }
 
     try {
-      await sendClientConfirmationEmail(payload, requestRecord)
+      await sendClientConfirmationEmail(payload)
     } catch (clientError) {
       console.error("CLIENT CONFIRMATION SEND ERROR:", clientError)
     }
 
     return res.status(200).json({
       ok: true,
-      matchedRequestId: requestRecord?.id || null
+      success: true
     })
   } catch (error) {
     console.error("PREMIUM FORM SUBMITTED ERROR:", error)
     return res.status(500).json({
       ok: false,
+      success: false,
       error: error.message
     })
   }
@@ -944,11 +695,9 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 
 const PORT = process.env.PORT || 8080
 
-async function startServer() {
+function startServer() {
   try {
     console.log("PORT FINAL:", PORT)
-
-    await initDb()
 
     app.listen(PORT, "0.0.0.0", () => {
       console.log("premium server running on port", PORT)
