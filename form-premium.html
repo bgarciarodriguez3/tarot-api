@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consulta Premium</title>
+  <meta name="description" content="Formulario premium para consultas personalizadas." />
+  <style>
+    :root {
+      --bg-1: #0f0c29;
+      --bg-2: #302b63;
+      --bg-3: #24243e;
+      --card: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
+      --text: #ffffff;
+      --muted: #cfcfe7;
+      --accent-1: #7b5cff;
+      --accent-2: #c6a45a;
+      --success: #4ef0c0;
+      --error: #ff9b9b;
+      --shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(123,92,255,0.20), transparent 35%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 32px 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #f4f1ff;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.95);
+      color: #171717;
+      font-size: 16px;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-1);
+      box-shadow: 0 0 0 4px rgba(123,92,255,0.16);
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+    }
+
+    .type-note {
+      text-align: left;
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    .submit-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .box {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      text-align: left;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .success {
+      background: rgba(78, 240, 192, 0.10);
+      border: 1px solid rgba(78, 240, 192, 0.28);
+      color: var(--success);
+    }
+
+    .error {
+      background: rgba(255, 155, 155, 0.10);
+      border: 1px solid rgba(255, 155, 155, 0.24);
+      color: var(--error);
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 24px 18px;
+        border-radius: 20px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="badge">✨ Consulta Premium</div>
+      <h1>Solicita tu consulta</h1>
+      <p class="subtitle">
+        Déjanos tus datos y te enviaremos el formulario premium específico de
+        <strong>mentoría</strong>, <strong>amor</strong> o <strong>dinero</strong>.
+      </p>
+
+      <form id="premiumForm" novalidate>
+        <div class="grid">
+          <div>
+            <label for="customerName">Tu nombre</label>
+            <input
+              id="customerName"
+              name="customerName"
+              type="text"
+              placeholder="Ej. María"
+              required
+              maxlength="100"
+            />
+          </div>
+
+          <div>
+            <label for="email">Tu email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="tuemail@ejemplo.com"
+              required
+              maxlength="150"
+            />
+          </div>
+
+          <div>
+            <label for="premiumType">Tipo de consulta</label>
+            <select id="premiumType" name="premiumType" required>
+              <option value="mentoria">Mentoría</option>
+              <option value="amor">Amor</option>
+              <option value="dinero">Dinero</option>
+            </select>
+            <div class="type-note" id="typeNote"></div>
+          </div>
+
+          <div>
+            <label for="message">Cuéntanos tu situación</label>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Describe brevemente tu situación para orientarte mejor..."
+              required
+              minlength="10"
+              maxlength="2000"
+            ></textarea>
+          </div>
+
+          <button class="submit-btn" id="submitBtn" type="submit">
+            🔮 CONTINUAR
+          </button>
+        </div>
+      </form>
+
+      <div class="box success" id="successBox">
+        ✅ Hemos recibido tu solicitud. Revisa tu email para completar el siguiente paso.
+      </div>
+
+      <div class="box error" id="errorBox">
+        ❌ No se pudo enviar tu solicitud.
+      </div>
+
+      <div class="footer-note">
+        Después te enviaremos el formulario premium correspondiente.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "/api/premium/form-submitted";
+
+    const TYPE_CONFIG = {
+      mentoria: {
+        productName: "Mentoría Premium",
+        note: "Ideal si buscas guía profunda, claridad y acompañamiento."
+      },
+      amor: {
+        productName: "Consulta Amor",
+        note: "Enfocada en relaciones, vínculos y claridad sentimental."
+      },
+      dinero: {
+        productName: "Consulta Dinero",
+        note: "Orientada a abundancia, bloqueos y decisiones económicas."
+      }
+    };
+
+    const form = document.getElementById("premiumForm");
+    const premiumType = document.getElementById("premiumType");
+    const typeNote = document.getElementById("typeNote");
+    const submitBtn = document.getElementById("submitBtn");
+    const successBox = document.getElementById("successBox");
+    const errorBox = document.getElementById("errorBox");
+
+    function updateTypeNote() {
+      const current = TYPE_CONFIG[premiumType.value] || TYPE_CONFIG.mentoria;
+      typeNote.textContent = current.note;
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function buildPayload(formEl) {
+      const formData = Object.fromEntries(new FormData(formEl));
+      const current = TYPE_CONFIG[formData.premiumType] || TYPE_CONFIG.mentoria;
+
+      return {
+        customerName: String(formData.customerName || "").trim(),
+        email: String(formData.email || "").trim().toLowerCase(),
+        premiumType: String(formData.premiumType || "").trim(),
+        message: String(formData.message || "").trim(),
+        productName: current.productName,
+        submittedAt: new Date().toISOString(),
+        source: "railway-premium-form",
+        formVersion: "v1",
+        pageUrl: window.location.href,
+        userAgent: navigator.userAgent
+      };
+    }
+
+    async function fetchWithTimeout(url, options = {}, timeout = 15000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        return await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    function showSuccess(message) {
+      successBox.textContent = message;
+      successBox.style.display = "block";
+      errorBox.style.display = "none";
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+      successBox.style.display = "none";
+    }
+
+    premiumType.addEventListener("change", updateTypeNote);
+    updateTypeNote();
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      successBox.style.display = "none";
+      errorBox.style.display = "none";
+
+      const payload = buildPayload(form);
+
+      if (!payload.customerName) {
+        showError("❌ Escribe tu nombre.");
+        return;
+      }
+
+      if (!isValidEmail(payload.email)) {
+        showError("❌ Introduce un email válido.");
+        return;
+      }
+
+      if (!["mentoria", "amor", "dinero"].includes(payload.premiumType)) {
+        showError("❌ Selecciona un tipo de consulta válido.");
+        return;
+      }
+
+      if (!payload.message || payload.message.length < 10) {
+        showError("❌ Cuéntanos un poco más sobre tu situación.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
+
+      try {
+        const response = await fetchWithTimeout(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        let result = {};
+        try {
+          result = await response.json();
+        } catch (_) {
+          result = {};
+        }
+
+        if (!response.ok || result.success === false || result.ok === false) {
+          throw new Error(result.message || "La API devolvió un error.");
+        }
+
+        showSuccess("✅ Solicitud enviada. Revisa tu email y completa el formulario premium.");
+        form.reset();
+        premiumType.value = "mentoria";
+        updateTypeNote();
+      } catch (error) {
+        const message =
+          error.name === "AbortError"
+            ? "❌ La solicitud tardó demasiado. Inténtalo de nuevo."
+            : `❌ ${error.message || "No se pudo enviar la solicitud."}`;
+
+        showError(message);
+        console.error("Error premium form:", error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "🔮 CONTINUAR";
+      }
+    });
+  </script>
+</body>
+</html>
