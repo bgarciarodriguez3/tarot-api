@@ -46,13 +46,8 @@ app.get("/favicon.ico", (_req, res) => {
   res.status(204).end()
 })
 
-// IMPORTANTE:
-// Excluimos el webhook premium del express.json para no romper el body raw de Shopify
-app.use((req, res, next) => {
-  if (req.path === "/api/premium/shopify/order-paid") {
-    return next()
-  }
-  return express.json()(req, res, next)
+pool.on("error", (err) => {
+  console.error("POSTGRES POOL ERROR:", err)
 })
 
 // ==============================
@@ -121,6 +116,11 @@ function verifyShopify(req) {
   }
 
   const secret = process.env.SHOPIFY_WEBHOOK_SECRET || ""
+
+  if (!secret) {
+    console.error("SHOPIFY HMAC ERROR: falta SHOPIFY_WEBHOOK_SECRET")
+    return false
+  }
 
   const digest = crypto
     .createHmac("sha256", secret)
@@ -718,7 +718,7 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-premium",
-    version: "premium-v1-postgres"
+    version: "premium-v2-postgres"
   })
 })
 
@@ -732,9 +732,14 @@ app.get("/api/health", async (_req, res) => {
   }
 })
 
+// ------------------------------
+// SHOPIFY WEBHOOK PREMIUM
+// IMPORTANTE: body raw SOLO aquí
+// ------------------------------
+
 app.post(
   "/api/premium/shopify/order-paid",
-  express.raw({ type: "application/json" }),
+  express.raw({ type: "application/json", limit: "2mb" }),
   async (req, res) => {
     try {
       console.log("=== PREMIUM WEBHOOK SHOPIFY RECIBIDO ===")
@@ -847,6 +852,12 @@ app.post(
   }
 )
 
+// ------------------------------
+// JSON parser para el resto
+// ------------------------------
+
+app.use(express.json({ limit: "2mb" }))
+
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
     const payload = normalizeFormPayload(req.body)
@@ -948,33 +959,4 @@ async function startServer() {
   }
 }
 
-startServer()  server premium actual, corrigemelo y listo para pegar entero if needed. One primary issue: the final user pasted code and asks "corrigemelo y listo para pegar entero". Need provide corrected full code. Need identify issues. They likely already applied raw route but 502 persists maybe because deploy logs don't show request logs. Maybe issue is middleware app.use((req,res,next)=> express.json()(req,res,next)) weird excluded route omitted in pasted current code. In current code, they removed global exclusion and just have express.raw in route. But they never call app.use(express.json()) at all! For form-submitted route, req.body undefined maybe but not relevant. 502 on webhook though. Potential issue maybe middleware ordering with no body parser not issue because route has raw. Why no deploy logs of request? maybe deploy logs only show startup, app logs at runtime not there? Yet should. HTTP logs show 502 indicates thrown before response? Could be from platform because app closes connection? Maybe because body too large? But likely from verifyShopify/JSON.parse. But route should catch and log. Since no logs of webhook, perhaps issue is not deployed after code change? Yet pasted code maybe not committed. But user asks correct code full. Need improve logging and use express.json for non-webhook routes. Also add route-specific raw parser and add request logging maybe enough. Need maybe 502 due express route double-reading? I think if no global app.use(express.json()) then /api/premium/form-submitted won't parse, but webhook route okay.
-
-Could also be because Shopify webhook content type may include charset: application/json; charset=utf-8. express.raw({type:"application/json"}) handles via type-is should match application/json with suffix params yes. okay.
-
-Need perhaps use app.use("/api/premium/form-submitted", express.json()) or global after webhook route definitions. Better clean code:
-app.use(cors())
-app.get favicon
-app.use(express.json({limit:"2mb"})) after raw route? Actually if route-specific raw defined in app.post before app.use(express.json()), route matched first and body parser raw runs. Then app.use(express.json()) for following routes. So define webhook route before express.json middleware? In Express, middleware order matters, but route path exact on first route. If a later app.use(express.json()) exists earlier in stack, it will consume body. So easiest define webhook route before app.use(express.json()) or use app.use skip condition. Let's provide robust version:
-- app.use(cors())
-- favicon route
-- define helpers, then webhook route with express.raw route-level
-- then app.use(express.json({limit:"2mb"}))
-- then form-submitted route
-Could still access helper definitions prior.
-
-Need maybe add pool.on('error') logging.
-Could add more detailed logs inside webhook catch.
-Potential 502 due `res.status(200).json(...)` then asynchronous email sending throwing causing unhandled rejection after response? No because inside for loop after res sent but within same try, errors caught locally. fine.
-
-Need maybe use await req.body? no.
-
-Let's craft full corrected code with:
-- express.json only after webhook route
-- extensive logs
-- safer verifyShopify with base64 decode? Actually Buffer.from(hmac,"utf8") okay compare ascii bytes; better compare strings? timingSafeEqual on ascii okay if equal length. fine.
-- Add `/api/health` and root.
-- maybe include `app.disable("x-powered-by")`
-
-Need ensure normalizeFormPayload can handle undefined body by express.json. Fine.
-Let's produce complete code and mention paste whole file and redeploy. No citations needed.
+startServer()
