@@ -10,6 +10,9 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
+
 // ==============================
 // CONFIG PRODUCTOS PREMIUM
 // ==============================
@@ -31,8 +34,6 @@ const PREMIUM_PRODUCTS = {
     formUrl: "https://forms.gle/AyAm7JACnZCoXNsy7"
   }
 }
-
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
 
 // ==============================
 // MIDDLEWARES
@@ -509,11 +510,6 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true })
 })
 
-// ------------------------------
-// SHOPIFY WEBHOOK PREMIUM
-// body raw SOLO aquí
-// ------------------------------
-
 app.post(
   "/api/premium/shopify/order-paid",
   express.raw({ type: "application/json", limit: "2mb" }),
@@ -633,10 +629,6 @@ app.post(
     }
   }
 )
-
-// ------------------------------
-// JSON parser para el resto
-// ------------------------------
 
 app.use(express.json({ limit: "2mb" }))
 
