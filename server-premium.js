@@ -11,7 +11,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const INTERNAL_EMAIL = "contactopremium@eltarotdelaruedadelafortuna.com"
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
+  "https://script.google.com/macros/s/AKfycbzjKG6pCdsfIbwRvRugSuWHi5TRGpApVw-jGXbxbnu-BU7C8mYnktBjdQfLv-UXLwyI/exec"
 
 // ==============================
 // CONFIG PRODUCTOS PREMIUM
