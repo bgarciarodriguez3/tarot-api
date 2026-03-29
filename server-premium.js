@@ -8,7 +8,7 @@ const { Resend } = require("resend")
 const app = express()
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
+const INTERNAL_EMAIL = "contactopremium@eltarotdelaruedadelafortuna.com"
 
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
@@ -117,7 +117,7 @@ function buildAccessEmailText(record) {
   return [
     "Querida alma,",
     "",
-    "Tu portal de sabiduría personalizada ya está abierto para que, cuando estés lista, nos compartas tus dudas e inquietudes.",
+    "Tu portal de sabiduría personalizada ya está abierto para que, cuando quieras, nos compartas tus dudas e inquietudes.",
     "",
     "Para comenzar a descubrir las revelaciones que el Universo guarda para ti, necesitamos conocer tu situación con el cariño y el respeto que merece.",
     "",
@@ -128,8 +128,8 @@ function buildAccessEmailText(record) {
     "",
     "Un fuerte abrazo de luz,",
     "Equipo de Expertos Premium Tarot de La Rueda de la Fortuna",
-    "contactopremium@laruedadelafortuna.com",
-    "www.laruedadelafortuna.com"
+    "contactopremium@eltarotdelaruedadelafortuna.com",
+    "www.eltarotdelaruedadelafortuna.com"
   ].join("\n")
 }
 
@@ -137,17 +137,17 @@ function buildAccessEmailHtml(record) {
   return `
     <div style="margin:0;padding:0;background:#f6f1e7;">
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
-        <div style="background:linear-gradient(180deg,#1a1330 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
+        <div style="background:linear-gradient(180deg,#120d1f 0%,#241845 100%);border-radius:28px;padding:1px;box-shadow:0 20px 60px rgba(0,0,0,0.18);">
           <div style="background:linear-gradient(180deg,#fcf7ef 0%,#f7f1e6 100%);border-radius:27px;padding:36px 28px;color:#2b2238;font-family:Georgia, 'Times New Roman', serif;">
 
             <div style="text-align:center;margin-bottom:22px;">
               <div style="display:inline-block;font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#8b6b2f;border:1px solid rgba(139,107,47,0.28);border-radius:999px;padding:8px 14px;background:rgba(255,255,255,0.55);">
-                Tus mensajes cósmicos ya están listos
+                Tu portal ya está abierto
               </div>
             </div>
 
             <div style="text-align:center;margin-bottom:20px;">
-              <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
+              <div style="font-size:30px;line-height:1;color:#caa24d;">✦</div>
               <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
                 Accede a tu destino
               </h1>
@@ -174,13 +174,39 @@ function buildAccessEmailHtml(record) {
               Será un espacio íntimo y confidencial para que nos cuentes lo que sientes y podamos prepararte una senda totalmente personalizada para tu camino.
             </p>
 
-            <div style="text-align:center;margin:28px 0;">
+            <p style="margin:0 0 24px;font-size:16px;line-height:1.85;text-align:center;color:#3b2d4a;">
+              Tu portal ya está abierto. Da el paso y descubre el mensaje que el Universo tiene reservado para ti.
+            </p>
+
+            <div style="text-align:center;margin:40px 0 34px;">
+              <div style="font-size:22px;line-height:1;color:#d4af37;margin-bottom:12px;">
+                ✦
+              </div>
+
               <a
                 href="${record.form_url}"
-                style="display:inline-block;background:#241845;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:999px;font-weight:bold;"
+                style="
+                  display:inline-block;
+                  background:#0b0b0f;
+                  color:#d4af37;
+                  text-decoration:none;
+                  padding:18px 38px;
+                  border-radius:999px;
+                  font-weight:bold;
+                  font-size:16px;
+                  letter-spacing:1px;
+                  border:1px solid #d4af37;
+                  box-shadow:
+                    0 0 12px rgba(212,175,55,0.25),
+                    0 8px 25px rgba(0,0,0,0.35);
+                "
               >
-                Accede a tu destino
+                ✨ ACCEDE A TU DESTINO ✨
               </a>
+
+              <div style="margin-top:14px;color:#d4af37;font-size:14px;letter-spacing:8px;">
+                ✧ ✦ ✧
+              </div>
             </div>
 
             <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:#6d5a7b;text-align:center;">
@@ -207,11 +233,11 @@ function buildAccessEmailHtml(record) {
             </div>
 
             <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
-              📧 contactopremium@laruedadelafortuna.com
+              📧 contactopremium@eltarotdelaruedadelafortuna.com
             </p>
 
             <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
-              🌐 www.laruedadelafortuna.com
+              🌐 www.eltarotdelaruedadelafortuna.com
             </p>
 
           </div>
@@ -235,8 +261,8 @@ function buildClientConfirmationText({ customerName }) {
     "",
     "Un fuerte abrazo de luz,",
     "Equipo de Expertos Premium Tarot de La Rueda de la Fortuna",
-    "contactopremium@laruedadelafortuna.com",
-    "www.laruedadelafortuna.com"
+    "contactopremium@eltarotdelaruedadelafortuna.com",
+    "www.eltarotdelaruedadelafortuna.com"
   ].join("\n")
 }
 
@@ -304,11 +330,11 @@ function buildClientConfirmationHtml({ customerName }) {
             </div>
 
             <p style="margin:8px 0;text-align:center;font-size:14px;color:#5a4968;">
-              📧 contactopremium@laruedadelafortuna.com
+              📧 contactopremium@eltarotdelaruedadelafortuna.com
             </p>
 
             <p style="margin:4px 0 0;text-align:center;font-size:14px;color:#5a4968;">
-              🌐 www.laruedadelafortuna.com
+              🌐 www.eltarotdelaruedadelafortuna.com
             </p>
 
           </div>
@@ -483,10 +509,10 @@ function normalizeFormPayload(body = {}) {
     productId: String(body.productId || "").trim(),
     productName: String(
       body.productName ||
-      body.productTitle ||
-      body.tipo ||
-      body.tipoConsulta ||
-      ""
+        body.productTitle ||
+        body.tipo ||
+        body.tipoConsulta ||
+        ""
     ).trim(),
     submittedAt: body.submittedAt || new Date().toISOString(),
     answers: body.answers || {},
@@ -527,8 +553,8 @@ app.post(
       const email = String(order.email || order.contact_email || "").trim()
       const customerName = String(
         order?.customer?.first_name ||
-        order?.billing_address?.first_name ||
-        ""
+          order?.billing_address?.first_name ||
+          ""
       ).trim()
 
       const financialStatus = String(order.financial_status || "").toLowerCase()
