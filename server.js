@@ -1173,16 +1173,89 @@ ${normalized.cierre}
 }
 
 function findProductConfigFromLineItem(item) {
+  const title = String(item?.title || "")
+    .trim()
+    .toLowerCase()
+
   const productId = item?.product_id ? String(item.product_id) : null
   const variantId = item?.variant_id ? String(item.variant_id) : null
 
+  console.log("SHOPIFY ITEM DEBUG:", {
+    title: item?.title,
+    product_id: item?.product_id,
+    variant_id: item?.variant_id
+  })
+
+  if (
+    title.includes("lectura profunda") ||
+    title.includes("análisis completo") ||
+    title.includes("analisis completo") ||
+    title.includes("12 cartas")
+  ) {
+    return {
+      productId: "10493383082321",
+      config: PRODUCTS["10493383082321"],
+      matchedBy: "title_lectura_profunda"
+    }
+  }
+
+  if (
+    title.includes("tres puertas") ||
+    title.includes("destino") ||
+    title.includes("3 cartas")
+  ) {
+    return {
+      productId: "10493369745745",
+      config: PRODUCTS["10493369745745"],
+      matchedBy: "title_tres_puertas"
+    }
+  }
+
+  if (
+    title.includes("semilla estelar") ||
+    title.includes("5 cartas")
+  ) {
+    return {
+      productId: "10495993446737",
+      config: PRODUCTS["10495993446737"],
+      matchedBy: "title_semilla_estelar"
+    }
+  }
+
+  if (
+    title.includes("ángeles") ||
+    title.includes("angeles") ||
+    title.includes("angelical") ||
+    title.includes("4 cartas")
+  ) {
+    return {
+      productId: "10496012616017",
+      config: PRODUCTS["10496012616017"],
+      matchedBy: "title_angeles"
+    }
+  }
+
   if (productId && PRODUCTS[productId]) {
-    return { productId, config: PRODUCTS[productId], matchedBy: "product_id" }
+    return {
+      productId,
+      config: PRODUCTS[productId],
+      matchedBy: "product_id"
+    }
   }
 
   if (variantId && PRODUCTS[variantId]) {
-    return { productId: variantId, config: PRODUCTS[variantId], matchedBy: "variant_id" }
+    return {
+      productId: variantId,
+      config: PRODUCTS[variantId],
+      matchedBy: "variant_id"
+    }
   }
+
+  console.log("PRODUCTO NO IDENTIFICADO:", {
+    title,
+    productId,
+    variantId
+  })
 
   return null
 }
@@ -1229,8 +1302,7 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     createdAt: new Date().toISOString(),
     completedAt: null
   }
-
-  saveSession(session)
+    saveSession(session)
   return session
 }
 
@@ -1240,471 +1312,4 @@ app.get("/", (_req, res) => {
     service: "tarot-api",
     version: "production-sqlite-v8"
   })
-})
-
-app.get("/api/health", (_req, res) => {
-  res.json({
-    ok: true
-  })
-})
-
-app.get("/api/session", (req, res) => {
-  try {
-    const { token } = req.query
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "Falta token"
-      })
-    }
-
-    const session = getSessionByToken(String(token))
-
-    if (!session) {
-      return res.status(404).json({
-        ok: false,
-        error: "Sesión no encontrada"
-      })
-    }
-
-    return res.json({
-      ok: true,
-      token: session.token,
-      productName: session.productName,
-      deck: session.deck || session.deckId,
-      deckId: session.deckId,
-      maxCards: Number(session.maxCards || session.pick || 3),
-      pick: Number(session.pick || session.maxCards || 3),
-      deckSize: session.deckSize,
-      pagePath: session.pagePath || "",
-      email: session.email || "",
-      status: session.status,
-      selectedCards: session.selectedCards || [],
-      interpretation: session.interpretation || "",
-      reading: session.reading || null,
-      readingDone: session.status === "completed"
-    })
-  } catch (error) {
-    console.error("SESSION GET ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-app.get("/api/cards/:deckId", (req, res) => {
-  try {
-    const deckId = String(req.params.deckId || "")
-
-    if (!deckId) {
-      return res.status(400).json({
-        ok: false,
-        error: "Falta deckId"
-      })
-    }
-
-    const deck = getPublicDeck(deckId)
-
-    return res.json({
-      ok: true,
-      ...deck
-    })
-  } catch (error) {
-    console.error("CARDS GET ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-app.post("/api/submit", async (req, res) => {
-  try {
-    const { token, cards } = req.body
-
-    console.log("=== SUBMIT REQUEST ===")
-    console.log("BODY:", JSON.stringify(req.body, null, 2))
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "Falta token"
-      })
-    }
-
-    if (!Array.isArray(cards) || cards.length === 0) {
-      return res.status(400).json({
-        ok: false,
-        error: "Faltan cartas seleccionadas"
-      })
-    }
-
-    const session = getSessionByToken(String(token))
-
-    if (!session) {
-      return res.status(404).json({
-        ok: false,
-        error: "Sesión no encontrada"
-      })
-    }
-
-    if (!Array.isArray(session.selectedCardIds)) session.selectedCardIds = []
-    if (!Array.isArray(session.selectedCards)) session.selectedCards = []
-    if (session.reading && typeof session.reading !== "object") session.reading = null
-
-    if (session.status === "completed" && session.reading) {
-      return res.json({
-        ok: true,
-        alreadyCompleted: true,
-        reading: session.reading,
-        interpretation: session.interpretation || "",
-        cards: session.selectedCards || []
-      })
-    }
-
-    if (session.status === "processing") {
-      return res.status(409).json({
-        ok: false,
-        error: "La lectura ya se está procesando"
-      })
-    }
-
-    const normalizedInputs = cards.map((c) => sanitizeIncomingCard(c)).filter(Boolean)
-
-    const uniqueInputs = []
-    const seen = new Set()
-
-    for (const item of normalizedInputs) {
-      const identityKey = [
-        normalizeCardValue(item.id),
-        normalizeCardValue(item.name),
-        normalizeCardValue(getImageFilename(item.image)),
-        item.reversed ? "rev" : "upright"
-      ].join("|")
-
-      if (!seen.has(identityKey)) {
-        seen.add(identityKey)
-        uniqueInputs.push(item)
-      }
-    }
-
-    if (uniqueInputs.length !== Number(session.pick)) {
-      return res.status(400).json({
-        ok: false,
-        error: `Debes elegir exactamente ${session.pick} cartas`
-      })
-    }
-
-    const deck = loadDeck(session.deckId)
-
-    const resolutionDebug = []
-    const selectedCards = []
-
-    for (const item of uniqueInputs) {
-      const resolved = resolveCardFromDeck(deck, item)
-
-      resolutionDebug.push({
-        incoming: item,
-        resolved: resolved
-          ? {
-              id: resolved.id,
-              name: resolved.name || resolved.title || "",
-              image: resolved.image || "",
-              reversed: Boolean(resolved.reversed)
-            }
-          : null
-      })
-
-      if (resolved) {
-        selectedCards.push(resolved)
-      }
-    }
-
-    if (selectedCards.length !== Number(session.pick)) {
-      console.error("CARD RESOLUTION ERROR:", {
-        deckId: session.deckId,
-        expectedPick: session.pick,
-        received: uniqueInputs,
-        resolutionDebug,
-        resolvedCount: selectedCards.length,
-        availableCards: deck.cards.map((card) => ({
-          id: card.id,
-          slug: card.slug || "",
-          name: card.name || card.title || "",
-          image: card.image || ""
-        }))
-      })
-
-      return res.status(400).json({
-        ok: false,
-        error: "No se pudieron resolver todas las cartas elegidas"
-      })
-    }
-
-    session.status = "processing"
-    session.selectedCardIds = selectedCards.map((card) => String(card.id))
-    session.selectedCards = selectedCards
-    saveSession(session)
-
-    const aiResult = await generateAIReading(
-      session.productName,
-      session.deckId,
-      session.pick,
-      selectedCards
-    )
-
-    session.interpretation = aiResult.interpretation
-    session.reading = aiResult.reading
-    session.status = "completed"
-    session.completedAt = new Date().toISOString()
-    saveSession(session)
-
-    if (session.email) {
-      try {
-        await withTimeout(
-          sendResultEmail(session),
-          15000,
-          "RESULT EMAIL TIMEOUT"
-        )
-      } catch (emailError) {
-        console.error("RESULT EMAIL ERROR:", emailError)
-      }
-    }
-
-    return res.json({
-      ok: true,
-      reading: session.reading,
-      interpretation: session.interpretation,
-      cards: selectedCards
-    })
-  } catch (error) {
-    console.error("SUBMIT ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-app.get("/api/reading/result", (req, res) => {
-  try {
-    const { token } = req.query
-
-    if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "Falta token"
-      })
-    }
-
-    const session = getSessionByToken(String(token))
-
-    if (!session) {
-      return res.status(404).json({
-        ok: false,
-        error: "Lectura no encontrada"
-      })
-    }
-
-    return res.json({
-      ok: true,
-      reading: {
-        token: session.token,
-        product: session.productName,
-        deck: session.deckId,
-        spread: session.pick,
-        status: session.status,
-        cardsData: session.selectedCards || [],
-        interpretation: session.interpretation || "",
-        sections: session.reading || null
-      }
-    })
-  } catch (error) {
-    console.error("READING GET ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-app.post("/api/debug/create-session", (req, res) => {
-  try {
-    const {
-      productId = "10496012616017",
-      email = "",
-      orderId = `debug-order-${Date.now()}`,
-      lineItemId = `debug-line-${Date.now()}`,
-      unitIndex = 0
-    } = req.body || {}
-
-    const session = createSession({
-      orderId: String(orderId),
-      lineItemId: String(lineItemId),
-      productId: String(productId),
-      email,
-      unitIndex: Number(unitIndex || 0)
-    })
-
-    return res.json({
-      ok: true,
-      session,
-      url: readingUrl(session)
-    })
-  } catch (error) {
-    console.error("DEBUG CREATE SESSION ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-app.post("/api/shopify/order-paid", async (req, res) => {
-  try {
-    console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
-
-    if (!verifyShopify(req)) {
-      console.error("SHOPIFY WEBHOOK INVALID HMAC")
-      return res.status(401).send("invalid")
-    }
-
-    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
-
-    if (webhookId && isWebhookProcessed(webhookId)) {
-      console.log("WEBHOOK DUPLICADO IGNORADO:", webhookId)
-
-      return res.status(200).json({
-        ok: true,
-        duplicate: true
-      })
-    }
-
-    let order = null
-
-    try {
-      order = JSON.parse(req.body.toString("utf8"))
-    } catch (parseError) {
-      console.error("SHOPIFY JSON PARSE ERROR:", parseError)
-
-      return res.status(400).json({
-        ok: false,
-        error: "invalid_json"
-      })
-    }
-
-    const email = order.email || order.contact_email || ""
-    const financialStatus = String(order.financial_status || "").toLowerCase()
-
-    console.log("ORDER INFO:", {
-      orderId: order.id,
-      orderName: order.name,
-      email,
-      financialStatus,
-      itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
-    })
-
-    if (financialStatus !== "paid") {
-      console.log("⛔ Pedido ignorado por financial_status:", financialStatus)
-
-      return res.status(200).json({
-        ok: true,
-        skipped: true,
-        reason: "order_not_paid"
-      })
-    }
-
-    let processedCount = 0
-    const created = []
-
-    for (const item of order.line_items || []) {
-      const found = findProductConfigFromLineItem(item)
-
-      if (!found || !found.config) {
-        console.log("Producto no configurado:", {
-          title: item.title,
-          product_id: item.product_id,
-          variant_id: item.variant_id
-        })
-
-        continue
-      }
-
-      const quantity = Number(item.quantity || 1)
-
-      for (let i = 0; i < quantity; i += 1) {
-        let session = null
-
-        try {
-          session = createSession({
-            orderId: String(order.id),
-            lineItemId: String(item.id),
-            productId: found.productId,
-            email,
-            unitIndex: i
-          })
-        } catch (sessionError) {
-          console.error("SESSION CREATE ERROR:", sessionError)
-          continue
-        }
-
-        if (!session) continue
-
-        if (!session.accessEmailSent && session.email) {
-          try {
-            await withTimeout(
-              sendAccessEmail(session),
-              15000,
-              "ACCESS EMAIL TIMEOUT"
-            )
-          } catch (emailError) {
-            console.error("ACCESS EMAIL ERROR:", emailError)
-          }
-        }
-
-        created.push({
-          token: session.token,
-          url: readingUrl(session),
-          productId: session.productId,
-          productName: session.productName
-        })
-
-        processedCount += 1
-      }
-    }
-
-    if (webhookId) {
-      try {
-        markWebhookProcessed(webhookId)
-      } catch (webhookError) {
-        console.error("MARK WEBHOOK ERROR:", webhookError)
-      }
-    }
-
-    return res.status(200).json({
-      ok: true,
-      processedCount,
-      created
-    })
-  } catch (error) {
-    console.error("SHOPIFY ORDER PAID ERROR:", error)
-
-    return res.status(500).json({
-      ok: false,
-      error: error.message
-    })
-  }
-})
-
-const PORT = Number(process.env.PORT) || 8080
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`server running on port ${PORT}`)
 })
