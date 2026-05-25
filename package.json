@@ -1,14 +1,14 @@
 {
   "name": "tarot-api",
   "version": "1.0.0",
-  "description": "Backend de tarot automatizado con Shopify + Railway + Resend + OpenAI",
+  "description": "Backend de tarot automatizado con Shopify + Render + Resend + OpenAI",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   },
   "dependencies": {
     "better-sqlite3": "11.8.1",
