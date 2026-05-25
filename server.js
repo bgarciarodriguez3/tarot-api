@@ -1302,7 +1302,8 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
     createdAt: new Date().toISOString(),
     completedAt: null
   }
-    saveSession(session)
+
+  saveSession(session)
   return session
 }
 
@@ -1313,3 +1314,4 @@ app.get("/", (_req, res) => {
     version: "production-sqlite-v8"
   })
 })
+
