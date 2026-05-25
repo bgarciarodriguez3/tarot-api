@@ -18,10 +18,9 @@ const openai = new OpenAI({
 
 app.use(cors())
 app.use("/api/shopify/order-paid", express.raw({ type: "application/json" }))
-app.use(express.json())
+app.use(express.json({ limit: "2mb" }))
 
-const STORE_URL =
-  process.env.STORE_URL || "https://eltarotdelaruedadelafortuna.com"
+const STORE_URL = process.env.STORE_URL || "https://eltarotdelaruedadelafortuna.com"
 
 const PRODUCTS = {
   "10496012616017": {
@@ -54,8 +53,40 @@ const PRODUCTS = {
   }
 }
 
-const decksCache = new Map()
+const PRODUCT_READING_TONES = {
+  angeles: `
+En lecturas de Ángeles:
+- El tono debe sentirse amoroso, protector, luminoso y reconfortante.
+- Hay guía espiritual, pero también verdad emocional.
+- Nunca debe sonar agresivo; sí profundo, íntimo y sanador.
+`,
+  semilla_estelar: `
+En lecturas de Semilla Estelar:
+- El tono debe sentirse cósmico, álmico, expansivo y con identidad.
+- La lectura debe tocar propósito, memoria interior, despertar y autenticidad.
+- Debe generar sensación de reconocimiento.
+`,
+  arcanos_mayores_3: `
+En lecturas de 3 cartas:
+- La lectura debe sentirse clara, intensa y enfocada.
+- Debe haber sensación de cruce de caminos, decisión y movimiento interno.
+`,
+  arcanos_mayores_12: `
+En lecturas profundas de 12 cartas:
+- La lectura debe sentirse amplia, narrativa, envolvente y premium.
+- Debe parecer un mapa completo del momento vital de la persona.
+`
+}
 
+const READING_STYLE_GUIDE = `
+Escribe siempre en español.
+Tu voz debe sentirse íntima, humana, cálida, profunda y transformadora.
+La lectura debe parecer premium, emocional y personalizada, nunca genérica.
+No uses listas ni viñetas. Redacta como una interpretación fluida y envolvente.
+No hagas predicciones absolutas. Debe sentirse como guía, espejo interno y revelación emocional.
+`
+
+const decksCache = new Map()
 const DB_PATH = path.join(__dirname, "data", "tarot.sqlite")
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true })
 
@@ -92,97 +123,10 @@ CREATE TABLE IF NOT EXISTS processed_webhooks (
 );
 `)
 
-const READING_STYLE_GUIDE = `
-Escribe siempre en español.
-
-Tu voz debe sentirse íntima, humana, cálida, profunda y transformadora.
-La lectura debe parecer premium, emocional y personalizada, nunca genérica.
-
-OBJETIVO:
-La persona debe sentir:
-- "esto habla de mí"
-- "esto tiene profundidad real"
-- "esto vale más de lo que esperaba"
-
-REGLAS DE ESTILO:
-- No escribas frases vacías ni genéricas.
-- No repitas la misma idea con palabras distintas.
-- No uses tono técnico.
-- No uses tono frío.
-- No uses un tono artificialmente grandilocuente.
-- No uses listas ni viñetas.
-- Redacta como una interpretación fluida y envolvente.
-- Haz que cada lectura tenga ritmo, tensión emocional y sensación de verdad.
-- Integra profundidad psicológica y espiritual al mismo tiempo.
-- Usa imágenes emocionales suaves y elegantes, no exageradas.
-- Debe sentirse ceremonial, delicada y potente.
-- Evita sonar como inteligencia artificial.
-- Algunas frases pueden ser más cortas y otras más profundas para sentirse humanas.
-- No hagas que todos los apartados tengan exactamente la misma longitud.
-- Introduce naturalidad emocional.
-- A veces una sola frase intensa tiene más fuerza que un párrafo largo.
-- Debe sentirse como una tarotista real escribiendo desde intuición auténtica.
-- No expliques demasiado.
-- Deja pequeños espacios de misterio emocional.
-
-SOBRE LA PASIÓN:
-- La pasión debe aparecer cuando tenga sentido como fuerza interna, deseo verdadero, intensidad emocional, fuego del corazón, impulso del alma o energía de transformación.
-- No repitas siempre la palabra "pasión"; alterna con deseo, fuego interno, intensidad, verdad del corazón, impulso vital o atracción profunda.
-- La pasión no debe sonar banal ni superficial.
-- Debe sentirse como algo que mueve a la persona, la confronta o la despierta por dentro.
-
-ESTRUCTURA INTERNA DE CADA LECTURA:
-1. Apertura emocional conectada con el momento vital de la persona.
-2. Interpretación clara de la energía o situación.
-3. Conflicto, bloqueo o tensión principal.
-4. Revelación o verdad central.
-5. Consejo útil, cálido y accionable.
-6. Cierre con fuerza emocional y sensación de guía.
-
-RESULTADO DESEADO:
-- Más profundidad
-- Más emoción
-- Más valor percibido
-- Más sensación de lectura única
-`
-
-const PRODUCT_READING_TONES = {
-  angeles: `
-En lecturas de Ángeles:
-- El tono debe sentirse amoroso, protector, luminoso y reconfortante.
-- Hay guía espiritual, pero también verdad emocional.
-- La pasión debe aparecer como verdad del corazón, llamada interior o impulso del alma.
-- Nunca debe sonar agresivo; sí profundo, íntimo y sanador.
-`,
-  semilla_estelar: `
-En lecturas de Semilla Estelar:
-- El tono debe sentirse cósmico, álmico, expansivo y con identidad.
-- La lectura debe tocar propósito, memoria interior, despertar y autenticidad.
-- La pasión debe sentirse como recuerdo del alma, activación interna o llamada profunda a ser quien realmente es.
-- Debe generar sensación de reconocimiento: "esto explica lo que me pasa".
-`,
-  arcanos_mayores_3: `
-En lecturas de 3 cartas / Tres Puertas del Destino:
-- La lectura debe sentirse clara, intensa y muy enfocada.
-- Tiene que haber sensación de cruce de caminos, decisión y movimiento interno.
-- La pasión debe actuar como impulso emocional que empuja a elegir, a mirar la verdad o a dejar de posponer algo importante.
-- Debe dejar sensación de claridad y fuerza.
-`,
-  arcanos_mayores_12: `
-En lecturas profundas de 12 cartas:
-- La lectura debe sentirse amplia, narrativa, envolvente y premium.
-- Debe parecer un mapa completo del momento vital de la persona.
-- La pasión debe aparecer como fuerza que reorganiza su camino, remueve bloqueos o despierta una verdad que ya no puede ignorar.
-- Tiene que sentirse transformadora, seria y con alto valor percibido.
-`
-}
-
 function withTimeout(promise, ms, message) {
   return Promise.race([
     promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(message)), ms)
-    )
+    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
   ])
 }
 
@@ -198,7 +142,6 @@ function generateToken(orderId, lineItemId, productId, unitIndex = 0) {
 function parseCompositeToken(token) {
   const raw = String(token || "").trim()
   const parts = raw.split("-")
-
   if (parts.length < 4) return null
 
   const unitIndex = parts[parts.length - 1]
@@ -219,84 +162,43 @@ function parseCompositeToken(token) {
 
 function verifyShopify(req) {
   const hmac = req.get("X-Shopify-Hmac-Sha256")
-
-  if (!hmac) {
-    console.error("SHOPIFY HMAC ERROR: falta header X-Shopify-Hmac-Sha256")
-    return false
-  }
-
-  if (!Buffer.isBuffer(req.body)) {
-    console.error("SHOPIFY HMAC ERROR: req.body no es Buffer")
-    return false
-  }
+  if (!hmac || !Buffer.isBuffer(req.body)) return false
 
   const secret = process.env.SHOPIFY_WEBHOOK_SECRET || ""
-
-  const digest = crypto
-    .createHmac("sha256", secret)
-    .update(req.body)
-    .digest("base64")
+  const digest = crypto.createHmac("sha256", secret).update(req.body).digest("base64")
 
   try {
     return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(digest))
-  } catch (error) {
-    console.error("SHOPIFY HMAC ERROR:", error)
+  } catch (_error) {
     return false
+  }
+}
+
+function safeJsonParse(text, fallback = null) {
+  try {
+    return JSON.parse(text)
+  } catch (_error) {
+    return fallback
   }
 }
 
 function safeDbJsonParse(value, fallback) {
   if (value === null || value === undefined) return fallback
   if (typeof value !== "string") return value
-
   const trimmed = value.trim()
   if (!trimmed) return fallback
-
-  try {
-    return JSON.parse(trimmed)
-  } catch (error) {
-    console.error("DB JSON PARSE ERROR:", {
-      value: trimmed.slice(0, 200),
-      error: error.message
-    })
-    return fallback
-  }
-}
-
-function safeJsonParse(text) {
-  try {
-    return JSON.parse(text)
-  } catch (_error) {
-    return null
-  }
+  return safeJsonParse(trimmed, fallback)
 }
 
 function loadDeck(deckName) {
-  if (decksCache.has(deckName)) {
-    return decksCache.get(deckName)
-  }
+  if (decksCache.has(deckName)) return decksCache.get(deckName)
 
   const filePath = path.join(__dirname, "data", "decks", `${deckName}.json`)
-
   if (!fs.existsSync(filePath)) {
     throw new Error(`No existe el mazo: ${deckName} en ${filePath}`)
   }
 
-  const raw = fs.readFileSync(filePath, "utf8")
-
-  let parsed
-  try {
-    parsed = JSON.parse(raw)
-  } catch (error) {
-    console.error("DECK JSON PARSE ERROR:", {
-      deckName,
-      filePath,
-      firstChars: raw.slice(0, 200),
-      error: error.message
-    })
-    throw error
-  }
-
+  const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"))
   if (!Array.isArray(parsed.cards)) {
     throw new Error(`El mazo ${deckName} no tiene un campo cards válido`)
   }
@@ -318,26 +220,15 @@ function normalizeCardValue(value) {
 function getImageFilename(url) {
   const raw = String(url || "").trim()
   if (!raw) return ""
-
-  try {
-    const clean = raw.split("?")[0]
-    const parts = clean.split("/")
-    return parts[parts.length - 1] || ""
-  } catch (_error) {
-    return ""
-  }
+  const clean = raw.split("?")[0]
+  const parts = clean.split("/")
+  return parts[parts.length - 1] || ""
 }
 
 function parseBooleanLike(value) {
   if (typeof value === "boolean") return value
-
-  const normalized = String(value || "")
-    .trim()
-    .toLowerCase()
-
-  return ["1", "true", "si", "sí", "yes", "invertida", "reversed"].includes(
-    normalized
-  )
+  const normalized = String(value || "").trim().toLowerCase()
+  return ["1", "true", "si", "sí", "yes", "invertida", "reversed"].includes(normalized)
 }
 
 function sanitizeIncomingCard(inputCard) {
@@ -354,13 +245,9 @@ function sanitizeIncomingCard(inputCard) {
   if (inputCard && typeof inputCard === "object") {
     return {
       id: String(inputCard.id || inputCard.cardId || inputCard.slug || "").trim(),
-      name: String(
-        inputCard.name || inputCard.title || inputCard.cardName || ""
-      ).trim(),
+      name: String(inputCard.name || inputCard.title || inputCard.cardName || "").trim(),
       image: String(inputCard.image || inputCard.url || inputCard.src || "").trim(),
-      reversed: parseBooleanLike(
-        inputCard.reversed ?? inputCard.invertida ?? inputCard.isReversed
-      ),
+      reversed: parseBooleanLike(inputCard.reversed ?? inputCard.invertida ?? inputCard.isReversed),
       position: Number(inputCard.position || inputCard.index || 0) || 0
     }
   }
@@ -369,15 +256,7 @@ function sanitizeIncomingCard(inputCard) {
 }
 
 function cardCandidateKeys(card) {
-  return [
-    card?.id,
-    card?.slug,
-    card?.name,
-    card?.title,
-    card?.arcano,
-    card?.image,
-    getImageFilename(card?.image || "")
-  ]
+  return [card?.id, card?.slug, card?.name, card?.title, card?.arcano, card?.image, getImageFilename(card?.image || "")]
     .filter(Boolean)
     .map(normalizeCardValue)
     .filter(Boolean)
@@ -389,12 +268,7 @@ function resolveCardFromDeck(deck, inputCard) {
   const sanitized = sanitizeIncomingCard(inputCard)
   if (!sanitized) return null
 
-  const inputKeys = [
-    sanitized.id,
-    sanitized.name,
-    sanitized.image,
-    getImageFilename(sanitized.image)
-  ]
+  const inputKeys = [sanitized.id, sanitized.name, sanitized.image, getImageFilename(sanitized.image)]
     .filter(Boolean)
     .map(normalizeCardValue)
     .filter(Boolean)
@@ -439,9 +313,18 @@ function readingUrl(session) {
   return `${STORE_URL}${pagePath}?token=${encodeURIComponent(session.token)}`
 }
 
-function buildAccessEmailText(session) {
-  const url = readingUrl(session)
+function stripHtml(html) {
+  return String(html || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<li>/gi, "- ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
 
+function buildAccessEmailText(session) {
   return [
     "Querida alma,",
     "",
@@ -452,7 +335,7 @@ function buildAccessEmailText(session) {
     "Hay mensajes que solo aparecen cuando el alma está preparada para escucharlos.",
     "",
     "Pulsa este enlace para entrar en tu espacio sagrado:",
-    url,
+    readingUrl(session),
     "",
     "Con mucha luz,",
     "El Tarot de la Rueda de la Fortuna"
@@ -472,7 +355,6 @@ function buildAccessEmailHtml(session) {
                 Tu espacio ya está preparado
               </div>
             </div>
-
             <div style="text-align:center;margin-bottom:20px;">
               <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
               <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
@@ -482,40 +364,21 @@ function buildAccessEmailHtml(session) {
                 Entra despacio. Tu mensaje ya te está esperando.
               </p>
             </div>
-
             <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
-
             <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">Querida alma,</p>
-
-            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-              Tu lectura ya ha comenzado a moverse hacia ti.
-            </p>
-
+            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">Tu lectura ya ha comenzado a moverse hacia ti.</p>
             <p style="margin:0 0 22px;font-size:16px;line-height:1.85;">
-              No la abras con prisa.<br>
-              Respira primero.<br>
+              No la abras con prisa.<br>Respira primero.<br>
               Hay mensajes que solo aparecen cuando el alma está preparada para escucharlos.
             </p>
-
             <div style="text-align:center;margin:28px 0;">
               <a href="${url}" style="display:inline-block;background:#241845;color:#ffffff;text-decoration:none;padding:14px 24px;border-radius:999px;font-weight:bold;">
                 Entrar en mi lectura
               </a>
             </div>
-
             <p style="margin:18px 0 0;font-size:13px;line-height:1.7;color:#6d5a7b;text-align:center;">
               Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
               <span style="word-break:break-all;">${url}</span>
-            </p>
-
-            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
-
-            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
-              Con luz,
-            </p>
-
-            <p style="margin:6px 0 0;text-align:center;font-size:18px;line-height:1.6;color:#241845;">
-              <strong>El Tarot de la Rueda de la Fortuna</strong>
             </p>
           </div>
         </div>
@@ -526,22 +389,17 @@ function buildAccessEmailHtml(session) {
 
 function buildResultEmailText(session) {
   const reading = session.reading || {}
-
   const content = [
     reading.introduccion || "",
     reading.significado_general || "",
     reading.amor ? "💗 Amor\n" + reading.amor : "",
     reading.trabajo_proposito ? "💫 Propósito\n" + reading.trabajo_proposito : "",
-    reading.consejo_espiritual
-      ? "🕊 Consejo espiritual\n" + reading.consejo_espiritual
-      : "",
+    reading.consejo_espiritual ? "🕊 Consejo espiritual\n" + reading.consejo_espiritual : "",
     reading.consejo_especial ? "✨ Consejo especial\n" + reading.consejo_especial : "",
     reading.afirmacion ? "🌞 Afirmación\n" + reading.afirmacion : "",
     reading.ritual ? "🕯 Ritual\n" + reading.ritual : "",
     reading.cierre ? "🌟 Cierre\n" + reading.cierre : ""
-  ]
-    .filter(Boolean)
-    .join("\n\n")
+  ].filter(Boolean).join("\n\n")
 
   return [
     "Querida alma,",
@@ -572,23 +430,10 @@ function buildResultEmailText(session) {
 }
 
 function buildResultEmailHtml(session) {
-  const reading = session.reading || {}
-
-  const content = [
-    reading.introduccion || "",
-    reading.significado_general || "",
-    reading.amor ? "💗 Amor\n" + reading.amor : "",
-    reading.trabajo_proposito ? "💫 Propósito\n" + reading.trabajo_proposito : "",
-    reading.consejo_espiritual
-      ? "🕊 Consejo espiritual\n" + reading.consejo_espiritual
-      : "",
-    reading.consejo_especial ? "✨ Consejo especial\n" + reading.consejo_especial : "",
-    reading.afirmacion ? "🌞 Afirmación\n" + reading.afirmacion : "",
-    reading.ritual ? "🕯 Ritual\n" + reading.ritual : "",
-    reading.cierre ? "🌟 Cierre\n" + reading.cierre : ""
-  ]
-    .filter(Boolean)
-    .join("\n\n")
+  const content = buildResultEmailText(session)
+    .split("\n")
+    .map((line) => line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"))
+    .join("\n")
 
   return `
     <div style="margin:0;padding:0;background:#f6f1e7;">
@@ -600,90 +445,17 @@ function buildResultEmailHtml(session) {
                 Mensaje revelado para ti
               </div>
             </div>
-
             <div style="text-align:center;margin-bottom:20px;">
               <div style="font-size:30px;line-height:1;color:#8b6b2f;">✦</div>
-              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">
-                Tu lectura ya ha llegado
-              </h1>
-              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">
-                Un mensaje para este momento exacto de tu camino
-              </p>
+              <h1 style="margin:10px 0 8px;font-size:30px;line-height:1.2;font-weight:normal;color:#241845;">Tu lectura ya ha llegado</h1>
+              <p style="margin:0;font-size:15px;color:#6d5a7b;line-height:1.7;">Un mensaje para este momento exacto de tu camino</p>
             </div>
-
             <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:22px auto 28px;"></div>
-
-            <p style="margin:0 0 16px;font-size:17px;line-height:1.8;">Querida alma,</p>
-
-            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-              Tu lectura ya ha llegado.
-            </p>
-
-            <p style="margin:0 0 16px;font-size:16px;line-height:1.85;">
-              No la leas como una respuesta cerrada.<br>
-              Léela como un espejo.<br>
-              Como una señal que se posa justo donde algo dentro de ti ya estaba preguntando.
-            </p>
-
-            <p style="margin:0 0 18px;font-size:16px;line-height:1.85;">
-              Respira.<br>
-              Lee despacio.<br>
-              Permite que cada palabra encuentre su lugar en ti.
-            </p>
-
-            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:18px 0 20px;">✨</div>
-
             <div style="white-space:pre-line;font-size:16px;line-height:1.9;color:#2f243c;margin:0 0 20px;">${content}</div>
-
-            <div style="text-align:center;font-size:20px;color:#8b6b2f;margin:8px 0 18px;">✨</div>
-
-            <p style="margin:0 0 12px;font-size:16px;line-height:1.85;">
-              Guarda este mensaje.<br>
-              A veces una lectura no termina cuando se lee.<br>
-              A veces empieza a trabajar dentro de ti después.
-            </p>
-
-            <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#c6a45a,transparent);margin:28px auto 24px;"></div>
-
-            <p style="margin:0;text-align:center;font-size:16px;line-height:1.8;color:#5a4968;">
-              Con Amor,
-            </p>
-
-            <p style="margin:6px 0 0 8px;text-align:center;font-size:18px;line-height:1.7;color:#241845;">
-              El equipo de Expertos Premium del Tarot de la Rueda de la Fortuna
-            </p>
-
-            <div style="text-align:center;margin:16px 0 10px;">
-              <img
-                src="https://cdn.shopify.com/s/files/1/0989/4694/1265/files/firma_transparente.png?v=1772104449"
-                alt="La Rueda de la Fortuna"
-                style="max-width:220px;width:100%;height:auto;display:inline-block;"
-              >
-            </div>
-
             <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,#d8c29a,transparent);margin:20px auto 18px;"></div>
-
-            <p style="margin:0 0 14px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a78;">
-              Guarda este email para volver a entrar cuando quieras.
-            </p>
-
-            <p style="margin:0 0 10px;text-align:center;font-size:13px;line-height:1.7;color:#7a6a78;">
-              Aviso legal:
-            </p>
-
             <p style="margin:0;text-align:center;font-size:12px;line-height:1.75;color:#8a7d87;">
-              Este servicio corresponde a un producto digital personalizado. De acuerdo con el artículo 103 del
-              Real Decreto Legislativo 1/2007, al tratarse de contenido digital y servicios personalizados, no es
-              posible ejercer el derecho de desistimiento una vez iniciado el proceso.
-              <br><br>
-              El servicio está destinado exclusivamente a personas mayores de 18 años.
-              <br><br>
-              Las interpretaciones de tarot se ofrecen con fines de orientación personal y entretenimiento y no
-              sustituyen asesoramiento profesional médico, legal, psicológico o financiero.
-              <br><br>
-              Al completar el formulario y utilizar el servicio aceptas estas condiciones.
-              <br><br>
-              Este correo es informativo y no admite respuesta.
+              Este servicio corresponde a un producto digital personalizado. El servicio está destinado exclusivamente a personas mayores de 18 años.
+              Las interpretaciones de tarot se ofrecen con fines de orientación personal y entretenimiento y no sustituyen asesoramiento profesional médico, legal, psicológico o financiero.
             </p>
           </div>
         </div>
@@ -692,20 +464,8 @@ function buildResultEmailHtml(session) {
   `
 }
 
-function stripHtml(html) {
-  return String(html || "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<li>/gi, "- ")
-    .replace(/<[^>]*>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
-}
-
 function rowToSession(row) {
   if (!row) return null
-
   return {
     token: row.token,
     orderId: row.order_id,
@@ -736,25 +496,16 @@ function getSessionByToken(token) {
   const tokenStr = String(token || "").trim()
   if (!tokenStr) return null
 
-  const directRow = db
-    .prepare("SELECT * FROM sessions WHERE token = ?")
-    .get(tokenStr)
-
+  const directRow = db.prepare("SELECT * FROM sessions WHERE token = ?").get(tokenStr)
   if (directRow) return rowToSession(directRow)
 
   const composite = parseCompositeToken(tokenStr)
-
   if (composite) {
-    const fallbackRows = db
-      .prepare(`
-        SELECT *
-        FROM sessions
-        WHERE order_id = ?
-          AND line_item_id = ?
-          AND product_id = ?
-        ORDER BY created_at ASC
-      `)
-      .all(composite.orderId, composite.lineItemId, composite.productId)
+    const fallbackRows = db.prepare(`
+      SELECT * FROM sessions
+      WHERE order_id = ? AND line_item_id = ? AND product_id = ?
+      ORDER BY created_at ASC
+    `).all(composite.orderId, composite.lineItemId, composite.productId)
 
     if (fallbackRows && fallbackRows.length) {
       const row = fallbackRows[composite.unitIndex] || fallbackRows[0]
@@ -821,30 +572,22 @@ function saveSession(session) {
 }
 
 function isWebhookProcessed(webhookId) {
-  const row = db
-    .prepare("SELECT webhook_id FROM processed_webhooks WHERE webhook_id = ?")
-    .get(String(webhookId))
-
+  if (!webhookId) return false
+  const row = db.prepare("SELECT webhook_id FROM processed_webhooks WHERE webhook_id = ?").get(String(webhookId))
   return Boolean(row)
 }
 
 function markWebhookProcessed(webhookId) {
-  db.prepare(`
-    INSERT OR IGNORE INTO processed_webhooks (webhook_id, created_at)
-    VALUES (?, ?)
-  `).run(String(webhookId), new Date().toISOString())
+  if (!webhookId) return
+  db.prepare("INSERT OR IGNORE INTO processed_webhooks (webhook_id, created_at) VALUES (?, ?)")
+    .run(String(webhookId), new Date().toISOString())
 }
 
 async function sendAccessEmail(session) {
   if (!session.email) throw new Error("La sesión no tiene email")
-  if (!process.env.RESEND_FROM_EMAIL) {
-    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
-  }
+  if (!process.env.RESEND_FROM_EMAIL) throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
 
-  if (session.accessEmailSent) {
-    console.log("EMAIL ACCESO: ya enviado para token", session.token)
-    return { already: true }
-  }
+  if (session.accessEmailSent) return { already: true }
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
@@ -854,30 +597,19 @@ async function sendAccessEmail(session) {
     html: buildAccessEmailHtml(session)
   })
 
-  if (result?.error) {
-    console.error("RESEND ACCESS ERROR:", result.error)
-    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
-  }
+  if (result?.error) throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
 
   session.accessEmailSent = true
   saveSession(session)
-
-  console.log("RESEND ACCESS OK:", result)
   return result
 }
 
 async function sendResultEmail(session) {
   if (!session.email) throw new Error("La sesión no tiene email")
-  if (!process.env.RESEND_FROM_EMAIL) {
-    throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
-  }
-
+  if (!process.env.RESEND_FROM_EMAIL) throw new Error("Falta RESEND_FROM_EMAIL en variables de entorno")
   if (!session.reading) throw new Error("No hay lectura generada")
 
-  if (session.resultEmailSent) {
-    console.log("EMAIL RESULTADO: ya enviado para token", session.token)
-    return { already: true }
-  }
+  if (session.resultEmailSent) return { already: true }
 
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
@@ -887,15 +619,10 @@ async function sendResultEmail(session) {
     html: buildResultEmailHtml(session)
   })
 
-  if (result?.error) {
-    console.error("RESEND RESULT ERROR:", result.error)
-    throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
-  }
+  if (result?.error) throw new Error(`Resend error: ${result.error.message || "error desconocido"}`)
 
   session.resultEmailSent = true
   saveSession(session)
-
-  console.log("RESEND RESULT OK:", result)
   return result
 }
 
@@ -905,22 +632,16 @@ function randomStyle(deck) {
     semilla_estelar: ["cósmico", "luminoso", "estelar", "expansivo", "vibracional"],
     angeles: ["amoroso", "sanador", "angelical", "suave", "protector"]
   }
-
   const arr = styles[deck] || ["espiritual"]
   return arr[Math.floor(Math.random() * arr.length)]
 }
 
 function getCardField(card, possibleKeys) {
   for (const key of possibleKeys) {
-    if (
-      card[key] !== undefined &&
-      card[key] !== null &&
-      String(card[key]).trim() !== ""
-    ) {
+    if (card[key] !== undefined && card[key] !== null && String(card[key]).trim() !== "") {
       return String(card[key]).trim()
     }
   }
-
   return ""
 }
 
@@ -928,6 +649,19 @@ function getSpecialSectionTitle(deck) {
   if (deck === "angeles") return "CONSEJO ANGELICAL"
   if (deck === "semilla_estelar") return "CONSEJO ESTELAR"
   return "CONSEJO DEL CORAZÓN"
+}
+
+function getProductTone(productName, deck, pick) {
+  if (deck === "angeles") return PRODUCT_READING_TONES.angeles
+  if (deck === "semilla_estelar") return PRODUCT_READING_TONES.semilla_estelar
+  if (deck === "arcanos_mayores" && Number(pick) === 12) return PRODUCT_READING_TONES.arcanos_mayores_12
+  if (deck === "arcanos_mayores" && Number(pick) === 3) return PRODUCT_READING_TONES.arcanos_mayores_3
+
+  const productText = String(productName || "").toLowerCase()
+  if (productText.includes("ángeles") || productText.includes("angeles")) return PRODUCT_READING_TONES.angeles
+  if (productText.includes("semilla")) return PRODUCT_READING_TONES.semilla_estelar
+  if (Number(pick) >= 10) return PRODUCT_READING_TONES.arcanos_mayores_12
+  return PRODUCT_READING_TONES.arcanos_mayores_3
 }
 
 function normalizeReadingObject(obj) {
@@ -951,7 +685,6 @@ function normalizeReadingObject(obj) {
 
 function sectionsFromPlainText(text) {
   const cleaned = String(text || "").trim()
-
   return {
     introduccion: cleaned,
     significado_general: cleaned,
@@ -959,92 +692,34 @@ function sectionsFromPlainText(text) {
     trabajo_proposito: cleaned,
     consejo_espiritual: cleaned,
     consejo_especial: cleaned,
-    afirmacion:
-      "Me permito escuchar con calma la verdad que mi alma ya estaba intentando mostrarme.",
-    ritual:
-      "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con una mano sobre el corazón.",
+    afirmacion: "Me permito escuchar con calma la verdad que mi alma ya estaba intentando mostrarme.",
+    ritual: "Enciende una vela blanca, respira profundamente tres veces y relee esta lectura con una mano sobre el corazón.",
     cierre: cleaned
   }
 }
 
-function getProductTone(productName, deck, pick) {
-  if (deck === "angeles") return PRODUCT_READING_TONES.angeles
-  if (deck === "semilla_estelar") return PRODUCT_READING_TONES.semilla_estelar
-  if (deck === "arcanos_mayores" && Number(pick) === 12) {
-    return PRODUCT_READING_TONES.arcanos_mayores_12
-  }
-  if (deck === "arcanos_mayores" && Number(pick) === 3) {
-    return PRODUCT_READING_TONES.arcanos_mayores_3
-  }
-
-  const productText = String(productName || "").toLowerCase()
-
-  if (productText.includes("ángeles") || productText.includes("angeles")) {
-    return PRODUCT_READING_TONES.angeles
-  }
-
-  if (productText.includes("semilla")) {
-    return PRODUCT_READING_TONES.semilla_estelar
-  }
-
-  if (Number(pick) >= 10) {
-    return PRODUCT_READING_TONES.arcanos_mayores_12
-  }
-
-  return PRODUCT_READING_TONES.arcanos_mayores_3
-}
-
 async function generateAIReading(productName, deck, pick, cardsData) {
   const style = randomStyle(deck)
-
-  const deckTone =
-    deck === "angeles"
-      ? "angelical, amoroso, protector, luminoso"
-      : deck === "semilla_estelar"
+  const deckTone = deck === "angeles"
+    ? "angelical, amoroso, protector, luminoso"
+    : deck === "semilla_estelar"
       ? "cósmico, álmico, expansivo, vibracional"
       : "místico, profundo, simbólico, introspectivo"
 
   const productTone = getProductTone(productName, deck, pick)
   const specialSection = getSpecialSectionTitle(deck)
 
-  const cardsText = cardsData
-    .map((c, index) => {
-      const cardName = getCardField(c, ["name", "nombre", "title", "id"])
-      const keywords = Array.isArray(c.keywords) ? c.keywords.join(", ") : ""
+  const cardsText = cardsData.map((c, index) => {
+    const cardName = getCardField(c, ["name", "nombre", "title", "id"])
+    const keywords = Array.isArray(c.keywords) ? c.keywords.join(", ") : ""
+    const general = getCardField(c, ["significado_general", "meaning_general", "descripcion", "description", "general"])
+    const love = getCardField(c, ["amor", "love"])
+    const work = getCardField(c, ["trabajo_proposito", "trabajo", "work", "purpose"])
+    const advice = getCardField(c, ["consejo_espiritual", "spiritual_advice", "consejo", "advice"])
+    const special = getCardField(c, ["consejo_corazon", "consejo_angelical", "consejo_estelar", "special_advice"])
+    const reversed = getCardField(c, ["invertida", "reversed"])
 
-      const general = getCardField(c, [
-        "significado_general",
-        "meaning_general",
-        "descripcion",
-        "description",
-        "general"
-      ])
-
-      const love = getCardField(c, ["amor", "love"])
-      const work = getCardField(c, [
-        "trabajo_proposito",
-        "trabajo",
-        "work",
-        "purpose"
-      ])
-
-      const advice = getCardField(c, [
-        "consejo_espiritual",
-        "spiritual_advice",
-        "consejo",
-        "advice"
-      ])
-
-      const special = getCardField(c, [
-        "consejo_corazon",
-        "consejo_angelical",
-        "consejo_estelar",
-        "special_advice"
-      ])
-
-      const reversed = getCardField(c, ["invertida", "reversed"])
-
-      return `
+    return `
 Carta ${index + 1}: ${cardName}
 Palabras clave: ${keywords}
 Significado general: ${general}
@@ -1054,8 +729,7 @@ Consejo espiritual: ${advice}
 Consejo especial: ${special}
 Invertida: ${reversed}
 `
-    })
-    .join("\n")
+  }).join("\n")
 
   const prompt = `
 ${READING_STYLE_GUIDE}
@@ -1097,19 +771,7 @@ Reglas:
 - No uses listas con viñetas.
 - No copies literalmente el texto base.
 - Usa el contenido base de las cartas como fundamento.
-- Cambia el estilo de redacción en cada lectura para evitar repeticiones entre compras distintas.
-- Si un campo no existe en la carta, créalo de forma coherente a partir del significado general.
-- La lectura debe sentirse única y premium.
 - Cada campo debe aportar información nueva y valiosa.
-- La lectura no debe sentirse como predicción absoluta.
-- Debe sentirse como revelación emocional, guía y espejo interno.
-- "introduccion" debe abrir emocionalmente la lectura.
-- "significado_general" debe explicar con profundidad lo que está ocurriendo.
-- "amor" debe sonar íntimo, real y emocional.
-- "trabajo_proposito" debe conectar vocación, dirección, energía y verdad interior.
-- "consejo_espiritual" debe sentirse útil, cálido y revelador.
-- "consejo_especial" debe ser especialmente memorable y con alto impacto emocional.
-- "cierre" debe dejar sensación de guía, verdad y transformación.
 `
 
   const response = await withTimeout(
@@ -1122,10 +784,7 @@ Reglas:
   )
 
   const text = (response.output_text || "").trim()
-
-  if (!text) {
-    throw new Error("OpenAI devolvió una respuesta vacía")
-  }
+  if (!text) throw new Error("OpenAI devolvió una respuesta vacía")
 
   const parsed = safeJsonParse(text)
   const normalized = normalizeReadingObject(parsed)
@@ -1165,7 +824,6 @@ ${normalized.cierre}
   }
 
   const fallbackReading = sectionsFromPlainText(text)
-
   return {
     reading: fallbackReading,
     interpretation: text
@@ -1173,10 +831,7 @@ ${normalized.cierre}
 }
 
 function findProductConfigFromLineItem(item) {
-  const title = String(item?.title || "")
-    .trim()
-    .toLowerCase()
-
+  const title = String(item?.title || "").trim().toLowerCase()
   const productId = item?.product_id ? String(item.product_id) : null
   const variantId = item?.variant_id ? String(item.variant_id) : null
 
@@ -1186,86 +841,37 @@ function findProductConfigFromLineItem(item) {
     variant_id: item?.variant_id
   })
 
-  if (
-    title.includes("lectura profunda") ||
-    title.includes("análisis completo") ||
-    title.includes("analisis completo") ||
-    title.includes("12 cartas")
-  ) {
-    return {
-      productId: "10493383082321",
-      config: PRODUCTS["10493383082321"],
-      matchedBy: "title_lectura_profunda"
-    }
+  if (title.includes("lectura profunda") || title.includes("análisis completo") || title.includes("analisis completo") || title.includes("12 cartas")) {
+    return { productId: "10493383082321", config: PRODUCTS["10493383082321"], matchedBy: "title_lectura_profunda" }
   }
 
-  if (
-    title.includes("tres puertas") ||
-    title.includes("destino") ||
-    title.includes("3 cartas")
-  ) {
-    return {
-      productId: "10493369745745",
-      config: PRODUCTS["10493369745745"],
-      matchedBy: "title_tres_puertas"
-    }
+  if (title.includes("tres puertas") || title.includes("destino") || title.includes("3 cartas")) {
+    return { productId: "10493369745745", config: PRODUCTS["10493369745745"], matchedBy: "title_tres_puertas" }
   }
 
-  if (
-    title.includes("semilla estelar") ||
-    title.includes("5 cartas")
-  ) {
-    return {
-      productId: "10495993446737",
-      config: PRODUCTS["10495993446737"],
-      matchedBy: "title_semilla_estelar"
-    }
+  if (title.includes("semilla estelar") || title.includes("5 cartas")) {
+    return { productId: "10495993446737", config: PRODUCTS["10495993446737"], matchedBy: "title_semilla_estelar" }
   }
 
-  if (
-    title.includes("ángeles") ||
-    title.includes("angeles") ||
-    title.includes("angelical") ||
-    title.includes("4 cartas")
-  ) {
-    return {
-      productId: "10496012616017",
-      config: PRODUCTS["10496012616017"],
-      matchedBy: "title_angeles"
-    }
+  if (title.includes("ángeles") || title.includes("angeles") || title.includes("angelical") || title.includes("4 cartas")) {
+    return { productId: "10496012616017", config: PRODUCTS["10496012616017"], matchedBy: "title_angeles" }
   }
 
   if (productId && PRODUCTS[productId]) {
-    return {
-      productId,
-      config: PRODUCTS[productId],
-      matchedBy: "product_id"
-    }
+    return { productId, config: PRODUCTS[productId], matchedBy: "product_id" }
   }
 
   if (variantId && PRODUCTS[variantId]) {
-    return {
-      productId: variantId,
-      config: PRODUCTS[variantId],
-      matchedBy: "variant_id"
-    }
+    return { productId: variantId, config: PRODUCTS[variantId], matchedBy: "variant_id" }
   }
 
-  console.log("PRODUCTO NO IDENTIFICADO:", {
-    title,
-    productId,
-    variantId
-  })
-
+  console.log("PRODUCTO NO IDENTIFICADO:", { title, productId, variantId })
   return null
 }
 
 function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 }) {
   const config = PRODUCTS[String(productId)]
-
-  if (!config) {
-    throw new Error(`Producto no configurado: ${productId}`)
-  }
+  if (!config) throw new Error(`Producto no configurado: ${productId}`)
 
   const token = generateToken(orderId, lineItemId, productId, unitIndex)
   const existing = getSessionByToken(token)
@@ -1275,7 +881,6 @@ function createSession({ orderId, lineItemId, productId, email, unitIndex = 0 })
       existing.email = email
       saveSession(existing)
     }
-
     return existing
   }
 
@@ -1311,7 +916,309 @@ app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "tarot-api",
-    version: "production-sqlite-v8"
+    version: "production-sqlite-v9"
   })
 })
 
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true })
+})
+
+app.get("/api/session", (req, res) => {
+  try {
+    const { token } = req.query
+    if (!token) return res.status(400).json({ ok: false, error: "Falta token" })
+
+    const session = getSessionByToken(String(token))
+    if (!session) return res.status(404).json({ ok: false, error: "Sesión no encontrada" })
+
+    return res.json({
+      ok: true,
+      token: session.token,
+      productName: session.productName,
+      deck: session.deck || session.deckId,
+      deckId: session.deckId,
+      maxCards: Number(session.maxCards || session.pick || 3),
+      pick: Number(session.pick || session.maxCards || 3),
+      deckSize: session.deckSize,
+      pagePath: session.pagePath || "",
+      email: session.email || "",
+      status: session.status,
+      selectedCards: session.selectedCards || [],
+      interpretation: session.interpretation || "",
+      reading: session.reading || null,
+      readingDone: session.status === "completed"
+    })
+  } catch (error) {
+    console.error("SESSION GET ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.get("/api/cards/:deckId", (req, res) => {
+  try {
+    const deckId = String(req.params.deckId || "")
+    if (!deckId) return res.status(400).json({ ok: false, error: "Falta deckId" })
+    return res.json({ ok: true, ...getPublicDeck(deckId) })
+  } catch (error) {
+    console.error("CARDS GET ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.post("/api/submit", async (req, res) => {
+  try {
+    const { token, cards } = req.body
+
+    if (!token) return res.status(400).json({ ok: false, error: "Falta token" })
+    if (!Array.isArray(cards) || cards.length === 0) {
+      return res.status(400).json({ ok: false, error: "Faltan cartas seleccionadas" })
+    }
+
+    const session = getSessionByToken(String(token))
+    if (!session) return res.status(404).json({ ok: false, error: "Sesión no encontrada" })
+
+    if (session.status === "completed" && session.reading) {
+      return res.json({
+        ok: true,
+        alreadyCompleted: true,
+        reading: session.reading,
+        interpretation: session.interpretation || "",
+        cards: session.selectedCards || []
+      })
+    }
+
+    if (session.status === "processing") {
+      return res.status(409).json({ ok: false, error: "La lectura ya se está procesando" })
+    }
+
+    const normalizedInputs = cards.map((c) => sanitizeIncomingCard(c)).filter(Boolean)
+    const uniqueInputs = []
+    const seen = new Set()
+
+    for (const item of normalizedInputs) {
+      const identityKey = [
+        normalizeCardValue(item.id),
+        normalizeCardValue(item.name),
+        normalizeCardValue(getImageFilename(item.image)),
+        item.reversed ? "rev" : "upright"
+      ].join("|")
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey)
+        uniqueInputs.push(item)
+      }
+    }
+
+    if (uniqueInputs.length !== Number(session.pick)) {
+      return res.status(400).json({ ok: false, error: `Debes elegir exactamente ${session.pick} cartas` })
+    }
+
+    const deck = loadDeck(session.deckId)
+    const selectedCards = []
+
+    for (const item of uniqueInputs) {
+      const resolved = resolveCardFromDeck(deck, item)
+      if (resolved) selectedCards.push(resolved)
+    }
+
+    if (selectedCards.length !== Number(session.pick)) {
+      return res.status(400).json({ ok: false, error: "No se pudieron resolver todas las cartas elegidas" })
+    }
+
+    session.status = "processing"
+    session.selectedCardIds = selectedCards.map((card) => String(card.id))
+    session.selectedCards = selectedCards
+    saveSession(session)
+
+    const aiResult = await generateAIReading(session.productName, session.deckId, session.pick, selectedCards)
+
+    session.interpretation = aiResult.interpretation
+    session.reading = aiResult.reading
+    session.status = "completed"
+    session.completedAt = new Date().toISOString()
+    saveSession(session)
+
+    if (session.email) {
+      try {
+        await withTimeout(sendResultEmail(session), 15000, "RESULT EMAIL TIMEOUT")
+      } catch (emailError) {
+        console.error("RESULT EMAIL ERROR:", emailError)
+      }
+    }
+
+    return res.json({
+      ok: true,
+      reading: session.reading,
+      interpretation: session.interpretation,
+      cards: selectedCards
+    })
+  } catch (error) {
+    console.error("SUBMIT ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.get("/api/reading/result", (req, res) => {
+  try {
+    const { token } = req.query
+    if (!token) return res.status(400).json({ ok: false, error: "Falta token" })
+
+    const session = getSessionByToken(String(token))
+    if (!session) return res.status(404).json({ ok: false, error: "Lectura no encontrada" })
+
+    return res.json({
+      ok: true,
+      reading: {
+        token: session.token,
+        product: session.productName,
+        deck: session.deckId,
+        spread: session.pick,
+        status: session.status,
+        cardsData: session.selectedCards || [],
+        interpretation: session.interpretation || "",
+        sections: session.reading || null
+      }
+    })
+  } catch (error) {
+    console.error("READING GET ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.post("/api/debug/create-session", (req, res) => {
+  try {
+    const {
+      productId = "10496012616017",
+      email = "",
+      orderId = `debug-order-${Date.now()}`,
+      lineItemId = `debug-line-${Date.now()}`,
+      unitIndex = 0
+    } = req.body || {}
+
+    const session = createSession({
+      orderId: String(orderId),
+      lineItemId: String(lineItemId),
+      productId: String(productId),
+      email,
+      unitIndex: Number(unitIndex || 0)
+    })
+
+    return res.json({ ok: true, session, url: readingUrl(session) })
+  } catch (error) {
+    console.error("DEBUG CREATE SESSION ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+app.post("/api/shopify/order-paid", async (req, res) => {
+  try {
+    console.log("=== WEBHOOK SHOPIFY RECIBIDO ===")
+
+    if (!verifyShopify(req)) {
+      console.error("SHOPIFY WEBHOOK INVALID HMAC")
+      return res.status(401).send("invalid")
+    }
+
+    const webhookId = String(req.get("X-Shopify-Webhook-Id") || "")
+    if (webhookId && isWebhookProcessed(webhookId)) {
+      return res.status(200).json({ ok: true, duplicate: true })
+    }
+
+    let order = null
+    try {
+      order = JSON.parse(req.body.toString("utf8"))
+    } catch (parseError) {
+      console.error("SHOPIFY JSON PARSE ERROR:", parseError)
+      return res.status(400).json({ ok: false, error: "invalid_json" })
+    }
+
+    const email = order.email || order.contact_email || ""
+    const financialStatus = String(order.financial_status || "").toLowerCase()
+
+    console.log("ORDER INFO:", {
+      orderId: order.id,
+      orderName: order.name,
+      email,
+      financialStatus,
+      itemsCount: Array.isArray(order.line_items) ? order.line_items.length : 0
+    })
+
+    if (financialStatus !== "paid") {
+      return res.status(200).json({ ok: true, skipped: true, reason: "order_not_paid" })
+    }
+
+    let processedCount = 0
+    const created = []
+
+    for (const item of order.line_items || []) {
+      const found = findProductConfigFromLineItem(item)
+
+      if (!found || !found.config) {
+        console.log("Producto no configurado:", {
+          title: item.title,
+          product_id: item.product_id,
+          variant_id: item.variant_id
+        })
+        continue
+      }
+
+      const quantity = Number(item.quantity || 1)
+
+      for (let i = 0; i < quantity; i += 1) {
+        let session = null
+
+        try {
+          session = createSession({
+            orderId: String(order.id),
+            lineItemId: String(item.id),
+            productId: found.productId,
+            email,
+            unitIndex: i
+          })
+        } catch (sessionError) {
+          console.error("SESSION CREATE ERROR:", sessionError)
+          continue
+        }
+
+        if (!session) continue
+
+        if (!session.accessEmailSent && session.email) {
+          try {
+            await withTimeout(sendAccessEmail(session), 15000, "ACCESS EMAIL TIMEOUT")
+          } catch (emailError) {
+            console.error("ACCESS EMAIL ERROR:", emailError)
+          }
+        }
+
+        created.push({
+          token: session.token,
+          url: readingUrl(session),
+          productId: session.productId,
+          productName: session.productName
+        })
+
+        processedCount += 1
+      }
+    }
+
+    if (webhookId) {
+      try {
+        markWebhookProcessed(webhookId)
+      } catch (webhookError) {
+        console.error("MARK WEBHOOK ERROR:", webhookError)
+      }
+    }
+
+    return res.status(200).json({ ok: true, processedCount, created })
+  } catch (error) {
+    console.error("SHOPIFY ORDER PAID ERROR:", error)
+    return res.status(500).json({ ok: false, error: error.message })
+  }
+})
+
+const PORT = Number(process.env.PORT) || 8080
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`server running on port ${PORT}`)
+})
