@@ -8,7 +8,7 @@ const { Resend } = require("resend")
 const app = express()
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const INTERNAL_EMAIL = "contactopremium@eltarotdelaruedadelafortuna.com"
+const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
@@ -19,22 +19,19 @@ const GOOGLE_SCRIPT_URL =
 
 const PREMIUM_PRODUCTS = {
   "10496141754705": {
-    name: "Tu Camino, Tu Destino y Tus Decisiones – Mentoría",
-    type: "camino_destino_decisiones",
-    formUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLSfdbkM9YVksES5t_LcbshESiNpzbpuFIGRcGLayIHAJzT7wig/viewform"
+    name: "10 Preguntas Personalizadas",
+    type: "claridad",
+    formUrl: "https://forms.gle/pffMmjyoNVjE9B9N6"
   },
   "10523108966737": {
-    name: "Claridad en tus Relaciones y tu Camino Sentimental",
-    type: "relaciones_sentimental",
-    formUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLSdSVenjU1wO7Pt3eC6jfX9gKWoAFA427B8fZzW8L7t2nOzUsA/viewform"
+    name: "Amor Premium | Vídeo Personalizado",
+    type: "amor",
+    formUrl: "https://forms.gle/9dwtYvQvBw39tqCK8"
   },
   "10667662606673": {
-    name: "Nuevos Comienzos, Liderazgo y Economía Personal – Consulta Premium",
-    type: "liderazgo_economia_personal",
-    formUrl:
-      "https://docs.google.com/forms/d/e/1FAIpQLSeKjcH-DDTdU7R7f_r7sCtkjPsnqnwfKyIQOCuFtgIOEjHWLg/viewform"
+    name: "Trabajo y Economía Premium | Vídeo Personalizado",
+    type: "proposito",
+    formUrl: "https://forms.gle/v25iecbR3KHKf7QZ8"
   }
 }
 
