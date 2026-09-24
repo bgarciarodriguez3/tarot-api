@@ -8,19 +8,19 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 const PREMIUM_PRODUCTS = {
   "10496141754705": {
-    name: "Tu Camino, Tu Destino y Tus Decisiones – Mentoría",
+    name: "10 Preguntas Personalizadas",
     type: "claridad",
-    formUrl: "https://forms.gle/9m6P5m3pBZ4BEybf9"
+    formUrl: "https://forms.gle/pffMmjyoNVjE9B9N6"
   },
   "10523108966737": {
-    name: "Claridad en tus Relaciones y tu Camino Sentimental",
+    name: "Amor Premium | Vídeo Personalizado",
     type: "amor",
-    formUrl: "https://forms.gle/z7Yqenb3VsrAVjij9"
+    formUrl: "https://forms.gle/9dwtYvQvBw39tqCK8"
   },
   "10667662606673": {
-    name: "Nuevos Comienzos, Liderazgo y Economía Personal – Consulta Premium",
+    name: "Trabajo y Economía Premium | Vídeo Personalizado",
     type: "proposito",
-    formUrl: "https://forms.gle/AyAm7JACnZCoXNsy7"
+    formUrl: "https://forms.gle/v25iecbR3KHKf7QZ8"
   }
 }
 
