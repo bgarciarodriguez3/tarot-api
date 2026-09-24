@@ -190,18 +190,24 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="card">
       <div class="badge">✨ Consulta Premium</div>
+
       <h1>Solicita tu consulta</h1>
+
       <p class="subtitle">
-        Déjanos tus datos y te enviaremos el formulario premium específico de
-        <strong>mentoría</strong>, <strong>amor</strong> o <strong>dinero</strong>.
+        Déjanos tus datos y te enviaremos el formulario premium correspondiente a tu consulta de
+        <strong>10 Preguntas Personalizadas</strong>,
+        <strong>Amor y Relaciones</strong> o
+        <strong>Trabajo y Economía</strong>.
       </p>
 
       <form id="premiumForm" novalidate>
         <div class="grid">
+
           <div>
             <label for="customerName">Tu nombre</label>
             <input
@@ -228,16 +234,19 @@
 
           <div>
             <label for="premiumType">Tipo de consulta</label>
+
             <select id="premiumType" name="premiumType" required>
-              <option value="mentoria">Mentoría</option>
-              <option value="amor">Amor</option>
-              <option value="dinero">Dinero</option>
+              <option value="claridad">🔮 10 Preguntas Personalizadas</option>
+              <option value="amor">❤️ Amor Premium</option>
+              <option value="proposito">💼 Trabajo y Economía Premium</option>
             </select>
+
             <div class="type-note" id="typeNote"></div>
           </div>
 
           <div>
             <label for="message">Cuéntanos tu situación</label>
+
             <textarea
               id="message"
               name="message"
@@ -251,6 +260,7 @@
           <button class="submit-btn" id="submitBtn" type="submit">
             🔮 CONTINUAR
           </button>
+
         </div>
       </form>
 
@@ -265,6 +275,7 @@
       <div class="footer-note">
         Después te enviaremos el formulario premium correspondiente.
       </div>
+
     </div>
   </div>
 
@@ -272,17 +283,25 @@
     const API_URL = "/api/premium/form-submitted";
 
     const TYPE_CONFIG = {
-      mentoria: {
-        productName: "Mentoría Premium",
-        note: "Ideal si buscas guía profunda, claridad y acompañamiento."
+      claridad: {
+        productId: "10496141754705",
+        productName: "10 Preguntas Personalizadas",
+        note: "Para plantear hasta 10 preguntas personalizadas sobre los temas que necesites.",
+        formUrl: "https://forms.gle/pffMmjyoNVjE9B9N6"
       },
+
       amor: {
-        productName: "Consulta Amor",
-        note: "Enfocada en relaciones, vínculos y claridad sentimental."
+        productId: "10523108966737",
+        productName: "Amor Premium | Vídeo Personalizado",
+        note: "Enfocada en relaciones, vínculos, sentimientos y claridad sentimental.",
+        formUrl: "https://forms.gle/9dwtYvQvBw39tqCK8"
       },
-      dinero: {
-        productName: "Consulta Dinero",
-        note: "Orientada a abundancia, bloqueos y decisiones económicas."
+
+      proposito: {
+        productId: "10667662606673",
+        productName: "Trabajo y Economía Premium | Vídeo Personalizado",
+        note: "Enfocada en trabajo, economía, decisiones profesionales, proyectos y propósito.",
+        formUrl: "https://forms.gle/v25iecbR3KHKf7QZ8"
       }
     };
 
@@ -294,7 +313,10 @@
     const errorBox = document.getElementById("errorBox");
 
     function updateTypeNote() {
-      const current = TYPE_CONFIG[premiumType.value] || TYPE_CONFIG.mentoria;
+      const current =
+        TYPE_CONFIG[premiumType.value] ||
+        TYPE_CONFIG.claridad;
+
       typeNote.textContent = current.note;
     }
 
@@ -303,26 +325,70 @@
     }
 
     function buildPayload(formEl) {
-      const formData = Object.fromEntries(new FormData(formEl));
-      const current = TYPE_CONFIG[formData.premiumType] || TYPE_CONFIG.mentoria;
+      const formData =
+        Object.fromEntries(new FormData(formEl));
+
+      const current =
+        TYPE_CONFIG[formData.premiumType] ||
+        TYPE_CONFIG.claridad;
 
       return {
-        customerName: String(formData.customerName || "").trim(),
-        email: String(formData.email || "").trim().toLowerCase(),
-        premiumType: String(formData.premiumType || "").trim(),
-        message: String(formData.message || "").trim(),
-        productName: current.productName,
-        submittedAt: new Date().toISOString(),
-        source: "railway-premium-form",
-        formVersion: "v1",
-        pageUrl: window.location.href,
-        userAgent: navigator.userAgent
+        customerName:
+          String(formData.customerName || "").trim(),
+
+        email:
+          String(formData.email || "")
+            .trim()
+            .toLowerCase(),
+
+        premiumType:
+          String(formData.premiumType || "").trim(),
+
+        message:
+          String(formData.message || "").trim(),
+
+        productId:
+          current.productId,
+
+        productName:
+          current.productName,
+
+        form_url:
+          current.formUrl,
+
+        formUrl:
+          current.formUrl,
+
+        submittedAt:
+          new Date().toISOString(),
+
+        source:
+          "railway-premium-form",
+
+        formVersion:
+          "v2",
+
+        pageUrl:
+          window.location.href,
+
+        userAgent:
+          navigator.userAgent
       };
     }
 
-    async function fetchWithTimeout(url, options = {}, timeout = 15000) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+    async function fetchWithTimeout(
+      url,
+      options = {},
+      timeout = 15000
+    ) {
+      const controller =
+        new AbortController();
+
+      const timeoutId =
+        setTimeout(
+          () => controller.abort(),
+          timeout
+        );
 
       try {
         return await fetch(url, {
@@ -337,86 +403,148 @@
     function showSuccess(message) {
       successBox.textContent = message;
       successBox.style.display = "block";
+
       errorBox.style.display = "none";
     }
 
     function showError(message) {
       errorBox.textContent = message;
       errorBox.style.display = "block";
+
       successBox.style.display = "none";
     }
 
-    premiumType.addEventListener("change", updateTypeNote);
+    premiumType.addEventListener(
+      "change",
+      updateTypeNote
+    );
+
     updateTypeNote();
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+    form.addEventListener(
+      "submit",
+      async (e) => {
 
-      successBox.style.display = "none";
-      errorBox.style.display = "none";
+        e.preventDefault();
 
-      const payload = buildPayload(form);
+        successBox.style.display = "none";
+        errorBox.style.display = "none";
 
-      if (!payload.customerName) {
-        showError("❌ Escribe tu nombre.");
-        return;
-      }
+        const payload =
+          buildPayload(form);
 
-      if (!isValidEmail(payload.email)) {
-        showError("❌ Introduce un email válido.");
-        return;
-      }
+        if (!payload.customerName) {
+          showError(
+            "❌ Escribe tu nombre."
+          );
+          return;
+        }
 
-      if (!["mentoria", "amor", "dinero"].includes(payload.premiumType)) {
-        showError("❌ Selecciona un tipo de consulta válido.");
-        return;
-      }
+        if (!isValidEmail(payload.email)) {
+          showError(
+            "❌ Introduce un email válido."
+          );
+          return;
+        }
 
-      if (!payload.message || payload.message.length < 10) {
-        showError("❌ Cuéntanos un poco más sobre tu situación.");
-        return;
-      }
+        if (
+          ![
+            "claridad",
+            "amor",
+            "proposito"
+          ].includes(payload.premiumType)
+        ) {
+          showError(
+            "❌ Selecciona un tipo de consulta válido."
+          );
+          return;
+        }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Enviando...";
+        if (
+          !payload.message ||
+          payload.message.length < 10
+        ) {
+          showError(
+            "❌ Cuéntanos un poco más sobre tu situación."
+          );
+          return;
+        }
 
-      try {
-        const response = await fetchWithTimeout(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
 
-        let result = {};
         try {
-          result = await response.json();
-        } catch (_) {
-          result = {};
+          const response =
+            await fetchWithTimeout(
+              API_URL,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+                body:
+                  JSON.stringify(payload)
+              }
+            );
+
+          let result = {};
+
+          try {
+            result =
+              await response.json();
+          } catch (_) {
+            result = {};
+          }
+
+          if (
+            !response.ok ||
+            result.success === false ||
+            result.ok === false
+          ) {
+            throw new Error(
+              result.message ||
+              "La API devolvió un error."
+            );
+          }
+
+          showSuccess(
+            "✅ Solicitud enviada. Revisa tu email y completa el formulario premium."
+          );
+
+          form.reset();
+
+          premiumType.value =
+            "claridad";
+
+          updateTypeNote();
+
+        } catch (error) {
+
+          const message =
+            error.name === "AbortError"
+              ? "❌ La solicitud tardó demasiado. Inténtalo de nuevo."
+              : `❌ ${
+                  error.message ||
+                  "No se pudo enviar la solicitud."
+                }`;
+
+          showError(message);
+
+          console.error(
+            "Error premium form:",
+            error
+          );
+
+        } finally {
+
+          submitBtn.disabled = false;
+
+          submitBtn.textContent =
+            "🔮 CONTINUAR";
         }
-
-        if (!response.ok || result.success === false || result.ok === false) {
-          throw new Error(result.message || "La API devolvió un error.");
-        }
-
-        showSuccess("✅ Solicitud enviada. Revisa tu email y completa el formulario premium.");
-        form.reset();
-        premiumType.value = "mentoria";
-        updateTypeNote();
-      } catch (error) {
-        const message =
-          error.name === "AbortError"
-            ? "❌ La solicitud tardó demasiado. Inténtalo de nuevo."
-            : `❌ ${error.message || "No se pudo enviar la solicitud."}`;
-
-        showError(message);
-        console.error("Error premium form:", error);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "🔮 CONTINUAR";
       }
-    });
+    );
   </script>
 </body>
 </html>
