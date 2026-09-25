@@ -3,6 +3,7 @@ require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
 const crypto = require("crypto")
+const path = require("path")
 const { Resend } = require("resend")
 
 const app = express()
@@ -40,9 +41,25 @@ const PREMIUM_PRODUCTS = {
 // ==============================
 
 app.use(cors())
+app.use(express.json())
 
 app.get("/favicon.ico", (_req, res) => {
   res.status(204).end()
+})
+
+// ==============================
+// FORMULARIO PREMIUM
+// ==============================
+
+// Abre el formulario directamente
+app.get("/form-premium.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "form-premium.html"))
+})
+
+// Si alguien entra directamente en vip.eltarotdelaruedadelafortuna.com
+// lo enviamos al formulario
+app.get("/", (_req, res) => {
+  res.redirect("/form-premium.html")
 })
 
 // ==============================
@@ -85,7 +102,9 @@ async function saveToGoogleSheets(payload) {
 
   const response = await fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(payload)
   })
 
@@ -106,14 +125,14 @@ async function sendAccessEmail(record) {
     html: buildAccessEmailHtml(record)
   })
 
-  if (result?.error) throw new Error(result.error.message)
+  if (result?.error) {
+    throw new Error(result.error.message)
+  }
 }
 
 // ==============================
-// ROUTES
+// ROUTES API
 // ==============================
-
-app.use(express.json())
 
 app.post("/api/premium/form-submitted", async (req, res) => {
   try {
@@ -122,10 +141,16 @@ app.post("/api/premium/form-submitted", async (req, res) => {
     await saveToGoogleSheets(payload)
     await sendAccessEmail(payload)
 
-    return res.json({ ok: true })
+    return res.status(200).json({
+      ok: true
+    })
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({ ok: false })
+    console.error("ERROR PREMIUM:", error)
+
+    return res.status(500).json({
+      ok: false,
+      error: error.message
+    })
   }
 })
 
@@ -136,5 +161,5 @@ app.post("/api/premium/form-submitted", async (req, res) => {
 const PORT = process.env.PORT || 8080
 
 app.listen(PORT, () => {
-  console.log("premium server running on port", PORT)
+  console.log(`premium server running on port ${PORT}`)
 })
