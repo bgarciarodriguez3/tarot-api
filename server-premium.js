@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 const INTERNAL_EMAIL = "contactopremium@laruedadelafortuna.com"
 
 const GOOGLE_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx1pGPa9aI15JAdPG1n4UMhPduLUY5u407NKzuV9VicwqNYXdd9rN403t6uwHNCFYf1/exec"
+  "https://script.google.com/macros/s/AKfycbzixm96aT2jaK1miUbMa46PB_tkbMULFAqVLMHZKtviNLpPevzzbHc0UhEKinPCnrM/exec"
 
 // ==============================
 // CONFIG PRODUCTOS PREMIUM
@@ -70,20 +70,31 @@ function buildAccessEmailHtml(record) {
   return `
     <div style="margin:0;padding:0;background:#f6f1e7;">
       <div style="max-width:680px;margin:0 auto;padding:32px 18px;">
-        <div style="background:#000;border-radius:999px;padding:2px;text-align:center;box-shadow:0 0 20px rgba(198,164,90,0.4);">
+        <div style="
+          background:#000;
+          border-radius:999px;
+          padding:2px;
+          text-align:center;
+          box-shadow:0 0 20px rgba(198,164,90,0.4);
+        ">
 
-          <a href="${record.form_url}" 
-             style="display:inline-block;
-                    padding:16px 30px;
-                    border-radius:999px;
-                    background:#000;
-                    color:#c6a45a;
-                    font-weight:bold;
-                    font-size:16px;
-                    text-decoration:none;
-                    letter-spacing:1px;
-                    box-shadow:0 0 10px rgba(198,164,90,0.6), inset 0 0 6px rgba(198,164,90,0.3);">
-
+          <a
+            href="${record.form_url}"
+            style="
+              display:inline-block;
+              padding:16px 30px;
+              border-radius:999px;
+              background:#000;
+              color:#c6a45a;
+              font-weight:bold;
+              font-size:16px;
+              text-decoration:none;
+              letter-spacing:1px;
+              box-shadow:
+                0 0 10px rgba(198,164,90,0.6),
+                inset 0 0 6px rgba(198,164,90,0.3);
+            "
+          >
             ✨ ACCEDE A TU DESTINO ✨
           </a>
 
@@ -98,7 +109,9 @@ function buildAccessEmailHtml(record) {
 // ==============================
 
 async function saveToGoogleSheets(payload) {
-  if (!GOOGLE_SCRIPT_URL) return
+  if (!GOOGLE_SCRIPT_URL) {
+    throw new Error("GOOGLE_SCRIPT_URL no está configurada")
+  }
 
   const response = await fetch(GOOGLE_SCRIPT_URL, {
     method: "POST",
@@ -111,6 +124,27 @@ async function saveToGoogleSheets(payload) {
   if (!response.ok) {
     throw new Error(`Google Sheets HTTP ${response.status}`)
   }
+
+  const text = await response.text()
+
+  if (text) {
+    try {
+      const data = JSON.parse(text)
+
+      if (data.ok === false) {
+        throw new Error(
+          `Google Sheets: ${data.error || "Error desconocido"}`
+        )
+      }
+    } catch (error) {
+      if (
+        error.message &&
+        error.message.startsWith("Google Sheets:")
+      ) {
+        throw error
+      }
+    }
+  }
 }
 
 // ==============================
@@ -118,6 +152,18 @@ async function saveToGoogleSheets(payload) {
 // ==============================
 
 async function sendAccessEmail(record) {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY no está configurada")
+  }
+
+  if (!process.env.RESEND_FROM_EMAIL) {
+    throw new Error("RESEND_FROM_EMAIL no está configurada")
+  }
+
+  if (!record.email) {
+    throw new Error("Falta el email del cliente")
+  }
+
   const result = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL,
     to: record.email,
@@ -138,8 +184,16 @@ app.post("/api/premium/form-submitted", async (req, res) => {
   try {
     const payload = req.body
 
+    console.log("PREMIUM FORM RECEIVED:", {
+      email: payload?.email,
+      type: payload?.type,
+      product: payload?.productName || payload?.productTitle
+    })
+
     await saveToGoogleSheets(payload)
     await sendAccessEmail(payload)
+
+    console.log("PREMIUM FORM COMPLETED")
 
     return res.status(200).json({
       ok: true
